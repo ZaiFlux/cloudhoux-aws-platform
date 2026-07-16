@@ -1,8 +1,6 @@
 # ☁️ CloudVox
 ## Secure Cloud-Native File Storage Platform on AWS
 
-![CloudVox Banner](./assets/banner.png)
-
 ---
 
 ## 📌 Overview
