@@ -1,6 +1,5 @@
 # ☁️ Cloudox
 ## Secure Cloud-Native File Storage Platform on AWS
-![Cloudox Banner](./assets/banner.png)
 
 ---
 
