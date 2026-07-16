@@ -1,14 +1,17 @@
-# ☁️ Cloudox
+# ☁️ CloudVox
 ## Secure Cloud-Native File Storage Platform on AWS
+
 
 ---
 
 ## 📌 Overview
 
-**Cloudox** is a secure, scalable, and cloud-native file storage platform built on Amazon Web Services (AWS).  
+**CloudVox** is a secure, scalable, and cloud-native file storage platform built on Amazon Web Services (AWS).
+
 The platform allows users to securely upload, store, manage, and access files from anywhere while demonstrating modern Cloud Engineering practices.
 
-**Focus Areas:**
+This project focuses on:
+
 - Infrastructure as Code (Terraform)
 - Cloud Architecture Design
 - Containerization (Docker)
@@ -17,11 +20,14 @@ The platform allows users to securely upload, store, manage, and access files fr
 - Monitoring and Logging
 - Production Deployment Practices
 
+The goal of CloudVox is to simulate how real companies design, deploy, secure, and operate cloud-based applications.
+
 ---
 
-## 🎯 Problem Statement
+# 🎯 Problem Statement
 
 Traditional file storage solutions often face problems such as:
+
 - Limited scalability
 - Manual deployment processes
 - Weak access control
@@ -29,224 +35,614 @@ Traditional file storage solutions often face problems such as:
 - Data security concerns
 - Difficulty managing infrastructure
 
-**Cloudox** addresses these challenges with secure file storage, automated pipelines, scalable infrastructure, encryption, and full observability.
+CloudVox addresses these challenges by providing:
+
+✅ Secure file storage  
+✅ Automated deployment pipeline  
+✅ Scalable cloud infrastructure  
+✅ Encrypted data protection  
+✅ Monitoring and auditing  
+✅ Production-ready architecture  
 
 ---
 
-## 🏗️ Cloudox Architecture
+# 🏗️ CloudVox Architecture
 
-```mermaid
-flowchart TD
-    subgraph Users
-        U[Users]
-    end
+```
+                              Users
+                                |
+                                |
+                           Route 53
+                                |
+                                |
+                         CloudFront CDN
+                                |
+                                |
+                            AWS WAF
+                                |
+                                |
+                  Application Load Balancer
+                                |
+                                |
+                    CloudVox Application Layer
+                                |
+                 --------------------------------
+                 |                              |
+                 |                              |
+              Amazon RDS                    Amazon S3
+          User Information             User File Storage
+          File Metadata
 
-    U --> R53[Amazon Route 53]
-    R53 --> CF[CloudFront CDN]
-    CF --> WAF[AWS WAF]
-    WAF --> ALB[Application Load Balancer]
-    ALB --> App[Cloudox Application Layer]
 
-    App --> DB[(Amazon RDS\nUser Information\nFile Metadata)]
-    App --> S3[(Amazon S3\nUser File Storage)]
+Security & Monitoring Layer:
 
-    style App fill:#3b82f6,stroke:#1e40af,color:white
-    style S3 fill:#10b981,stroke:#047857,color:white
-    style DB fill:#8b5cf6,stroke:#6b21a8,color:white
+IAM
+ |
+KMS Encryption
+ |
+Secrets Manager
+ |
+CloudTrail
+ |
+AWS Config
+ |
+GuardDuty
+ |
+CloudWatch
 ```
 
 ---
 
-## 🔄 File Upload Flow
+# ☁️ AWS Services Used
 
-```mermaid
-flowchart LR
-    A[User Upload] --> B[Cloudox API]
-    B --> C[Private S3 Bucket]
-    C --> D[Encrypted Storage\nKMS]
+## 🌐 Networking
+
+## Amazon VPC
+
+Provides a secure isolated network environment.
+
+Components:
+
+- VPC
+- Public Subnets
+- Private Subnets
+- Route Tables
+- Internet Gateway
+- NAT Gateway
+- Security Groups
+- Network ACLs
+
+Purpose:
+
+- Network isolation
+- Secure communication
+- Controlled access
+
+---
+
+# ⚙️ Compute
+
+## Amazon ECS / EC2
+
+Runs the CloudVox application.
+
+Responsibilities:
+
+- Host application containers
+- Process user requests
+- Scale application workloads
+
+Features:
+
+- Docker container deployment
+- Load balancing
+- Auto scaling
+
+---
+
+# 🚦 Load Balancing
+
+## Application Load Balancer (ALB)
+
+Distributes incoming traffic across application instances.
+
+Provides:
+
+- High availability
+- Health checks
+- Traffic distribution
+
+---
+
+# 📦 Storage
+
+## Amazon S3
+
+Stores user uploaded files.
+
+Features:
+
+- Private bucket
+- Encryption enabled
+- Versioning
+- Lifecycle policies
+- IAM-controlled access
+
+
+Example:
+
+```
+User Upload
+
+     |
+     v
+
+CloudVox API
+
+     |
+     v
+
+Private S3 Bucket
+
+     |
+     v
+
+Encrypted Storage
 ```
 
 ---
 
-## 🔐 Encryption Flow
+# 🗄️ Database
 
-```mermaid
-flowchart TD
-    UF[User File] --> SB[S3 Bucket]
-    SB --> KMS[AWS KMS Encryption Key]
-    KMS --> ES[Encrypted Storage]
+## Amazon RDS
+
+Stores application data.
+
+Database contains:
+
+- User accounts
+- Authentication information
+- File metadata
+- Storage information
+
+
+Features:
+
+- Automated backups
+- Encryption
+- Private subnet deployment
+
+---
+
+# 🔐 Security Architecture
+
+CloudVox follows AWS security best practices.
+
+---
+
+# Identity and Access Management
+
+## AWS IAM
+
+Implemented using:
+
+- Least privilege access
+- IAM roles
+- Service permissions
+- Restricted policies
+
+
+Example:
+
+Application can:
+
+```
+✔ Upload files to S3
+✔ Read file metadata
+✔ Access database
+```
+
+Application cannot:
+
+```
+✘ Delete infrastructure
+✘ Modify IAM users
+✘ Access unrelated resources
 ```
 
 ---
 
-## 🚀 CI/CD Pipeline
+# Data Encryption
 
-```mermaid
-flowchart TD
-    Dev[Developer] --> Repo[GitHub Repository]
-    Repo --> GA[GitHub Actions]
-    GA --> Tests[Run Tests + Terraform Validate]
-    Tests --> Build[Build Docker Image]
-    Build --> ECR[Push to Amazon ECR]
-    ECR --> Deploy[Deploy to ECS]
-    Deploy --> Health[Health Check]
-    Health --> Prod[Production Release]
+## AWS KMS
+
+Used for encryption management.
+
+Protects:
+
+- S3 objects
+- Database storage
+- Sensitive application data
+
+
+Encryption flow:
+
+```
+User File
+
+   |
+
+S3 Bucket
+
+   |
+
+KMS Encryption Key
+
+   |
+
+Encrypted Storage
 ```
 
 ---
 
-## 🐳 Container Architecture
+# Secrets Management
 
-```mermaid
-flowchart TD
-    subgraph Cloudox
-        direction TB
-        FE[Frontend Container]
-        BE[Backend API Container]
-    end
-    FE <--> BE
+## AWS Secrets Manager
+
+Stores sensitive information:
+
+- Database passwords
+- API keys
+- Application secrets
+
+
+Benefits:
+
+- No secrets inside code
+- Automatic rotation
+- Secure access
+
+---
+
+# 🛡️ Security Monitoring
+
+## AWS CloudTrail
+
+Tracks:
+
+- API activity
+- User actions
+- Resource changes
+
+
+---
+
+## Amazon GuardDuty
+
+Provides:
+
+- Threat detection
+- Suspicious activity analysis
+- Security findings
+
+
+---
+
+## AWS Config
+
+Provides:
+
+- Resource compliance checking
+- Configuration tracking
+- Security auditing
+
+
+---
+
+## Amazon CloudWatch
+
+Provides:
+
+- Application logs
+- Infrastructure metrics
+- Alerts
+- Dashboards
+
+---
+
+# 🚀 CI/CD Pipeline
+
+CloudVox uses GitHub Actions to automate deployment.
+
+Pipeline workflow:
+
+```
+Developer
+
+    |
+    |
+    v
+
+GitHub Repository
+
+    |
+    |
+    v
+
+GitHub Actions
+
+    |
+    |
+    +----------------+
+    |                |
+    v                v
+
+Run Tests       Terraform Validate
+
+    |
+    |
+    v
+
+Build Docker Image
+
+    |
+    |
+    v
+
+Push Image to Amazon ECR
+
+    |
+    |
+    v
+
+Deploy to ECS
+
+    |
+    |
+    v
+
+Health Check
+
+    |
+    |
+    v
+
+Production Release
 ```
 
 ---
 
-## 🏗️ Project Structure
+# 🐳 Container Architecture
 
-```mermaid
-mindmap
-  root((Cloudox))
-    app
-      frontend
-      backend
-    terraform
-      main.tf
-      provider.tf
-      variables.tf
-      outputs.tf
-      modules
-        vpc
-        ecs
-        alb
-        rds
-        s3
-        iam
-        monitoring
-    docker
-    .github
-      workflows
-        deploy.yml
-    README.md
+CloudVox uses Docker containers.
+
+Example:
+
+```
+CloudVox
+
+├── Frontend Container
+│
+└── Backend API Container
+```
+
+Docker provides:
+
+- Consistent environments
+- Easy deployment
+- Application portability
+
+---
+
+# 🏗️ Infrastructure as Code
+
+Terraform manages all AWS infrastructure.
+
+Project structure:
+
+```
+cloudvox/
+
+├── app/
+
+├── terraform/
+
+│   ├── main.tf
+│   ├── provider.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   │
+│   └── modules/
+│       │
+│       ├── vpc/
+│       ├── ecs/
+│       ├── alb/
+│       ├── rds/
+│       ├── s3/
+│       ├── iam/
+│       └── monitoring/
+
+├── docker/
+
+├── .github/
+
+│   └── workflows/
+
+│       └── deploy.yml
+
+
+└── README.md
 ```
 
 ---
 
-## 🌐 AWS Services Used
+# 🌎 Application Features
 
-### Networking
-- **Amazon VPC** – Isolated network with public/private subnets, NAT Gateway, Security Groups, NACLs
+## User Features
 
-### Compute
-- **Amazon ECS / EC2** – Runs containerized application with auto scaling
+- User registration
+- User login
+- Upload files
+- Download files
+- Delete files
+- File management
+- Storage dashboard
 
-### Load Balancing
-- **Application Load Balancer (ALB)** – Traffic distribution and health checks
-
-### Storage
-- **Amazon S3** – Secure, encrypted, versioned file storage
-
-### Database
-- **Amazon RDS** – Stores user data and file metadata (private subnet)
 
 ---
 
-## 🔐 Security Architecture
+## Future Features
 
-- **IAM** – Least privilege roles and policies
-- **KMS** – Encryption at rest for S3 and RDS
-- **Secrets Manager** – Secure storage of credentials
-- **CloudTrail** – API activity logging
-- **GuardDuty** – Threat detection
-- **AWS Config** – Compliance monitoring
-- **CloudWatch** – Metrics, logs, and alarms
-
----
-
-## 🌎 Application Features
-
-### Current Features
-- User registration & login
-- File upload, download & delete
-- File management dashboard
-
-### Future Features
 - File sharing links
-- Storage quotas
+- User storage limits
 - File preview
-- AI-powered search
+- Mobile application
 - Multi-region backup
+- Kubernetes deployment
+- AI-powered search
 
 ---
 
-## 🛠️ Technology Stack
+# 🛠️ Technology Stack
 
-**Frontend:** HTML, CSS, JavaScript (React planned)  
-**Backend:** Python Flask / Node.js  
-**Infrastructure:** Terraform  
-**Containers:** Docker  
-**CI/CD:** GitHub Actions  
-**Cloud:** AWS (ECS, S3, RDS, etc.)
+## Frontend
+
+- HTML
+- CSS
+- JavaScript
+- React (Future)
+
+
+## Backend
+
+- Python Flask / Node.js
+
+
+## Cloud Platform
+
+- Amazon Web Services
+
+
+## Infrastructure
+
+- Terraform
+
+
+## Containers
+
+- Docker
+
+
+## CI/CD
+
+- GitHub Actions
+
+
+## Database
+
+- Amazon RDS
+
+
+## Storage
+
+- Amazon S3
+
 
 ---
 
-## 📅 Development Roadmap
+# 📅 Development Roadmap
 
-### Phase 1 — Application Development
-- [ ] Build frontend
+## Phase 1 — Application Development
+
+- [ ] Build CloudVox frontend
 - [ ] Create backend API
 - [ ] Implement authentication
-- [ ] Implement file upload/download
+- [ ] Implement file upload
 
-### Phase 2 — Docker
-- [ ] Create Dockerfile(s)
-- [ ] Build and test containers locally
-
-### Phase 3 — AWS Infrastructure
-- [ ] VPC + Networking
-- [ ] ECS + ALB deployment
-- [ ] RDS + S3 configuration
-
-### Phase 4 — CI/CD
-- [ ] GitHub Actions workflow
-- [ ] Automated build, push to ECR, deploy to ECS
-
-### Phase 5 — Security
-- [ ] IAM roles & policies
-- [ ] KMS encryption
-- [ ] Secrets Manager integration
-- [ ] Enable CloudTrail, GuardDuty, Config
-
-### Phase 6 — Monitoring
-- [ ] CloudWatch dashboards & alerts
 
 ---
 
-## 📊 Skills Demonstrated
+## Phase 2 — Docker
 
-| Skill                  | Implementation                     |
-|------------------------|------------------------------------|
-| AWS Architecture       | Production-grade cloud design      |
-| Terraform              | Infrastructure as Code             |
-| Docker                 | Containerization                   |
-| GitHub Actions         | CI/CD Pipeline                     |
-| ECS                    | Container orchestration            |
-| S3 + RDS               | Storage & Database                 |
-| IAM + KMS              | Security & Encryption              |
-| CloudWatch + GuardDuty | Monitoring & Threat Detection      |
+- [ ] Create Dockerfile
+- [ ] Build containers
+- [ ] Test locally
+
 
 ---
 
-## 👨‍💻 Author
-**Rodhel N. Condicion**  
-*Cloud Engineer Portfolio Project*
+## Phase 3 — AWS Infrastructure
+
+- [ ] Create VPC
+- [ ] Configure networking
+- [ ] Deploy ECS/EC2
+- [ ] Configure RDS
+- [ ] Configure S3
+
 
 ---
 
+## Phase 4 — CI/CD
+
+- [ ] Create GitHub Actions workflow
+- [ ] Build automated deployment
+- [ ] Push images to ECR
+- [ ] Deploy automatically
+
+
+---
+
+## Phase 5 — Security
+
+- [ ] Configure IAM
+- [ ] Enable encryption
+- [ ] Configure KMS
+- [ ] Enable CloudTrail
+- [ ] Enable GuardDuty
+- [ ] Configure Secrets Manager
+
+
+---
+
+## Phase 6 — Monitoring
+
+- [ ] CloudWatch dashboards
+- [ ] Application logging
+- [ ] Security alerts
+
+
+---
+
+# 📊 Skills Demonstrated
+
+CloudVox demonstrates:
+
+| Skill | Implementation |
+|---|---|
+| AWS Architecture | Production cloud design |
+| Terraform | Infrastructure automation |
+| Docker | Container deployment |
+| GitHub Actions | CI/CD pipeline |
+| ECS/EC2 | Application hosting |
+| S3 | Cloud storage |
+| RDS | Database management |
+| IAM | Security controls |
+| KMS | Encryption |
+| CloudTrail | Auditing |
+| GuardDuty | Threat detection |
+| CloudWatch | Monitoring |
+| Networking | VPC design |
+
+---
+
+# 👨‍💻 Author
+
+**Rodhel N. Condicion**
+
+Cloud Engineer Portfolio Project
+
+---
+
+# 📜 License
+
+This project is created for educational and portfolio purposes.
