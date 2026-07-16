@@ -250,5 +250,3 @@ mindmap
 
 ---
 
-## 📜 License
-This project is created for educational and portfolio purposes only.
