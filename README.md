@@ -1,12 +1,11 @@
-# ☁️ CloudVox
+# ☁️ CloudHoux
 ## Secure Cloud-Native File Storage Platform on AWS
-
 
 ---
 
 ## 📌 Overview
 
-**CloudVox** is a secure, scalable, and cloud-native file storage platform built on Amazon Web Services (AWS).
+**CloudHoux** is a secure, scalable, and cloud-native file storage platform built on Amazon Web Services (AWS).
 
 The platform allows users to securely upload, store, manage, and access files from anywhere while demonstrating modern Cloud Engineering practices.
 
@@ -20,7 +19,7 @@ This project focuses on:
 - Monitoring and Logging
 - Production Deployment Practices
 
-The goal of CloudVox is to simulate how real companies design, deploy, secure, and operate cloud-based applications.
+The goal of **CloudHoux** is to simulate how real companies design, deploy, secure, and operate cloud-based applications.
 
 ---
 
@@ -35,20 +34,20 @@ Traditional file storage solutions often face problems such as:
 - Data security concerns
 - Difficulty managing infrastructure
 
-CloudVox addresses these challenges by providing:
+**CloudHoux** addresses these challenges by providing:
 
 ✅ Secure file storage  
 ✅ Automated deployment pipeline  
 ✅ Scalable cloud infrastructure  
 ✅ Encrypted data protection  
 ✅ Monitoring and auditing  
-✅ Production-ready architecture  
+✅ Production-ready architecture
 
 ---
 
-# 🏗️ CloudVox Architecture
+# 🏗️ CloudHoux Architecture
 
-```
+```text
                               Users
                                 |
                                 |
@@ -64,7 +63,7 @@ CloudVox addresses these challenges by providing:
                   Application Load Balancer
                                 |
                                 |
-                    CloudVox Application Layer
+                   CloudHoux Application Layer
                                 |
                  --------------------------------
                  |                              |
@@ -97,7 +96,7 @@ CloudWatch
 
 ## 🌐 Networking
 
-## Amazon VPC
+### Amazon VPC
 
 Provides a secure isolated network environment.
 
@@ -124,7 +123,7 @@ Purpose:
 
 ## Amazon ECS / EC2
 
-Runs the CloudVox application.
+Runs the **CloudHoux** application.
 
 Responsibilities:
 
@@ -136,7 +135,7 @@ Features:
 
 - Docker container deployment
 - Load balancing
-- Auto scaling
+- Auto Scaling
 
 ---
 
@@ -168,25 +167,18 @@ Features:
 - Lifecycle policies
 - IAM-controlled access
 
-
 Example:
 
-```
+```text
 User Upload
-
      |
      v
-
-CloudVox API
-
+CloudHoux API
      |
      v
-
 Private S3 Bucket
-
      |
      v
-
 Encrypted Storage
 ```
 
@@ -205,7 +197,6 @@ Database contains:
 - File metadata
 - Storage information
 
-
 Features:
 
 - Automated backups
@@ -216,13 +207,13 @@ Features:
 
 # 🔐 Security Architecture
 
-CloudVox follows AWS security best practices.
+**CloudHoux** follows AWS security best practices.
 
 ---
 
-# Identity and Access Management
+## Identity and Access Management
 
-## AWS IAM
+### AWS IAM
 
 Implemented using:
 
@@ -231,12 +222,11 @@ Implemented using:
 - Service permissions
 - Restricted policies
 
-
 Example:
 
 Application can:
 
-```
+```text
 ✔ Upload files to S3
 ✔ Read file metadata
 ✔ Access database
@@ -244,7 +234,7 @@ Application can:
 
 Application cannot:
 
-```
+```text
 ✘ Delete infrastructure
 ✘ Modify IAM users
 ✘ Access unrelated resources
@@ -252,9 +242,9 @@ Application cannot:
 
 ---
 
-# Data Encryption
+## Data Encryption
 
-## AWS KMS
+### AWS KMS
 
 Used for encryption management.
 
@@ -264,37 +254,32 @@ Protects:
 - Database storage
 - Sensitive application data
 
-
 Encryption flow:
 
-```
+```text
 User File
-
    |
-
+   v
 S3 Bucket
-
    |
-
+   v
 KMS Encryption Key
-
    |
-
+   v
 Encrypted Storage
 ```
 
 ---
 
-# Secrets Management
+## Secrets Management
 
-## AWS Secrets Manager
+### AWS Secrets Manager
 
 Stores sensitive information:
 
 - Database passwords
 - API keys
 - Application secrets
-
 
 Benefits:
 
@@ -314,7 +299,6 @@ Tracks:
 - User actions
 - Resource changes
 
-
 ---
 
 ## Amazon GuardDuty
@@ -325,7 +309,6 @@ Provides:
 - Suspicious activity analysis
 - Security findings
 
-
 ---
 
 ## AWS Config
@@ -335,7 +318,6 @@ Provides:
 - Resource compliance checking
 - Configuration tracking
 - Security auditing
-
 
 ---
 
@@ -352,61 +334,44 @@ Provides:
 
 # 🚀 CI/CD Pipeline
 
-CloudVox uses GitHub Actions to automate deployment.
+**CloudHoux** uses GitHub Actions to automate deployment.
 
 Pipeline workflow:
 
-```
+```text
 Developer
-
     |
     |
     v
-
 GitHub Repository
-
     |
     |
     v
-
 GitHub Actions
-
-    |
     |
     +----------------+
     |                |
     v                v
-
-Run Tests       Terraform Validate
-
+Run Tests     Terraform Validate
     |
     |
     v
-
 Build Docker Image
-
     |
     |
     v
-
 Push Image to Amazon ECR
-
     |
     |
     v
-
 Deploy to ECS
-
     |
     |
     v
-
 Health Check
-
     |
     |
     v
-
 Production Release
 ```
 
@@ -414,12 +379,12 @@ Production Release
 
 # 🐳 Container Architecture
 
-CloudVox uses Docker containers.
+**CloudHoux** uses Docker containers.
 
 Example:
 
-```
-CloudVox
+```text
+CloudHoux
 
 ├── Frontend Container
 │
@@ -440,20 +405,16 @@ Terraform manages all AWS infrastructure.
 
 Project structure:
 
-```
-cloudvox/
+```text
+cloudhoux/
 
 ├── app/
-
 ├── terraform/
-
 │   ├── main.tf
 │   ├── provider.tf
 │   ├── variables.tf
 │   ├── outputs.tf
-│   │
 │   └── modules/
-│       │
 │       ├── vpc/
 │       ├── ecs/
 │       ├── alb/
@@ -461,16 +422,10 @@ cloudvox/
 │       ├── s3/
 │       ├── iam/
 │       └── monitoring/
-
 ├── docker/
-
 ├── .github/
-
 │   └── workflows/
-
 │       └── deploy.yml
-
-
 └── README.md
 ```
 
@@ -487,7 +442,6 @@ cloudvox/
 - Delete files
 - File management
 - Storage dashboard
-
 
 ---
 
@@ -512,41 +466,33 @@ cloudvox/
 - JavaScript
 - React (Future)
 
-
 ## Backend
 
 - Python Flask / Node.js
 
-
 ## Cloud Platform
 
-- Amazon Web Services
-
+- Amazon Web Services (AWS)
 
 ## Infrastructure
 
 - Terraform
 
-
 ## Containers
 
 - Docker
-
 
 ## CI/CD
 
 - GitHub Actions
 
-
 ## Database
 
 - Amazon RDS
 
-
 ## Storage
 
 - Amazon S3
-
 
 ---
 
@@ -554,11 +500,10 @@ cloudvox/
 
 ## Phase 1 — Application Development
 
-- [ ] Build CloudVox frontend
+- [ ] Build CloudHoux frontend
 - [ ] Create backend API
 - [ ] Implement authentication
 - [ ] Implement file upload
-
 
 ---
 
@@ -567,7 +512,6 @@ cloudvox/
 - [ ] Create Dockerfile
 - [ ] Build containers
 - [ ] Test locally
-
 
 ---
 
@@ -579,16 +523,14 @@ cloudvox/
 - [ ] Configure RDS
 - [ ] Configure S3
 
-
 ---
 
 ## Phase 4 — CI/CD
 
 - [ ] Create GitHub Actions workflow
 - [ ] Build automated deployment
-- [ ] Push images to ECR
+- [ ] Push images to Amazon ECR
 - [ ] Deploy automatically
-
 
 ---
 
@@ -601,48 +543,33 @@ cloudvox/
 - [ ] Enable GuardDuty
 - [ ] Configure Secrets Manager
 
-
 ---
 
 ## Phase 6 — Monitoring
 
-- [ ] CloudWatch dashboards
-- [ ] Application logging
-- [ ] Security alerts
-
+- [ ] Create CloudWatch dashboards
+- [ ] Configure application logging
+- [ ] Configure security alerts
 
 ---
 
 # 📊 Skills Demonstrated
 
-CloudVox demonstrates:
+**CloudHoux** demonstrates:
 
 | Skill | Implementation |
-|---|---|
+|--------|----------------|
 | AWS Architecture | Production cloud design |
 | Terraform | Infrastructure automation |
 | Docker | Container deployment |
 | GitHub Actions | CI/CD pipeline |
 | ECS/EC2 | Application hosting |
-| S3 | Cloud storage |
-| RDS | Database management |
-| IAM | Security controls |
-| KMS | Encryption |
-| CloudTrail | Auditing |
-| GuardDuty | Threat detection |
-| CloudWatch | Monitoring |
-| Networking | VPC design |
+| Amazon S3 | Cloud object storage |
+| Amazon RDS | Database management |
+| IAM | Identity and access management |
+| AWS KMS | Data encryption |
+| AWS CloudTrail | Auditing |
+| Amazon GuardDuty | Threat detection |
+| Amazon CloudWatch | Monitoring and logging |
+| VPC Networking | Secure cloud networking |
 
----
-
-# 👨‍💻 Author
-
-**Rodhel N. Condicion**
-
-Cloud Engineer Portfolio Project
-
----
-
-# 📜 License
-
-This project is created for educational and portfolio purposes.
