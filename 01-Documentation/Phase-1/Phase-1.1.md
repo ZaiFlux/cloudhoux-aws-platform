@@ -12,7 +12,7 @@ The first step is to create a GitHub repository for the project. This repository
 After creating the repository, I clone it to my WSL (Windows Subsystem for Linux). I choose to work in WSL because it is more convenient when using cloud engineering tools like Terraform, Docker, AWS CLI, and Git.
 
 ```bash
-git clone https://github.com/<username>/cloudhoux-aws-platform.git
+git clone https://github.com/ZaiFlux/cloudhoux-aws-platform.git
 ```
 
 Go to the project folder.
@@ -21,9 +21,7 @@ Go to the project folder.
 cd ~/cloudhoux-aws-platform
 ```
 
-> **Figure 1.2 – Repository Cloned to WSL**
->
-> *Insert a screenshot of the Ubuntu terminal after cloning the repository.*
+![Figure 1.2 - Cloned Repository in WSL](images/cloned_repo.png)
 
 ---
 
@@ -37,10 +35,8 @@ code .
 
 This command opens the current folder in VS Code while connected to WSL. Most of my work is done in this environment because it is easier to manage the project.
 
-> **Figure 1.3 – VS Code Connected to WSL**
->
-> *Insert a screenshot of VS Code connected to WSL.*
-
+**Figure 1.3 – VS Code Connected to WSL**
+![Figure 1.3 - VS Code Connected to WSL](images/vscode-connected-wsl.png)
 ---
 
 ## 4. My Daily Workflow
@@ -93,10 +89,6 @@ git push origin main
 
 Following the same workflow helps me keep the project organized and updated.
 
-> **Figure 1.4 – Daily Workflow**
->
-> *Insert a screenshot of the workflow or WSL terminal.*
-
 ---
 
 ## 5. Create the Main Folders
@@ -116,9 +108,9 @@ The **02-CloudHoux** folder is where I build the actual project.
 
 This makes the repository cleaner and easier to manage.
 
-> **Figure 1.5 – Main Project Folders**
->
-> *Insert a screenshot of the folder structure.*
+**Figure 1.5 – Main Project Folders**
+![Figure 1.5 - Main Project Folders](images/2main_folder.png)
+
 
 ---
 
