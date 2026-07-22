@@ -135,4 +135,4 @@ This is the starting point of the CloudHoux project.
 
 ![Milestone Snapshot](images/milestone_snapshot.jpg)
 
-*Figure 1.7 – Celebrating the successful completion of Phase 1.1.*
+*Figure 1.7 – Celebrating the successful completion of Phase 1.1 😆.*
