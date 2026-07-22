@@ -35,7 +35,6 @@ code .
 
 This command opens the current folder in VS Code while connected to WSL. Most of my work is done in this environment because it is easier to manage the project.
 
-**Figure 1.3 – VS Code Connected to WSL**
 ![Figure 1.3 - VS Code Connected to WSL](images/vscode-connected-wsl.png)
 ---
 
