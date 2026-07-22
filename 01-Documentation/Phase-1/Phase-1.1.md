@@ -7,7 +7,8 @@
 The first step is to create a GitHub repository for the project. This repository is where I store all the project files and source code. It also helps me keep track of all the changes that I make during development.
 
 ![Figure 1.1 - GitHub Repository](images/cloudhoux_repo.png)
----
+
+*Figure 1.1 – GitHub Repository*
 
 ## 2. Clone the Repository to WSL
 
@@ -25,7 +26,7 @@ cd ~/cloudhoux-aws-platform
 
 ![Figure 1.2 - Cloned Repository in WSL](images/cloned_repo.png)
 
----
+*Figure 1.2 – Cloned Repository in WSL*
 
 ## 3. Connect VS Code to WSL
 
@@ -38,7 +39,8 @@ code .
 This command opens the current folder in VS Code while connected to WSL. Most of my work is done in this environment because it is easier to manage the project.
 
 ![Figure 1.3 - VS Code Connected to WSL](images/vscode-connected-wsl.png)
----
+
+*Figure 1.3 – VS Code Connected to WSL*
 
 ## 4. My Daily Workflow
 
@@ -51,46 +53,28 @@ Start PC
 Open Ubuntu (WSL)
       │
       ▼
-Go to the project folder
-
 cd ~/cloudhoux-aws-platform
-
       │
       ▼
-Open VS Code
-
 code .
-
       │
       ▼
 VS Code opens connected to WSL
-
       │
       ▼
 Develop the project
-
       │
       ▼
-Git Add
-
 git add .
-
       │
       ▼
-Commit Changes
-
 git commit -m "Commit message"
-
       │
       ▼
-Push to GitHub
-
 git push origin main
 ```
 
 Following the same workflow helps me keep the project organized and updated.
-
----
 
 ## 5. Create the Main Folders
 
@@ -109,11 +93,9 @@ The **02-CloudHoux** folder is where I build the actual project.
 
 This makes the repository cleaner and easier to manage.
 
-**Figure 1.5 – Main Project Folders**
 ![Figure 1.5 - Main Project Folders](images/2main_folder.png)
 
-
----
+*Figure 1.5 – Main Project Folders*
 
 ## 6. Build the Project Folder Structure
 
@@ -131,7 +113,11 @@ This is the starting point of the CloudHoux project.
 
 ![Figure 1.6 - Project Folder Structure](images/folder_structure.png)
 
+*Figure 1.6 – Project Folder Structure*
+
 ## 📸 Milestone Snapshot
+
+After completing Phase 1.1, I successfully finished setting up the repository, development environment, and initial project structure. This is the first milestone of the CloudHoux project.
 
 ![Milestone Snapshot](images/milestone_snapshot.jpg)
 
