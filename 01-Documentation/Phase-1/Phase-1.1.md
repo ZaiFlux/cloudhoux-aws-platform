@@ -127,6 +127,10 @@ git push origin main
 
 This is the starting point of the CloudHoux project.
 
-> **Figure 1.6 – Project Structure Uploaded to GitHub**
->
-> *Insert a screenshot of the GitHub repository after pushing the project structure.*
+![Figure 1.6 - Project Folder Structure](images/folder_structure.png)
+
+## 📸 Milestone Snapshot
+
+![Milestone Snapshot](images/milestone_snapshot.jpg)
+
+*Figure 1.7 – Celebrating the successful completion of Phase 1.1.*
