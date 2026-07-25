@@ -1,0 +1,68 @@
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    min-height: 100vh;
+    background: white;
+    padding: 20px;
+}
+
+.topbar {
+    display: flex;
+    align-items: flex-start;
+}
+
+.logo {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2563eb;
+    letter-spacing: 1px;
+    cursor: pointer;
+    
+}
+
+.search_box {
+    display: flex;
+    margin-left: 350px;
+}
+
+.search_box input {
+    width: 450px;
+}
+
+.profile {
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    margin-left: auto;
+    margin-top: -5px;
+
+    border-radius: 50%;
+    background: #d1d5db;
+    
+}
+
+.profile svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+}
+
+
+.left_nav_bar {
+     display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 60px;
+    margin-left: 20px;
+
+}
