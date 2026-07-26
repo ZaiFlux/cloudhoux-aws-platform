@@ -30,7 +30,6 @@ This ensures that Visual Studio Code workspace settings are not pushed to the Gi
 
 ## Milestone Snapshot
 
-> Insert a screenshot below showing the completed milestone for this phase.
 
 ![Phase 2.1 Milestone Snapshot](./images/f2f8c43f-6fed-4c5a-b29a-b80acad14ab5.jpg)
 
