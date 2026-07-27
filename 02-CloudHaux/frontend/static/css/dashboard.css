@@ -2,6 +2,10 @@
    RESET
 ========================== */
 
+html{
+    scroll-behavior: smooth;
+}
+
 *{
     margin: 0;
     padding: 0;
@@ -17,6 +21,7 @@ body{
 /* ==========================
    TOPBAR
 ========================== */
+
 
 .topbar{
     position: fixed;
@@ -107,18 +112,27 @@ body{
     background: white;
 }
 
-.left_nav_bar div{
+.left_nav_bar a{
+
+    display:block;
+
     padding:12px 16px;
 
     border-radius:10px;
+
+    text-decoration:none;
+
+    color:#111827;
 
     cursor:pointer;
 
     transition:.2s;
 }
 
-.left_nav_bar div:hover{
+.left_nav_bar a:hover{
+
     background:#f3f4f6;
+
 }
 
 /* ==========================
@@ -140,6 +154,13 @@ body{
    CARDS
 ========================== */
 
+.all_files,
+.recent_files,
+.favorites,
+.trash{
+    scroll-margin-top: 90px;
+}
+
 .recent_files,
 .favorites,
 .all_files,
@@ -148,7 +169,7 @@ body{
     width:100%;
     max-width:1000px;
 
-    min-height:400px;
+    min-height:100vh;
 
     padding:20px;
 
@@ -161,7 +182,7 @@ body{
 .recent_files h2,
 .favorites h2,
 .all_files h2,
-.trash{
+.trash h2{
 
     font-size:1.3rem;
     margin-bottom:15px;
