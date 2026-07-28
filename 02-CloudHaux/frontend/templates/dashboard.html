@@ -25,6 +25,15 @@
     </header>
 
     <nav class="left_nav_bar">
+        <button type="button" class="add_file_btn" id="addFileBtn">
+            + Add Files
+        </button>
+        <input
+            type="file"
+            id="fileInput"
+            hidden
+            multiple
+        >
         <a href="#all_files">All Files</a>
         <a href="#recent_files">Recent</a>
         <a href="#favorites">Favorites</a>
@@ -33,29 +42,29 @@
 
     <main class="dashboard_content">
 
-        <div class="main_content">
-            <section id="recent_files" class="recent_files">
-                <h2>Recent Files</h2>
-            </section>
-            <section id="favorites" class="favorites">
-                <h2>Favorites</h2>
-            </section>
-            <section id="all_files" class="all_files">
-                <h2>All Files</h2>
-            </section>
-            <section id="trash" class="trash">
-                <h2>Trash</h2>
-            </section>
-        </div>
+    <div class="main_content">
+        <section id="recent_files" class="recent_files">
+            <h2>Recent Files</h2>
+        </section>
 
-        <aside class="right_panel">
+        <section id="favorites" class="favorites">
+            <h2>Favorites</h2>
+        </section>
 
+        <section id="all_files" class="all_files">
+            <h2>All Files</h2>
+        </section>
 
-        </aside>
+        <section id="trash" class="trash">
+            <h2>Trash</h2>
+        </section>
+    </div>
+
+    <aside class="right_panel"></aside>
+
 
     </main>
 
-</body>
-
+    <script src="../static/js/dashboard.js"></script>
 </body>
 </html>

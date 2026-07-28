@@ -167,7 +167,6 @@ body{
 .trash {
 
     width:100%;
-    max-width:1000px;
 
     min-height:100vh;
 
@@ -179,6 +178,7 @@ body{
     background:white;
 }
 
+.add_files h2,
 .recent_files h2,
 .favorites h2,
 .all_files h2,
@@ -204,4 +204,26 @@ body{
     display: flex;
     flex-direction: column;
     gap: 40px;      
+}
+
+.add_file_btn {
+    width: 60%;
+    padding: 10px;
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: -20px;
+    text-align: left; 
+}
+
+.add_file_btn:hover {
+    background-color: #2563eb;
+}
+
+.add_file_btn:active {
+    transform: scale(0.98);
 }
