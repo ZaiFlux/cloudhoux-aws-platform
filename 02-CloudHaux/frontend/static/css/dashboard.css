@@ -227,3 +227,39 @@ body{
 .add_file_btn:active {
     transform: scale(0.98);
 }
+
+/* ==========================
+   FILE LIST
+========================== */
+
+#fileList{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.file_card{
+    padding: 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background: #f9fafb;
+    transition: 0.2s;
+}
+
+.file_card:hover{
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+}
+
+.file_card h3{
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: #111827;
+    word-break: break-word;
+}
+
+.file_card p{
+    font-size: 14px;
+    color: #6b7280;
+}
