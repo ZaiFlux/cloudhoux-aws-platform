@@ -7,6 +7,10 @@
     <link rel ="stylesheet" href="../static/css/dashboard.css">
 
 </head>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+
 <body>
     <header class="topbar">
 
@@ -14,8 +18,11 @@
             CloudHaux
         </div>
 
-        <div class="search_box">
-            <input type="search" placeholder="Search files...">
+       <div class="search_box">
+            <div class="search-container">
+                <input type="search" placeholder="Search files...">
+                <i class="fas fa-search search-icon"></i>
+            </div>
         </div>
 
         <div class="profile">
@@ -60,7 +67,35 @@
 
     </div>
 
-    <aside class="right_panel"></aside>
+    <aside class="right_panel">
+
+            <div class="button_group">
+
+                <button class="category_btn images">
+                     Images
+                </button>
+
+                <button class="category_btn documents">
+                     Documents
+                </button>
+
+                <button class="category_btn media_files">
+                     Media
+                </button>
+
+                <button class="category_btn audio_files">
+                     Audio
+                </button>
+
+                <button class="category_btn safe_vault">
+                     Safe Vault
+                </button>
+
+            </div>
+
+        </aside>
+
+
 
 
     </main>

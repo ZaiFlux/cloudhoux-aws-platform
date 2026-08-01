@@ -263,3 +263,60 @@ body{
     font-size: 14px;
     color: #6b7280;
 }
+
+.right_panel{
+    border-left:1px solid #ddd;
+
+    padding-left:30px;
+
+    display:flex;
+    flex-direction:column;
+}
+.button_group{
+    margin-top:300px;      /* Move only the buttons */
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+}
+
+.category_btn{
+    display:flex;
+    align-items:center;
+    gap:14px;
+
+    width:100%;
+    padding:18px;
+
+    border:none;
+    border-radius:16px;
+
+    background:#f7f7f7;
+
+    font-size:17px;
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.25s;
+}
+
+.category_btn:hover{
+    background:#2563eb;
+    color:white;
+
+    transform:translateX(6px);
+
+    box-shadow:0 10px 20px rgba(37,99,235,.25);
+}
+
+.search-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    pointer-events: none;
+    transition: color 0.2s;
+    font-size: 16px;
+    margin-right:580px;
+}
