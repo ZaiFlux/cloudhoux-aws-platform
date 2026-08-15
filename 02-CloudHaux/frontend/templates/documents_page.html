@@ -22,7 +22,7 @@
       flex-direction: column;
     }
 
-    /* ----- TOPBAR (unchanged) ----- */
+    /* ----- TOPBAR ----- */
     .topbar {
       position: fixed;
       top: 0;
@@ -103,7 +103,7 @@
       height: 20px;
     }
 
-    /* ----- LEFT NAV (unchanged) ----- */
+    /* ----- LEFT NAV (RETAINED) ----- */
     .left_nav_bar {
       position: fixed;
       top: 90px;
@@ -157,7 +157,7 @@
       transform: scale(0.98);
     }
 
-    /* ----- DASHBOARD LAYOUT ----- */
+    /* ----- DASHBOARD LAYOUT (with right panel) ----- */
     .dashboard_content {
       margin-left: 220px;
       margin-top: 70px;
@@ -174,8 +174,8 @@
       gap: 30px;
     }
 
-    /* ----- DOCUMENT VIEWER (replaces image viewer) ----- */
-    .document_viewer {
+    /* ----- AUDIO VIEWER – empty state ----- */
+    .audio_viewer {
       width: 100%;
       min-height: 80vh;
       background: white;
@@ -186,157 +186,61 @@
       flex-direction: column;
     }
 
-    .document_header {
+    .audio_header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
       margin-bottom: 25px;
       padding-bottom: 15px;
-      border-bottom: 1px solid #e5e7eb;
+      /* remove bottom border so no horizontal line under "Audio" */
+      border-bottom: none;
     }
 
-    .document_header h2 {
+    .audio_header h2 {
       font-size: 1.3rem;
       color: #111827;
-      flex: 1;
       text-align: center;
     }
 
-    .back_btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 8px;
-      background: #f3f4f6;
-      color: #374151;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.2s;
+    /* hide back button, action buttons */
+    .back_btn,
+    .audio_actions {
+      display: none !important;
     }
 
-    .back_btn:hover {
-      background: #e5e7eb;
-      transform: translateX(-3px);
+    /* hide metadata footer (horizontal line) */
+    .image_info {
+      display: none !important;
     }
 
-    .doc_actions {
-      display: flex;
-      gap: 10px;
-    }
-
-    .action_btn {
-      padding: 8px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      background: white;
-      color: #6b7280;
-      cursor: pointer;
-      transition: 0.2s;
-      font-size: 16px;
-    }
-
-    .action_btn:hover {
-      background: #f3f4f6;
-      border-color: #3b82f6;
-      color: #3b82f6;
-      transform: translateY(-2px);
-    }
-
-    /* document list */
-    .document_list {
+    /* audio grid – empty state with message */
+    .audio_grid {
       flex: 1;
       display: flex;
-      flex-direction: column;
-      gap: 16px;
+      align-items: center;
+      justify-content: center;
       background: #f9fafb;
       border-radius: 12px;
       padding: 20px;
       min-height: 400px;
       border: 1px solid #e5e7eb;
-    }
-
-    .doc_item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: white;
-      padding: 16px 20px;
-      border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-      border: 1px solid #edf2f7;
-      transition: 0.2s;
-    }
-
-    .doc_item:hover {
-      border-color: #3b82f6;
-      background: #fafcff;
-    }
-
-    .doc_icon_name {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-    }
-
-    .doc_icon_name i {
-      font-size: 28px;
-      color: #2563eb;
-      width: 32px;
-      text-align: center;
-    }
-
-    .doc_icon_name .doc_name {
-      font-weight: 600;
-      color: #111827;
-      font-size: 16px;
-    }
-
-    .doc_icon_name .doc_ext {
-      font-size: 13px;
       color: #6b7280;
-      background: #f1f5f9;
-      padding: 2px 10px;
-      border-radius: 20px;
-      margin-left: 6px;
+      font-size: 1.2rem;
     }
 
-    .doc_meta {
-      display: flex;
-      align-items: center;
-      gap: 24px;
-      color: #6b7280;
-      font-size: 14px;
+    .audio_grid::before {
+      content: "No audio files";
+      font-weight: 400;
+      letter-spacing: 0.3px;
+      opacity: 0.7;
     }
 
-    .doc_meta span {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    /* hide any leftover audio items */
+    .audio_item {
+      display: none;
     }
 
-    .doc_status_badge {
-      background: #dbeafe;
-      color: #1e40af;
-      padding: 4px 14px;
-      border-radius: 30px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .doc_status_badge.public {
-      background: #d1fae5;
-      color: #065f46;
-    }
-
-    .doc_status_badge.private {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    /* ----- RIGHT PANEL (unchanged) ----- */
+    /* ----- RIGHT PANEL (RETAINED) ----- */
     .right_panel {
       border-left: 1px solid #ddd;
       padding-left: 30px;
@@ -409,7 +313,7 @@
       background: #a0a7b0;
     }
 
-    /* ----- RESPONSIVE (mirror image page) ----- */
+    /* ----- RESPONSIVE ----- */
     @media (max-width: 1024px) {
       .dashboard_content {
         grid-template-columns: 1fr 250px;
@@ -458,46 +362,28 @@
         padding: 14px;
         font-size: 14px;
       }
-      .document_header {
+      .audio_header {
         flex-wrap: wrap;
         gap: 10px;
       }
-      .document_header h2 {
+      .audio_header h2 {
         order: 3;
         width: 100%;
         text-align: center;
       }
-      .doc_item {
-        flex-wrap: wrap;
-        gap: 12px;
-      }
-      .doc_meta {
-        flex-wrap: wrap;
-        gap: 10px;
+      .audio_grid {
+        min-height: 300px;
+        font-size: 1rem;
       }
     }
 
     @media (max-width: 480px) {
-      .document_list {
-        padding: 12px;
+      .audio_grid {
         min-height: 200px;
+        font-size: 0.9rem;
       }
-      .doc_item {
-        padding: 14px;
-      }
-      .doc_icon_name i {
-        font-size: 22px;
-      }
-      .action_btn {
-        padding: 6px 10px;
-        font-size: 14px;
-      }
-      .document_header h2 {
+      .audio_header h2 {
         font-size: 1rem;
-      }
-      .back_btn {
-        padding: 6px 12px;
-        font-size: 12px;
       }
     }
   </style>
@@ -520,7 +406,7 @@
     </div>
   </header>
 
-  <!-- ===== LEFT NAV ===== -->
+  <!-- ===== LEFT NAV (RETAINED) ===== -->
   <nav class="left_nav_bar">
     <button type="button" class="add_file_btn">+ Add Files</button>
     <a href="#all_files">All Files</a>
@@ -529,112 +415,24 @@
     <a href="#trash">Trash</a>
   </nav>
 
-  <!-- ===== MAIN CONTENT ===== -->
+  <!-- ===== MAIN CONTENT (empty body, but both side panels retained) ===== -->
   <main class="dashboard_content">
     <div class="main_content">
 
-      <!-- DOCUMENT VIEWER (replaces image viewer) -->
-      <section class="document_viewer">
-        <div class="document_header">
-          <button class="back_btn">
-            <i class="fas fa-arrow-left"></i> Back
-          </button>
+      <!-- AUDIO VIEWER – empty state, no back button, no actions, no horizontal line -->
+      <section class="audio_viewer">
+        <div class="audio_header">
           <h2>Documents</h2>
-          <div class="doc_actions">
-            <button class="action_btn" title="Download"><i class="fas fa-download"></i></button>
-            <button class="action_btn" title="Favorite"><i class="fas fa-star"></i></button>
-            <button class="action_btn" title="Share"><i class="fas fa-share-alt"></i></button>
-            <button class="action_btn" title="Delete"><i class="fas fa-trash"></i></button>
-          </div>
         </div>
 
-        <!-- Document list (instead of image) -->
-        <div class="document_list">
-          <!-- item 1 -->
-          <div class="doc_item">
-            <div class="doc_icon_name">
-              <i class="fas fa-file-pdf"></i>
-              <span class="doc_name">Quarterly_Report_2026</span>
-              <span class="doc_ext">.pdf</span>
-            </div>
-            <div class="doc_meta">
-              <span><i class="far fa-calendar-alt"></i> Dec 10, 2026</span>
-              <span><i class="far fa-file"></i> 4.2 MB</span>
-              <span class="doc_status_badge public">Public</span>
-            </div>
-          </div>
-          <!-- item 2 -->
-          <div class="doc_item">
-            <div class="doc_icon_name">
-              <i class="fas fa-file-word"></i>
-              <span class="doc_name">Project_Proposal_v3</span>
-              <span class="doc_ext">.docx</span>
-            </div>
-            <div class="doc_meta">
-              <span><i class="far fa-calendar-alt"></i> Dec 8, 2026</span>
-              <span><i class="far fa-file"></i> 1.8 MB</span>
-              <span class="doc_status_badge private">Private</span>
-            </div>
-          </div>
-          <!-- item 3 -->
-          <div class="doc_item">
-            <div class="doc_icon_name">
-              <i class="fas fa-file-excel"></i>
-              <span class="doc_name">Budget_FY2026</span>
-              <span class="doc_ext">.xlsx</span>
-            </div>
-            <div class="doc_meta">
-              <span><i class="far fa-calendar-alt"></i> Dec 5, 2026</span>
-              <span><i class="far fa-file"></i> 3.1 MB</span>
-              <span class="doc_status_badge public">Public</span>
-            </div>
-          </div>
-          <!-- item 4 -->
-          <div class="doc_item">
-            <div class="doc_icon_name">
-              <i class="fas fa-file-powerpoint"></i>
-              <span class="doc_name">Product_Deck_2026</span>
-              <span class="doc_ext">.pptx</span>
-            </div>
-            <div class="doc_meta">
-              <span><i class="far fa-calendar-alt"></i> Dec 1, 2026</span>
-              <span><i class="far fa-file"></i> 6.7 MB</span>
-              <span class="doc_status_badge public">Public</span>
-            </div>
-          </div>
-          <!-- item 5 -->
-          <div class="doc_item">
-            <div class="doc_icon_name">
-              <i class="fas fa-file-alt"></i>
-              <span class="doc_name">Meeting_Notes_Nov</span>
-              <span class="doc_ext">.txt</span>
-            </div>
-            <div class="doc_meta">
-              <span><i class="far fa-calendar-alt"></i> Nov 28, 2026</span>
-              <span><i class="far fa-file"></i> 0.3 MB</span>
-              <span class="doc_status_badge private">Private</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- document info footer (like image info) -->
-        <div class="image_info" style="margin-top:20px; padding-top:20px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
-          <div class="info_left">
-            <h3 style="font-size:18px; color:#111827; margin-bottom:6px;">5 documents</h3>
-            <div class="image_meta" style="display:flex; gap:20px; color:#6b7280; font-size:14px;">
-              <span><i class="far fa-calendar-alt"></i> Updated Dec 10, 2026</span>
-              <span><i class="far fa-folder"></i> 16.1 MB total</span>
-            </div>
-          </div>
-          <div class="info_right" style="display:flex; gap:12px;">
-            <span class="file_type_badge" style="padding:6px 14px; border-radius:20px; font-size:13px; font-weight:600; background:#dbeafe; color:#1e40af;">Documents</span>
-            <span class="file_status" style="padding:6px 14px; border-radius:20px; font-size:13px; font-weight:600; background:#d1fae5; color:#065f46;">3 Public</span>
-          </div>
+        <!-- empty audio grid (no sample files) -->
+        <div class="audio_grid">
+          <!-- all .audio_item removed, grid shows "No audio files" via pseudo-element -->
         </div>
       </section>
     </div>
 
-    <!-- ===== RIGHT PANEL (unchanged) ===== -->
+    <!-- ===== RIGHT PANEL (RETAINED) ===== -->
     <aside class="right_panel">
       <div class="button_group">
         <button class="category_btn images"><i class="fas fa-image"></i> Images</button>
