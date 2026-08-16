@@ -16,72 +16,74 @@ body{
     min-height: 100vh;
     background: #ffffff;
     font-family: Arial, Helvetica, sans-serif;
+    overflow: hidden;
 }
 
 /* ==========================
    TOPBAR
 ========================== */
 
-
 .topbar{
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-
     height: 70px;
-
     display: flex;
     align-items: center;
-
     padding: 0 25px;
-
     background: white;
-
     z-index: 1000;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .logo{
     width: 180px;
-
     font-size: 1.2rem;
     font-weight: 700;
     color: #2563eb;
     cursor: pointer;
+    flex-shrink: 0;
 }
 
-.search_box{
+.search-container{
     flex: 1;
-
     display: flex;
     justify-content: center;
-    margin-right: 230px;
+    position: relative;
+    max-width: 500px;
+    margin: 0 auto;
 }
 
-.search_box input{
-    width: 450px;
-    padding: 10px 15px;
-
+.search-container input{
+    width: 100%;
+    padding: 10px 15px 10px 40px;
     border: 1px solid #d1d5db;
     border-radius: 8px;
-
     outline: none;
+}
+
+.search-container .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    pointer-events: none;
+    font-size: 16px;
 }
 
 .profile{
     width: 42px;
     height: 42px;
-
     display: flex;
     justify-content: center;
     align-items: center;
-
     margin-left: auto;
-
     border-radius: 50%;
     background: #d1d5db;
-
     cursor: pointer;
+    flex-shrink: 0;
 }
 
 .profile svg{
@@ -90,64 +92,104 @@ body{
 }
 
 /* ==========================
-   SIDEBAR
+   SIDEBAR (FIXED FULL HEIGHT)
 ========================== */
 
 .left_nav_bar{
     position: fixed;
-
-    top: 90px;
+    top: 0;
     left: 0;
-
     width: 220px;
-    height: calc(100vh - 90px);
-
+    height: 100vh;
     padding: 20px;
-
+    padding-top: 90px;
     display: flex;
     flex-direction: column;
     gap: 25px;
-
     border-right: 1px solid #e5e7eb;
     background: white;
+    overflow-y: auto;
+}
+
+/* Hide scrollbar for sidebar but keep functionality */
+.left_nav_bar::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
 }
 
 .left_nav_bar a{
-
     display:block;
-
     padding:12px 16px;
-
     border-radius:10px;
-
     text-decoration:none;
-
     color:#111827;
-
     cursor:pointer;
-
     transition:.2s;
 }
 
 .left_nav_bar a:hover{
-
     background:#f3f4f6;
+}
 
+.add_file_btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+}
+
+.add_file_btn:hover {
+    background-color: #2563eb;
+}
+
+.add_file_btn:active {
+    transform: scale(0.98);
 }
 
 /* ==========================
-   DASHBOARD
+   DASHBOARD LAYOUT
 ========================== */
 
 .dashboard_content{
-    margin-left:220px;
-    margin-top:70px;
-    padding:30px;
+    margin-left: 220px;
+    margin-top: 70px;
+    padding: 30px 30px 30px 30px;
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 0px;
+    height: calc(100vh - 70px);
+    overflow: hidden;
+}
 
-    display:grid;
-    grid-template-columns: 1fr 300px;
-
+.main_content{
+    display: flex;
+    flex-direction: column;
     gap: 40px;
+    overflow-y: auto;
+    padding-right: 2px;  /* ADJUST THIS: Controls right gap independently */
+    height: 100%;
+}
+
+/* Hide scrollbar for main content but keep functionality */
+.main_content::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
+/* For Firefox */
+.main_content {
+    scrollbar-width: none;
+}
+
+/* For IE/Edge */
+.main_content {
+    -ms-overflow-style: none;
 }
 
 /* ==========================
@@ -165,67 +207,84 @@ body{
 .favorites,
 .all_files,
 .trash {
-
     width:100%;
-
-    min-height:100vh;
-
+    min-height: 400px;
     padding:20px;
-
     border:1px solid #d9d9d9;
     border-radius:16px;
-
     background:white;
 }
 
-.add_files h2,
 .recent_files h2,
 .favorites h2,
 .all_files h2,
 .trash h2{
-
     font-size:1.3rem;
     margin-bottom:15px;
 }
 
+/* ==========================
+   RIGHT PANEL (FIXED FULL HEIGHT - INDEPENDENT)
+========================== */
+
 .right_panel{
-
-    border-left:1px solid #e5e7eb;
-
-    padding-left:30px;
-
-    display:flex;
-    flex-direction:column;
-
-    gap:30px;
-}
-
-.main_content{
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 280px;
+    height: 100vh;
+    border-left: 1px solid #e5e7eb;
+    padding: 20px;
+    padding-top: 420px;
+    padding-left: 20px;  /* ADJUST THIS: Controls space inside right panel */
     display: flex;
     flex-direction: column;
-    gap: 40px;      
+    overflow-y: auto;
+    background: white;
 }
 
-.add_file_btn {
-    width: 60%;
-    padding: 10px;
-    background-color: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-bottom: -20px;
-    text-align: left; 
+/* Hide scrollbar for right panel but keep functionality */
+.right_panel::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
 }
 
-.add_file_btn:hover {
-    background-color: #2563eb;
+/* For Firefox */
+.right_panel {
+    scrollbar-width: none;
 }
 
-.add_file_btn:active {
-    transform: scale(0.98);
+/* For IE/Edge */
+.right_panel {
+    -ms-overflow-style: none;
+}
+
+.button_group{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.category_btn{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    width:100%;
+    padding:18px;
+    border:none;
+    border-radius:16px;
+    background:#f7f7f7;
+    font-size:17px;
+    font-weight:600;
+    cursor:pointer;
+    transition:.25s;
+}
+
+.category_btn:hover{
+    background:#2563eb;
+    color:white;
+    transform:translateX(6px);
+    box-shadow:0 10px 20px rgba(37,99,235,.25);
 }
 
 /* ==========================
@@ -262,61 +321,4 @@ body{
 .file_card p{
     font-size: 14px;
     color: #6b7280;
-}
-
-.right_panel{
-    border-left:1px solid #ddd;
-
-    padding-left:30px;
-
-    display:flex;
-    flex-direction:column;
-}
-.button_group{
-    margin-top:300px;      /* Move only the buttons */
-    display:flex;
-    flex-direction:column;
-    gap:20px;
-}
-
-.category_btn{
-    display:flex;
-    align-items:center;
-    gap:14px;
-
-    width:100%;
-    padding:18px;
-
-    border:none;
-    border-radius:16px;
-
-    background:#f7f7f7;
-
-    font-size:17px;
-    font-weight:600;
-
-    cursor:pointer;
-
-    transition:.25s;
-}
-
-.category_btn:hover{
-    background:#2563eb;
-    color:white;
-
-    transform:translateX(6px);
-
-    box-shadow:0 10px 20px rgba(37,99,235,.25);
-}
-
-.search-icon {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #9ca3af;
-    pointer-events: none;
-    transition: color 0.2s;
-    font-size: 16px;
-    margin-right:580px;
 }
