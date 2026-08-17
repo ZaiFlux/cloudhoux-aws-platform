@@ -25,3 +25,25 @@ fileInput.addEventListener("change", () => {
     fileList.appendChild(fileCard);
   }
 });
+
+// ==========================================
+// REDIRECT: Images button → audio_page.html
+// ==========================================
+const imagesBtn = document.getElementById("imagesBtn");
+
+if (imagesBtn) {
+  imagesBtn.addEventListener("click", function () {
+    window.location.href = "audio_page.html";
+  });
+}
+
+// ==========================================
+// REDIRECT: Documents button → documents_page.html
+// ==========================================
+const documentsBtn = document.getElementById("documentsBtn");
+
+if (documentsBtn) {
+  documentsBtn.addEventListener("click", function () {
+    window.location.href = "documents_page.html";
+  });
+}
