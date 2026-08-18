@@ -7,176 +7,14 @@
     <link rel="stylesheet" href="../static/css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* Audio specific styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            min-height: 100vh;
-            background: #ffffff;
-            font-family: Arial, Helvetica, sans-serif;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* ----- TOPBAR ----- */
-        .topbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 70px;
-            display: flex;
-            align-items: center;
-            padding: 0 25px;
-            background: white;
-            z-index: 1000;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .logo {
-            width: 180px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #2563eb;
-            cursor: pointer;
-        }
-
-        .search-container {
-            flex: 1;
-            position: relative;
-            max-width: 450px;
-            margin: 0 auto;
-        }
-
-        .search-container input {
-            width: 100%;
-            padding: 10px 40px 10px 15px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            outline: none;
-            font-size: 14px;
-        }
-
-        .search-container input:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .search-icon {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9ca3af;
-            pointer-events: none;
-            font-size: 16px;
-        }
-
-        .profile {
-            width: 42px;
-            height: 42px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-left: auto;
-            border-radius: 50%;
-            background: #d1d5db;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .profile:hover {
-            background: #b0b8c4;
-        }
-
-        .profile svg {
-            width: 20px;
-            height: 20px;
-            fill: currentColor;
-        }
-
-        /* ----- LEFT NAV ----- */
-        .left_nav_bar {
-            position: fixed;
-            top: 70px;
-            left: 0;
-            width: 220px;
-            height: calc(100vh - 70px);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-            border-right: 1px solid #e5e7eb;
-            background: white;
-            overflow-y: auto;
-        }
-
-        .left_nav_bar a {
-            display: block;
-            padding: 12px 16px;
-            border-radius: 10px;
-            text-decoration: none;
-            color: #111827;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .left_nav_bar a:hover {
-            background: #f3f4f6;
-        }
-
-        .add_file_btn {
-            width: 60%;
-            padding: 10px;
-            background-color: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-bottom: -20px;
-            text-align: left;
-            transition: 0.2s;
-        }
-
-        .add_file_btn:hover {
-            background-color: #2563eb;
-            transform: scale(1.02);
-        }
-
-        .add_file_btn:active {
-            transform: scale(0.98);
-        }
-
-        /* ----- DASHBOARD LAYOUT ----- */
-        .dashboard_content {
-            margin-left: 220px;
-            margin-top: 70px;
-            padding: 30px;
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 40px;
-            min-height: calc(100vh - 70px);
-        }
-
-        .main_content {
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-        }
-
+        /* ----- AUDIO PAGE SPECIFIC STYLES ----- */
         .audio_viewer {
             width: 100%;
-            min-height: 80vh;
-            background: white;
-            border-radius: 16px;
-            border: 1px solid #d9d9d9;
+            min-height: 400px;
             padding: 30px;
+            border: 1px solid #d9d9d9;
+            border-radius: 16px;
+            background: white;
             display: flex;
             flex-direction: column;
         }
@@ -211,12 +49,11 @@
             transition: 0.2s;
         }
 
-        /* empty state - NO TEXT, just empty */
+        /* Empty state - NO TEXT */
         .audio_grid:empty {
             /* No content, just empty */
         }
 
-        /* audio card */
         .audio-card {
             width: 200px;
             padding: 16px;
@@ -267,113 +104,7 @@
             border-radius: 8px;
         }
 
-        /* Right Panel */
-        .right_panel {
-            border-left: 1px solid #ddd;
-            padding-left: 30px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .button_group {
-            margin-top: 300px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .category_btn {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            width: 100%;
-            padding: 18px;
-            border: none;
-            border-radius: 16px;
-            background: #f7f7f7;
-            font-size: 17px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.25s;
-        }
-
-        .category_btn:hover {
-            transform: translateX(6px);
-            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
-        }
-
-        .category_btn i {
-            width: 24px;
-            font-size: 20px;
-        }
-
-        .category_btn.images:hover {
-            background: #2563eb;
-            color: white;
-        }
-        .category_btn.documents:hover {
-            background: #7c3aed;
-            color: white;
-        }
-        .category_btn.media_files:hover {
-            background: #dc2626;
-            color: white;
-        }
-        .category_btn.audio_files:hover {
-            background: #059669;
-            color: white;
-        }
-        .category_btn.safe_vault:hover {
-            background: #d97706;
-            color: white;
-        }
-
-        /* ----- RESPONSIVE ----- */
-        @media (max-width: 1024px) {
-            .dashboard_content {
-                grid-template-columns: 1fr 250px;
-                gap: 30px;
-            }
-            .right_panel {
-                padding-left: 20px;
-            }
-            .button_group {
-                margin-top: 200px;
-            }
-        }
-
         @media (max-width: 768px) {
-            .dashboard_content {
-                grid-template-columns: 1fr;
-                margin-left: 0;
-                padding: 20px;
-            }
-            .left_nav_bar {
-                display: none;
-            }
-            .topbar {
-                padding: 0 15px;
-            }
-            .search-container {
-                width: 100%;
-            }
-            .right_panel {
-                border-left: none;
-                border-top: 1px solid #ddd;
-                padding: 20px 0 0 0;
-            }
-            .button_group {
-                margin-top: 20px;
-                flex-direction: row;
-                flex-wrap: wrap;
-            }
-            .category_btn {
-                width: auto;
-                flex: 1;
-                min-width: 120px;
-                padding: 14px;
-                font-size: 14px;
-            }
             .audio_grid {
                 min-height: 300px;
                 padding: 16px;
