@@ -189,200 +189,95 @@
     .media_header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
       margin-bottom: 25px;
       padding-bottom: 15px;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: none;
     }
 
     .media_header h2 {
       font-size: 1.3rem;
       color: #111827;
-      flex: 1;
       text-align: center;
     }
 
-    .back_btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 8px;
-      background: #f3f4f6;
-      color: #374151;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .back_btn:hover {
-      background: #e5e7eb;
-      transform: translateX(-3px);
-    }
-
-    .media_actions {
-      display: flex;
-      gap: 10px;
-    }
-
-    .action_btn {
-      padding: 8px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      background: white;
-      color: #6b7280;
-      cursor: pointer;
-      transition: 0.2s;
-      font-size: 16px;
-    }
-
-    .action_btn:hover {
-      background: #f3f4f6;
-      border-color: #3b82f6;
-      color: #3b82f6;
-      transform: translateY(-2px);
-    }
-
-    /* Media grid */
+    /* Media grid - dynamic gallery */
     .media_grid {
       flex: 1;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      display: flex;
+      flex-wrap: wrap;
       gap: 20px;
+      align-items: flex-start;
+      justify-content: flex-start;
       background: #f9fafb;
       border-radius: 12px;
-      padding: 20px;
+      padding: 24px;
       min-height: 400px;
       border: 1px solid #e5e7eb;
-    }
-
-    .media_item {
-      background: white;
-      border-radius: 12px;
-      border: 1px solid #edf2f7;
-      overflow: hidden;
-      transition: 0.25s;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .media_item:hover {
-      border-color: #3b82f6;
-      transform: translateY(-4px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    }
-
-    .media_thumbnail {
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      background: #e5e7eb;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 48px;
-      color: #6b7280;
-      position: relative;
-    }
-
-    .media_thumbnail .play_overlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.6);
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 20px;
       transition: 0.2s;
     }
 
-    .media_item:hover .play_overlay {
-      background: rgba(37, 99, 235, 0.85);
-      transform: translate(-50%, -50%) scale(1.1);
+    /* empty state - NO TEXT, just empty */
+    .media_grid:empty {
+      /* No content, just empty */
     }
 
-    .media_thumbnail .file_icon {
-      font-size: 56px;
-      color: #6b7280;
-    }
-
-    .media_thumbnail.video {
-      background: #1a1a2e;
-    }
-
-    .media_thumbnail.audio {
-      background: #1e293b;
-    }
-
-    .media_thumbnail.audio .file_icon {
-      color: #60a5fa;
-    }
-
-    .media_info {
-      padding: 14px 16px 16px;
-      flex: 1;
+    /* media card */
+    .media-card {
+      width: 200px;
+      padding: 12px;
+      border-radius: 12px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      transition: 0.2s;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-    }
-
-    .media_info .media_name {
-      font-weight: 600;
-      color: #111827;
-      font-size: 15px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .media_info .media_ext {
-      font-size: 12px;
-      color: #6b7280;
-      background: #f1f5f9;
-      padding: 2px 10px;
-      border-radius: 20px;
-      display: inline-block;
-      align-self: flex-start;
-    }
-
-    .media_meta {
-      display: flex;
-      justify-content: space-between;
-      color: #6b7280;
-      font-size: 13px;
-      margin-top: 4px;
-    }
-
-    .media_meta span {
-      display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 8px;
+      cursor: default;
     }
 
-    .media_status_badge {
-      padding: 3px 12px;
-      border-radius: 30px;
+    .media-card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+    }
+
+    .media-card .media-icon {
+      font-size: 56px;
+      color: #dc2626;
+    }
+
+    .media-card .media-icon.audio-icon {
+      color: #059669;
+    }
+
+    .media-card .media-icon.video-icon {
+      color: #dc2626;
+    }
+
+    .media-card .media-name {
+      font-size: 13px;
+      color: #374151;
+      text-align: center;
+      word-break: break-all;
+      max-width: 180px;
+      font-weight: 500;
+    }
+
+    .media-card .media-size {
       font-size: 11px;
+      color: #6b7280;
+    }
+
+    .media-card .media-type {
+      font-size: 10px;
+      padding: 2px 12px;
+      border-radius: 20px;
+      background: #f1f5f9;
+      color: #475569;
       font-weight: 600;
-      align-self: flex-start;
-    }
-
-    .media_status_badge.public {
-      background: #d1fae5;
-      color: #065f46;
-    }
-
-    .media_status_badge.private {
-      background: #fee2e2;
-      color: #991b1b;
+      text-transform: uppercase;
     }
 
     /* ----- RIGHT PANEL ----- */
@@ -507,49 +402,40 @@
         padding: 14px;
         font-size: 14px;
       }
-      .media_header {
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-      .media_header h2 {
-        order: 3;
-        width: 100%;
-        text-align: center;
-      }
       .media_grid {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 14px;
-        padding: 14px;
+        min-height: 300px;
+        font-size: 1rem;
+        padding: 16px;
+      }
+      .media-card {
+        width: 150px;
+        padding: 10px;
+      }
+      .media-card .media-icon {
+        font-size: 40px;
       }
     }
 
     @media (max-width: 480px) {
       .media_grid {
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-        padding: 10px;
         min-height: 200px;
-      }
-      .media_thumbnail {
-        font-size: 32px;
-      }
-      .media_info .media_name {
-        font-size: 13px;
-      }
-      .media_meta {
-        font-size: 11px;
-        flex-wrap: wrap;
-        gap: 4px;
-      }
-      .action_btn {
-        padding: 6px 10px;
-        font-size: 14px;
+        font-size: 0.9rem;
+        gap: 12px;
+        padding: 12px;
       }
       .media_header h2 {
         font-size: 1rem;
       }
-      .back_btn {
-        padding: 6px 12px;
-        font-size: 12px;
+      .media-card {
+        width: 120px;
+        padding: 8px;
+      }
+      .media-card .media-icon {
+        font-size: 32px;
+      }
+      .media-card .media-name {
+        font-size: 11px;
+        max-width: 100px;
       }
     }
   </style>
@@ -574,7 +460,7 @@
 
   <!-- ===== LEFT NAV ===== -->
   <nav class="left_nav_bar">
-    <button type="button" class="add_file_btn">+ Add Files</button>
+    <button type="button" class="add_file_btn" id="addFileBtn">+ Add Files</button>
     <a href="#all_files">All Files</a>
     <a href="#recent_files">Recent</a>
     <a href="#favorites">Favorites</a>
@@ -588,149 +474,146 @@
       <!-- MEDIA VIEWER -->
       <section class="media_viewer">
         <div class="media_header">
-          <button class="back_btn">
-            <i class="fas fa-arrow-left"></i> Back
-          </button>
           <h2>Media</h2>
-          <div class="media_actions">
-            <button class="action_btn" title="Download"><i class="fas fa-download"></i></button>
-            <button class="action_btn" title="Favorite"><i class="fas fa-star"></i></button>
-            <button class="action_btn" title="Share"><i class="fas fa-share-alt"></i></button>
-            <button class="action_btn" title="Delete"><i class="fas fa-trash"></i></button>
-          </div>
         </div>
 
         <!-- Media grid -->
-        <div class="media_grid">
-          <!-- Video 1 -->
-          <div class="media_item">
-            <div class="media_thumbnail video">
-              <i class="fas fa-play-circle" style="font-size: 64px; color: rgba(255,255,255,0.3);"></i>
-              <div class="play_overlay"><i class="fas fa-play"></i></div>
-            </div>
-            <div class="media_info">
-              <span class="media_name">Product_Demo_2026</span>
-              <span class="media_ext">.mp4</span>
-              <div class="media_meta">
-                <span><i class="far fa-calendar-alt"></i> Dec 12, 2026</span>
-                <span><i class="far fa-file"></i> 128 MB</span>
-              </div>
-              <span class="media_status_badge public">Public</span>
-            </div>
-          </div>
-
-          <!-- Video 2 -->
-          <div class="media_item">
-            <div class="media_thumbnail video">
-              <i class="fas fa-film" style="font-size: 48px; color: rgba(255,255,255,0.25);"></i>
-              <div class="play_overlay"><i class="fas fa-play"></i></div>
-            </div>
-            <div class="media_info">
-              <span class="media_name">Tutorial_Module_3</span>
-              <span class="media_ext">.mov</span>
-              <div class="media_meta">
-                <span><i class="far fa-calendar-alt"></i> Dec 8, 2026</span>
-                <span><i class="far fa-file"></i> 256 MB</span>
-              </div>
-              <span class="media_status_badge private">Private</span>
-            </div>
-          </div>
-
-          <!-- Audio 1 -->
-          <div class="media_item">
-            <div class="media_thumbnail audio">
-              <i class="fas fa-music file_icon"></i>
-            </div>
-            <div class="media_info">
-              <span class="media_name">Podcast_Ep_42</span>
-              <span class="media_ext">.mp3</span>
-              <div class="media_meta">
-                <span><i class="far fa-calendar-alt"></i> Dec 6, 2026</span>
-                <span><i class="far fa-file"></i> 42 MB</span>
-              </div>
-              <span class="media_status_badge public">Public</span>
-            </div>
-          </div>
-
-          <!-- Video 3 -->
-          <div class="media_item">
-            <div class="media_thumbnail video">
-              <i class="fas fa-video" style="font-size: 48px; color: rgba(255,255,255,0.25);"></i>
-              <div class="play_overlay"><i class="fas fa-play"></i></div>
-            </div>
-            <div class="media_info">
-              <span class="media_name">Interview_Clip</span>
-              <span class="media_ext">.avi</span>
-              <div class="media_meta">
-                <span><i class="far fa-calendar-alt"></i> Dec 3, 2026</span>
-                <span><i class="far fa-file"></i> 98 MB</span>
-              </div>
-              <span class="media_status_badge public">Public</span>
-            </div>
-          </div>
-
-          <!-- Audio 2 -->
-          <div class="media_item">
-            <div class="media_thumbnail audio">
-              <i class="fas fa-headphones file_icon"></i>
-            </div>
-            <div class="media_info">
-              <span class="media_name">Meeting_Recording</span>
-              <span class="media_ext">.wav</span>
-              <div class="media_meta">
-                <span><i class="far fa-calendar-alt"></i> Nov 29, 2026</span>
-                <span><i class="far fa-file"></i> 74 MB</span>
-              </div>
-              <span class="media_status_badge private">Private</span>
-            </div>
-          </div>
-
-          <!-- Video 4 -->
-          <div class="media_item">
-            <div class="media_thumbnail video">
-              <i class="fas fa-play-circle" style="font-size: 64px; color: rgba(255,255,255,0.3);"></i>
-              <div class="play_overlay"><i class="fas fa-play"></i></div>
-            </div>
-            <div class="media_info">
-              <span class="media_name">Webinar_Recording</span>
-              <span class="media_ext">.mp4</span>
-              <div class="media_meta">
-                <span><i class="far fa-calendar-alt"></i> Nov 25, 2026</span>
-                <span><i class="far fa-file"></i> 312 MB</span>
-              </div>
-              <span class="media_status_badge public">Public</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Media info footer -->
-        <div class="image_info" style="margin-top:20px; padding-top:20px; border-top:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
-          <div class="info_left">
-            <h3 style="font-size:18px; color:#111827; margin-bottom:6px;">6 media files</h3>
-            <div class="image_meta" style="display:flex; gap:20px; color:#6b7280; font-size:14px;">
-              <span><i class="far fa-calendar-alt"></i> Updated Dec 12, 2026</span>
-              <span><i class="far fa-folder"></i> 910 MB total</span>
-            </div>
-          </div>
-          <div class="info_right" style="display:flex; gap:12px;">
-            <span class="file_type_badge" style="padding:6px 14px; border-radius:20px; font-size:13px; font-weight:600; background:#fef3c7; color:#92400e;">Media</span>
-            <span class="file_status" style="padding:6px 14px; border-radius:20px; font-size:13px; font-weight:600; background:#d1fae5; color:#065f46;">4 Public</span>
-          </div>
-        </div>
+        <div class="media_grid" id="mediaGrid"></div>
       </section>
     </div>
 
     <!-- ===== RIGHT PANEL ===== -->
     <aside class="right_panel">
       <div class="button_group">
-        <button class="category_btn images"><i class="fas fa-image"></i> Images</button>
-        <button class="category_btn documents"><i class="fas fa-file-alt"></i> Documents</button>
-        <button class="category_btn media_files"><i class="fas fa-video"></i> Media</button>
-        <button class="category_btn audio_files"><i class="fas fa-music"></i> Audio</button>
-        <button class="category_btn safe_vault"><i class="fas fa-lock"></i> Safe Vault</button>
+        <button class="category_btn images" onclick="window.location.href='images_page.html'">
+          <i class="fas fa-image"></i> Images
+        </button>
+        <button class="category_btn documents" onclick="window.location.href='documents_page.html'">
+          <i class="fas fa-file-alt"></i> Documents
+        </button>
+        <button class="category_btn media_files" onclick="window.location.href='media_page.html'">
+          <i class="fas fa-video"></i> Media
+        </button>
+        <button class="category_btn audio_files" onclick="window.location.href='audio_page.html'">
+          <i class="fas fa-music"></i> Audio
+        </button>
+        <button class="category_btn safe_vault" onclick="window.location.href='dashboard.html'">
+          <i class="fas fa-lock"></i> Safe Vault
+        </button>
       </div>
     </aside>
   </main>
 
+  <!-- hidden file input -->
+  <input type="file" id="fileInput" accept=".mp4,.mov,.avi,.mkv,.mp3,.wav,.ogg,.m4a" multiple style="display:none;">
+
+  <!-- ===== JAVASCRIPT - Media upload functionality ===== -->
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    "use strict";
+
+    const fileInput = document.getElementById("fileInput");
+    const addBtn = document.getElementById("addFileBtn");
+    const mediaGrid = document.getElementById("mediaGrid");
+
+    if (!fileInput || !addBtn || !mediaGrid) {
+      console.error('Elements not found');
+      return;
+    }
+
+    // Function to format file size
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Get icon for media type
+    function getMediaIcon(fileName) {
+      const ext = fileName.split('.').pop().toLowerCase();
+      const videoExts = ['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'wmv'];
+      const audioExts = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'wma'];
+      
+      if (videoExts.includes(ext)) {
+        return { icon: 'fa-video', type: 'video', cssClass: 'video-icon' };
+      } else if (audioExts.includes(ext)) {
+        return { icon: 'fa-music', type: 'audio', cssClass: 'audio-icon' };
+      }
+      return { icon: 'fa-file-video', type: 'media', cssClass: '' };
+    }
+
+    function renderMediaFiles(files) {
+      const mediaFiles = Array.from(files);
+      
+      if (mediaFiles.length === 0) {
+        alert("Please select media files (videos or audio)");
+        return;
+      }
+
+      mediaFiles.forEach((file) => {
+        const card = document.createElement("div");
+        card.className = "media-card";
+        
+        const mediaInfo = getMediaIcon(file.name);
+        
+        // Icon
+        const icon = document.createElement("div");
+        icon.className = `media-icon ${mediaInfo.cssClass}`;
+        icon.innerHTML = `<i class="fas ${mediaInfo.icon}"></i>`;
+        
+        // Name
+        const name = document.createElement("div");
+        name.className = "media-name";
+        name.textContent = file.name;
+        
+        // Size
+        const size = document.createElement("div");
+        size.className = "media-size";
+        size.textContent = formatFileSize(file.size);
+        
+        // Type badge
+        const type = document.createElement("div");
+        type.className = "media-type";
+        type.textContent = mediaInfo.type;
+        
+        card.appendChild(icon);
+        card.appendChild(name);
+        card.appendChild(size);
+        card.appendChild(type);
+        mediaGrid.appendChild(card);
+      });
+    }
+
+    addBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      fileInput.click();
+    });
+
+    fileInput.addEventListener("change", function (e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      renderMediaFiles(files);
+      fileInput.value = "";
+    });
+
+    mediaGrid.addEventListener("dragover", function (e) {
+      e.preventDefault();
+      this.style.backgroundColor = "#f0f4ff";
+    });
+    mediaGrid.addEventListener("dragleave", function (e) {
+      this.style.backgroundColor = "#f9fafb";
+    });
+    mediaGrid.addEventListener("drop", function (e) {
+      e.preventDefault();
+      this.style.backgroundColor = "#f9fafb";
+      const files = e.dataTransfer.files;
+      if (files && files.length > 0) {
+        renderMediaFiles(files);
+      }
+    });
+  });
+  </script>
 </body>
 </html>

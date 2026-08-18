@@ -172,7 +172,7 @@ body{
     flex-direction: column;
     gap: 40px;
     overflow-y: auto;
-    padding-right: 2px;  /* ADJUST THIS: Controls right gap independently */
+    padding-right: 2px;
     height: 100%;
 }
 
@@ -236,7 +236,7 @@ body{
     border-left: 1px solid #e5e7eb;
     padding: 20px;
     padding-top: 420px;
-    padding-left: 20px;  /* ADJUST THIS: Controls space inside right panel */
+    padding-left: 20px;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
@@ -285,6 +285,28 @@ body{
     color:white;
     transform:translateX(6px);
     box-shadow:0 10px 20px rgba(37,99,235,.25);
+}
+
+/* Individual button hover colors */
+.category_btn.images:hover {
+    background: #2563eb;
+    color: white;
+}
+.category_btn.documents:hover {
+    background: #7c3aed;
+    color: white;
+}
+.category_btn.media_files:hover {
+    background: #dc2626;
+    color: white;
+}
+.category_btn.audio_files:hover {
+    background: #059669;
+    color: white;
+}
+.category_btn.safe_vault:hover {
+    background: #d97706;
+    color: white;
 }
 
 /* ==========================
