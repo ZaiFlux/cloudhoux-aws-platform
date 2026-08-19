@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="../static/css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* ----- DOCUMENTS PAGE SPECIFIC STYLES ----- */
         .documents_viewer {
             width: 100%;
             min-height: 400px;
@@ -22,16 +21,23 @@
         .documents_header {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             margin-bottom: 25px;
             padding-bottom: 15px;
-            border-bottom: none;
+            border-bottom: 1px solid #e5e7eb;
         }
 
         .documents_header h2 {
             font-size: 1.3rem;
             color: #111827;
-            text-align: center;
+        }
+
+        .documents_count {
+            font-size: 0.9rem;
+            color: #6b7280;
+            background: #f3f4f6;
+            padding: 4px 12px;
+            border-radius: 20px;
         }
 
         .documents_grid {
@@ -49,47 +55,211 @@
             transition: 0.2s;
         }
 
-        /* Empty state - NO TEXT */
-        .documents_grid:empty {
-            /* No content, just empty */
-        }
-
-        .document-card {
-            width: 160px;
-            padding: 16px;
+        .folder-card {
+            width: 180px;
+            padding: 20px;
             border-radius: 12px;
             background: white;
-            border: 1px solid #e2e8f0;
+            border: 2px solid #e2e8f0;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             transition: 0.2s;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
-            cursor: default;
+            gap: 10px;
+            cursor: pointer;
+            position: relative;
         }
 
-        .document-card:hover {
-            transform: scale(1.02);
-            box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+        .folder-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            border-color: #7c3aed;
         }
 
-        .document-card i {
-            font-size: 48px;
-            color: #7c3aed;
+        .folder-card i.fa-folder {
+            font-size: 56px;
+            color: #f59e0b;
         }
 
-        .document-card .doc-name {
-            font-size: 12px;
-            color: #374151;
+        .folder-card .folder-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #111827;
             text-align: center;
-            word-break: break-all;
-            max-width: 140px;
+            word-break: break-word;
         }
 
-        .document-card .doc-size {
-            font-size: 11px;
+        .folder-card .folder-info {
+            font-size: 12px;
             color: #6b7280;
+            text-align: center;
+        }
+
+        .folder-card .folder-remove {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .folder-card:hover .folder-remove {
+            display: flex;
+        }
+
+        .folder-card .folder-remove:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+        .folder-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .folder-overlay.active {
+            display: flex;
+        }
+
+        .folder-modal {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        .folder-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .folder-modal-header h3 {
+            font-size: 1.2rem;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .folder-modal-header h3 i {
+            color: #f59e0b;
+        }
+
+        .folder-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+
+        .folder-modal-close:hover {
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 8px;
+            transition: 0.2s;
+        }
+
+        .file-item:hover {
+            background: #f3f4f6;
+            border-color: #7c3aed;
+        }
+
+        .file-item i {
+            font-size: 18px;
+            color: #6b7280;
+            width: 24px;
+            text-align: center;
+        }
+
+        .file-item .file-name {
+            flex: 1;
+            font-size: 13px;
+            color: #374151;
+        }
+
+        .file-item .file-size {
+            font-size: 12px;
+            color: #6b7280;
+            background: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+        }
+
+        .uploading-indicator {
+            display: none;
+            padding: 20px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .uploading-indicator.active {
+            display: block;
+        }
+
+        .uploading-indicator i {
+            font-size: 24px;
+            color: #3b82f6;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         @media (max-width: 768px) {
@@ -97,12 +267,16 @@
                 min-height: 300px;
                 padding: 16px;
             }
-            .document-card {
-                width: 130px;
-                padding: 12px;
+            .folder-card {
+                width: 150px;
+                padding: 16px;
             }
-            .document-card i {
-                font-size: 36px;
+            .folder-card i.fa-folder {
+                font-size: 44px;
+            }
+            .folder-modal {
+                padding: 20px;
+                max-width: 95%;
             }
         }
 
@@ -115,21 +289,24 @@
             .documents_header h2 {
                 font-size: 1rem;
             }
-            .document-card {
-                width: 100px;
-                padding: 10px;
+            .folder-card {
+                width: 130px;
+                padding: 12px;
             }
-            .document-card i {
-                font-size: 28px;
+            .folder-card i.fa-folder {
+                font-size: 36px;
             }
-            .document-card .doc-name {
-                font-size: 10px;
+            .file-item {
+                padding: 8px 10px;
+                font-size: 12px;
+            }
+            .file-item .file-name {
+                font-size: 11px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- ===== TOPBAR ===== -->
     <header class="topbar">
         <div class="logo">CloudHaux</div>
         <div class="search-container">
@@ -143,27 +320,32 @@
         </div>
     </header>
 
-    <!-- ===== LEFT NAV ===== -->
     <nav class="left_nav_bar">
-        <button type="button" class="add_file_btn" id="addFileBtn">+ Add Files</button>
+        <button type="button" class="add_file_btn" id="addFileBtn">
+            <i class="fas fa-plus" style="margin-right: 8px;"></i> Add Files
+        </button>
+        <!-- Using webkitdirectory for folder upload -->
+        <input type="file" id="fileInput" webkitdirectory multiple style="display:none;">
         <a href="#all_files">All Files</a>
         <a href="#recent_files">Recent</a>
         <a href="#favorites">Favorites</a>
         <a href="#trash">Trash</a>
     </nav>
 
-    <!-- ===== MAIN CONTENT ===== -->
     <main class="dashboard_content">
         <div class="main_content">
             <section class="documents_viewer">
                 <div class="documents_header">
-                    <h2>Documents</h2>
+                    <h2>📄 Documents</h2>
+                    <span class="documents_count" id="docCount">0 items</span>
+                </div>
+                <div class="uploading-indicator" id="uploadingIndicator">
+                    <i class="fas fa-spinner"></i> Uploading files...
                 </div>
                 <div class="documents_grid" id="documentsGrid"></div>
             </section>
         </div>
 
-        <!-- ===== RIGHT PANEL ===== -->
         <aside class="right_panel">
             <div class="button_group">
                 <button class="category_btn images" onclick="window.location.href='images_page.html'">
@@ -185,10 +367,16 @@
         </aside>
     </main>
 
-    <!-- hidden file input -->
-    <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx" multiple style="display:none;">
+    <div class="folder-overlay" id="folderOverlay">
+        <div class="folder-modal">
+            <div class="folder-modal-header">
+                <h3><i class="fas fa-folder"></i> <span id="modalFolderName">Folder</span></h3>
+                <button class="folder-modal-close" id="modalCloseBtn">&times;</button>
+            </div>
+            <div id="modalFileList"></div>
+        </div>
+    </div>
 
-    <!-- ===== JAVASCRIPT - Document upload functionality ===== -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         "use strict";
@@ -196,13 +384,16 @@
         const fileInput = document.getElementById("fileInput");
         const addBtn = document.getElementById("addFileBtn");
         const documentsGrid = document.getElementById("documentsGrid");
+        const docCount = document.getElementById("docCount");
+        const uploadIndicator = document.getElementById("uploadingIndicator");
+        
+        const folderOverlay = document.getElementById("folderOverlay");
+        const modalCloseBtn = document.getElementById("modalCloseBtn");
+        const modalFolderName = document.getElementById("modalFolderName");
+        const modalFileList = document.getElementById("modalFileList");
 
-        if (!fileInput || !addBtn || !documentsGrid) {
-            console.error('Elements not found');
-            return;
-        }
+        const folderStore = {};
 
-        // Function to format file size
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
             const k = 1024;
@@ -211,8 +402,7 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-        // Get icon for document type
-        function getDocumentIcon(fileName) {
+        function getFileIcon(fileName) {
             const ext = fileName.split('.').pop().toLowerCase();
             const icons = {
                 'pdf': 'fa-file-pdf',
@@ -221,8 +411,26 @@
                 'txt': 'fa-file-alt',
                 'xls': 'fa-file-excel',
                 'xlsx': 'fa-file-excel',
+                'csv': 'fa-file-csv',
                 'ppt': 'fa-file-powerpoint',
                 'pptx': 'fa-file-powerpoint',
+                'js': 'fa-file-code',
+                'html': 'fa-file-code',
+                'htm': 'fa-file-code',
+                'css': 'fa-file-code',
+                'json': 'fa-file-code',
+                'xml': 'fa-file-code',
+                'py': 'fa-file-code',
+                'java': 'fa-file-code',
+                'cpp': 'fa-file-code',
+                'c': 'fa-file-code',
+                'php': 'fa-file-code',
+                'rb': 'fa-file-code',
+                'go': 'fa-file-code',
+                'rs': 'fa-file-code',
+                'swift': 'fa-file-code',
+                'kt': 'fa-file-code',
+                'md': 'fa-file-alt',
                 'zip': 'fa-file-archive',
                 'rar': 'fa-file-archive',
                 '7z': 'fa-file-archive'
@@ -230,61 +438,170 @@
             return icons[ext] || 'fa-file';
         }
 
-        function renderDocuments(files) {
-            const documentFiles = Array.from(files);
-            
-            if (documentFiles.length === 0) {
-                alert("Please select documents to upload");
-                return;
-            }
-
-            documentFiles.forEach((file) => {
-                const card = document.createElement("div");
-                card.className = "document-card";
-                
-                const icon = document.createElement("i");
-                icon.className = getDocumentIcon(file.name);
-                
-                const name = document.createElement("div");
-                name.className = "doc-name";
-                name.textContent = file.name;
-                
-                const size = document.createElement("div");
-                size.className = "doc-size";
-                size.textContent = formatFileSize(file.size);
-                
-                card.appendChild(icon);
-                card.appendChild(name);
-                card.appendChild(size);
-                documentsGrid.appendChild(card);
-            });
+        function updateCount() {
+            const count = documentsGrid.children.length;
+            docCount.textContent = count + ' item' + (count !== 1 ? 's' : '');
         }
 
-        addBtn.addEventListener("click", function (e) {
+        function removeItem(card) {
+            const folderName = card.dataset.folderName;
+            if (folderName && folderStore[folderName]) {
+                delete folderStore[folderName];
+            }
+            card.style.transition = '0.2s';
+            card.style.transform = 'scale(0.8)';
+            card.style.opacity = '0';
+            setTimeout(() => {
+                card.remove();
+                updateCount();
+            }, 200);
+        }
+
+        function openFolder(folderName, files) {
+            modalFolderName.textContent = folderName;
+            modalFileList.innerHTML = '';
+            
+            const sortedFiles = [...files].sort((a, b) => a.name.localeCompare(b.name));
+            
+            sortedFiles.forEach(file => {
+                const fileItem = document.createElement("div");
+                fileItem.className = "file-item";
+                
+                const icon = document.createElement("i");
+                icon.className = 'fas ' + getFileIcon(file.name);
+                
+                const name = document.createElement("span");
+                name.className = "file-name";
+                name.textContent = file.name;
+                
+                const size = document.createElement("span");
+                size.className = "file-size";
+                size.textContent = formatFileSize(file.size);
+                
+                fileItem.appendChild(icon);
+                fileItem.appendChild(name);
+                fileItem.appendChild(size);
+                modalFileList.appendChild(fileItem);
+            });
+            
+            folderOverlay.classList.add('active');
+        }
+
+        function closeModal() {
+            folderOverlay.classList.remove('active');
+        }
+
+        function createFolderCard(folderName, files) {
+            const card = document.createElement("div");
+            card.className = "folder-card";
+            card.dataset.folderName = folderName;
+            
+            const removeBtn = document.createElement("button");
+            removeBtn.className = "folder-remove";
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            removeBtn.title = "Remove folder";
+            removeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                removeItem(card);
+            });
+            
+            const icon = document.createElement("i");
+            icon.className = "fas fa-folder";
+            
+            const name = document.createElement("div");
+            name.className = "folder-name";
+            name.textContent = folderName;
+            
+            const info = document.createElement("div");
+            info.className = "folder-info";
+            const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+            info.textContent = `${files.length} files · ${formatFileSize(totalSize)}`;
+            
+            card.appendChild(removeBtn);
+            card.appendChild(icon);
+            card.appendChild(name);
+            card.appendChild(info);
+            
+            card.addEventListener('click', function(e) {
+                if (e.target.closest('.folder-remove')) return;
+                openFolder(folderName, files);
+            });
+            
+            return card;
+        }
+
+        function processFiles(files) {
+            const fileArray = Array.from(files);
+            const folders = {};
+            
+            fileArray.forEach(file => {
+                if (file.webkitRelativePath) {
+                    const pathParts = file.webkitRelativePath.split('/');
+                    const folderName = pathParts[0];
+                    
+                    if (!folders[folderName]) {
+                        folders[folderName] = [];
+                    }
+                    folders[folderName].push(file);
+                }
+            });
+            
+            Object.keys(folders).forEach(folderName => {
+                folderStore[folderName] = folders[folderName];
+                const folderCard = createFolderCard(folderName, folders[folderName]);
+                documentsGrid.appendChild(folderCard);
+            });
+            
+            updateCount();
+        }
+
+        modalCloseBtn.addEventListener('click', closeModal);
+        folderOverlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        addBtn.addEventListener("click", function(e) {
             e.stopPropagation();
             fileInput.click();
         });
 
-        fileInput.addEventListener("change", function (e) {
+        fileInput.addEventListener("change", function(e) {
             const files = e.target.files;
             if (!files || files.length === 0) return;
-            renderDocuments(files);
-            fileInput.value = "";
+            
+            uploadIndicator.classList.add('active');
+            
+            setTimeout(() => {
+                processFiles(files);
+                uploadIndicator.classList.remove('active');
+                fileInput.value = "";
+            }, 300);
         });
 
-        documentsGrid.addEventListener("dragover", function (e) {
+        documentsGrid.addEventListener("dragover", function(e) {
             e.preventDefault();
             this.style.backgroundColor = "#f0f4ff";
         });
-        documentsGrid.addEventListener("dragleave", function (e) {
+        documentsGrid.addEventListener("dragleave", function(e) {
             this.style.backgroundColor = "#f9fafb";
         });
-        documentsGrid.addEventListener("drop", function (e) {
+        documentsGrid.addEventListener("drop", function(e) {
             e.preventDefault();
             this.style.backgroundColor = "#f9fafb";
             const files = e.dataTransfer.files;
             if (files && files.length > 0) {
-                renderDocuments(files);
+                uploadIndicator.classList.add('active');
+                setTimeout(() => {
+                    processFiles(files);
+                    uploadIndicator.classList.remove('active');
+                }, 300);
             }
         });
     });
