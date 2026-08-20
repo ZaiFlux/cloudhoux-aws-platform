@@ -22,16 +22,64 @@
         .images_header {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             margin-bottom: 25px;
             padding-bottom: 15px;
             border-bottom: none;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .images_header h2 {
             font-size: 1.3rem;
             color: #111827;
-            text-align: center;
+            margin: 0;
+        }
+
+        /* ADD FOLDER BUTTON (icon only) */
+        .add-folder-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.8rem;
+            color: #1e293b;
+            cursor: pointer;
+            padding: 0 6px;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            width: 44px;
+            height: 44px;
+            background: #f1f5f9;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+
+        .add-folder-btn i {
+            font-size: 1.6rem;
+            color: #334155;
+        }
+
+        .add-folder-btn:hover {
+            background: #e2e8f0;
+            transform: scale(1.04);
+            color: #0f172a;
+        }
+
+        .add-folder-btn:active {
+            transform: scale(0.94);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .images_grid {
@@ -47,11 +95,6 @@
             min-height: 400px;
             border: 1px solid #e5e7eb;
             transition: 0.2s;
-        }
-
-        /* Empty state - NO TEXT */
-        .images_grid:empty {
-            /* No content, just empty */
         }
 
         /* image card */
@@ -82,6 +125,48 @@
             display: block;
         }
 
+        /* ----- FOLDER CARD — gray bg made smaller & softer ----- */
+        .folder-card {
+            width: 125px;
+            height: 100px;
+            border-radius: 12px;
+            /* smaller, lighter gray background */
+            background: #eef2f6;        /* was #eef2f6, keep light */
+            border: 1px solid #d1d9e6;  /* softer border */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #1e293b;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            cursor: default;
+            gap: 4px;
+        }
+
+        .folder-card i {
+            font-size: 2.8rem;
+            color: #475569;
+            margin-bottom: 2px;
+        }
+
+        /* label background also softer */
+        .folder-card span {
+            background: #dce3ec;   /* lighter than before */
+            padding: 2px 14px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            color: #1e293b;
+            letter-spacing: 0.3px;
+        }
+
+        .folder-card:hover {
+            background: #e2e8f0;
+            border-color: #94a3b8;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .images_grid {
@@ -91,6 +176,18 @@
             .image-card {
                 width: 100px;
                 height: 100px;
+            }
+            .folder-card {
+                width: 100px;
+                height: 100px;
+            }
+            .add-folder-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 1.4rem;
+            }
+            .add-folder-btn i {
+                font-size: 1.3rem;
             }
         }
 
@@ -106,6 +203,20 @@
             .image-card {
                 width: 80px;
                 height: 80px;
+            }
+            .folder-card {
+                width: 80px;
+                height: 80px;
+            }
+            .folder-card i {
+                font-size: 2rem;
+            }
+            .add-folder-btn {
+                width: 34px;
+                height: 34px;
+            }
+            .add-folder-btn i {
+                font-size: 1.1rem;
             }
         }
     </style>
@@ -139,7 +250,15 @@
         <div class="main_content">
             <section class="images_viewer">
                 <div class="images_header">
-                    <h2>Images</h2>
+                    <div class="header-left">
+                        <h2>Images</h2>
+                    </div>
+                    <div class="header-actions">
+                        <!-- ADD FOLDER BUTTON : icon only (folder + plus) -->
+                        <button class="add-folder-btn" id="addFolderBtn" title="Create new folder">
+                            <i class="fas fa-folder-plus"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="images_grid" id="imageGrid"></div>
             </section>
@@ -170,7 +289,7 @@
     <!-- hidden file input -->
     <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
 
-    <!-- ===== JAVASCRIPT - Image upload functionality ===== -->
+    <!-- ===== JAVASCRIPT - Image upload + folder creation ===== -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         "use strict";
@@ -178,12 +297,14 @@
         const fileInput = document.getElementById("fileInput");
         const addBtn = document.getElementById("addFileBtn");
         const imageGrid = document.getElementById("imageGrid");
+        const addFolderBtn = document.getElementById("addFolderBtn");
 
-        if (!fileInput || !addBtn || !imageGrid) {
+        if (!fileInput || !addBtn || !imageGrid || !addFolderBtn) {
             console.error('Elements not found');
             return;
         }
 
+        // ----- render images (from FileList) -----
         function renderImages(files) {
             const imageFiles = Array.from(files).filter((file) =>
                 file.type.startsWith("image/")
@@ -210,6 +331,24 @@
             });
         }
 
+        // ----- ADD FOLDER (creates a folder-card) -----
+        function createFolderCard() {
+            const folderCount = imageGrid.querySelectorAll('.folder-card').length + 1;
+            const folderName = `Folder ${folderCount}`;
+
+            const card = document.createElement('div');
+            card.className = 'folder-card';
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-folder';
+            const label = document.createElement('span');
+            label.textContent = folderName;
+
+            card.appendChild(icon);
+            card.appendChild(label);
+            imageGrid.appendChild(card);
+        }
+
+        // ----- event listeners -----
         addBtn.addEventListener("click", function (e) {
             e.stopPropagation();
             fileInput.click();
@@ -222,6 +361,7 @@
             fileInput.value = "";
         });
 
+        // drag & drop images
         imageGrid.addEventListener("dragover", function (e) {
             e.preventDefault();
             this.style.backgroundColor = "#f0f4ff";
@@ -236,6 +376,12 @@
             if (files && files.length > 0) {
                 renderImages(files);
             }
+        });
+
+        // ----- ADD FOLDER BUTTON (icon only) -----
+        addFolderBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            createFolderCard();
         });
     });
     </script>

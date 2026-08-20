@@ -24,20 +24,61 @@
             justify-content: space-between;
             margin-bottom: 25px;
             padding-bottom: 15px;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: none;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .documents_header h2 {
             font-size: 1.3rem;
             color: #111827;
+            margin: 0;
         }
 
-        .documents_count {
-            font-size: 0.9rem;
-            color: #6b7280;
-            background: #f3f4f6;
-            padding: 4px 12px;
-            border-radius: 20px;
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ADD FOLDER BUTTON (icon only) - matches images page */
+        .add-folder-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.8rem;
+            color: #1e293b;
+            cursor: pointer;
+            padding: 0 6px;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            width: 44px;
+            height: 44px;
+            background: #f1f5f9;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+
+        .add-folder-btn i {
+            font-size: 1.6rem;
+            color: #334155;
+        }
+
+        .add-folder-btn:hover {
+            background: #e2e8f0;
+            transform: scale(1.04);
+            color: #0f172a;
+        }
+
+        .add-folder-btn:active {
+            transform: scale(0.94);
         }
 
         .documents_grid {
@@ -55,45 +96,45 @@
             transition: 0.2s;
         }
 
+        /* ----- FOLDER CARD — same as images page ----- */
         .folder-card {
-            width: 180px;
-            padding: 20px;
+            width: 125px;
+            height: 100px;
             border-radius: 12px;
-            background: white;
-            border: 2px solid #e2e8f0;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            transition: 0.2s;
+            background: #eef2f6;
+            border: 1px solid #d1d9e6;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
-            cursor: pointer;
+            justify-content: center;
+            color: #1e293b;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            cursor: default;
+            gap: 4px;
             position: relative;
         }
 
+        .folder-card i {
+            font-size: 2.8rem;
+            color: #475569;
+            margin-bottom: 2px;
+        }
+
+        .folder-card span {
+            background: #dce3ec;
+            padding: 2px 14px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            color: #1e293b;
+            letter-spacing: 0.3px;
+        }
+
         .folder-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            border-color: #7c3aed;
-        }
-
-        .folder-card i.fa-folder {
-            font-size: 56px;
-            color: #f59e0b;
-        }
-
-        .folder-card .folder-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: #111827;
-            text-align: center;
-            word-break: break-word;
-        }
-
-        .folder-card .folder-info {
-            font-size: 12px;
-            color: #6b7280;
-            text-align: center;
+            background: #e2e8f0;
+            border-color: #94a3b8;
         }
 
         .folder-card .folder-remove {
@@ -268,11 +309,16 @@
                 padding: 16px;
             }
             .folder-card {
-                width: 150px;
-                padding: 16px;
+                width: 100px;
+                height: 100px;
             }
-            .folder-card i.fa-folder {
-                font-size: 44px;
+            .add-folder-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 1.4rem;
+            }
+            .add-folder-btn i {
+                font-size: 1.3rem;
             }
             .folder-modal {
                 padding: 20px;
@@ -290,11 +336,11 @@
                 font-size: 1rem;
             }
             .folder-card {
-                width: 130px;
-                padding: 12px;
+                width: 80px;
+                height: 80px;
             }
-            .folder-card i.fa-folder {
-                font-size: 36px;
+            .folder-card i {
+                font-size: 2rem;
             }
             .file-item {
                 padding: 8px 10px;
@@ -302,6 +348,13 @@
             }
             .file-item .file-name {
                 font-size: 11px;
+            }
+            .add-folder-btn {
+                width: 34px;
+                height: 34px;
+            }
+            .add-folder-btn i {
+                font-size: 1.1rem;
             }
         }
     </style>
@@ -324,7 +377,6 @@
         <button type="button" class="add_file_btn" id="addFileBtn">
             <i class="fas fa-plus" style="margin-right: 8px;"></i> Add Files
         </button>
-        <!-- Using webkitdirectory for folder upload -->
         <input type="file" id="fileInput" webkitdirectory multiple style="display:none;">
         <a href="#all_files">All Files</a>
         <a href="#recent_files">Recent</a>
@@ -336,8 +388,14 @@
         <div class="main_content">
             <section class="documents_viewer">
                 <div class="documents_header">
-                    <h2>📄 Documents</h2>
-                    <span class="documents_count" id="docCount">0 items</span>
+                    <div class="header-left">
+                        <h2>📄 Documents</h2>
+                    </div>
+                    <div class="header-actions">
+                        <button class="add-folder-btn" id="addFolderBtn" title="Create new folder">
+                            <i class="fas fa-folder-plus"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="uploading-indicator" id="uploadingIndicator">
                     <i class="fas fa-spinner"></i> Uploading files...
@@ -384,8 +442,8 @@
         const fileInput = document.getElementById("fileInput");
         const addBtn = document.getElementById("addFileBtn");
         const documentsGrid = document.getElementById("documentsGrid");
-        const docCount = document.getElementById("docCount");
         const uploadIndicator = document.getElementById("uploadingIndicator");
+        const addFolderBtn = document.getElementById("addFolderBtn");
         
         const folderOverlay = document.getElementById("folderOverlay");
         const modalCloseBtn = document.getElementById("modalCloseBtn");
@@ -438,11 +496,6 @@
             return icons[ext] || 'fa-file';
         }
 
-        function updateCount() {
-            const count = documentsGrid.children.length;
-            docCount.textContent = count + ' item' + (count !== 1 ? 's' : '');
-        }
-
         function removeItem(card) {
             const folderName = card.dataset.folderName;
             if (folderName && folderStore[folderName]) {
@@ -453,7 +506,6 @@
             card.style.opacity = '0';
             setTimeout(() => {
                 card.remove();
-                updateCount();
             }, 200);
         }
 
@@ -508,24 +560,12 @@
             const icon = document.createElement("i");
             icon.className = "fas fa-folder";
             
-            const name = document.createElement("div");
-            name.className = "folder-name";
+            const name = document.createElement("span");
             name.textContent = folderName;
-            
-            const info = document.createElement("div");
-            info.className = "folder-info";
-            const totalSize = files.reduce((sum, f) => sum + f.size, 0);
-            info.textContent = `${files.length} files · ${formatFileSize(totalSize)}`;
             
             card.appendChild(removeBtn);
             card.appendChild(icon);
             card.appendChild(name);
-            card.appendChild(info);
-            
-            card.addEventListener('click', function(e) {
-                if (e.target.closest('.folder-remove')) return;
-                openFolder(folderName, files);
-            });
             
             return card;
         }
@@ -551,8 +591,17 @@
                 const folderCard = createFolderCard(folderName, folders[folderName]);
                 documentsGrid.appendChild(folderCard);
             });
+        }
+
+        // Create empty folder
+        function createEmptyFolder() {
+            const folderCount = documentsGrid.querySelectorAll('.folder-card').length + 1;
+            const folderName = `Folder ${folderCount}`;
             
-            updateCount();
+            const emptyFiles = [];
+            folderStore[folderName] = emptyFiles;
+            const folderCard = createFolderCard(folderName, emptyFiles);
+            documentsGrid.appendChild(folderCard);
         }
 
         modalCloseBtn.addEventListener('click', closeModal);
@@ -570,6 +619,12 @@
         addBtn.addEventListener("click", function(e) {
             e.stopPropagation();
             fileInput.click();
+        });
+
+        // Add folder button
+        addFolderBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            createEmptyFolder();
         });
 
         fileInput.addEventListener("change", function(e) {
