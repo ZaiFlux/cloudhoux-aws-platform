@@ -95,6 +95,7 @@
             min-height: 400px;
             border: 1px solid #e5e7eb;
             transition: 0.2s;
+            position: relative;
         }
 
         /* image card */
@@ -125,14 +126,13 @@
             display: block;
         }
 
-        /* ----- FOLDER CARD — gray bg made smaller & softer ----- */
+        /* ----- FOLDER CARD — with drag support ----- */
         .folder-card {
             width: 125px;
             height: 100px;
             border-radius: 12px;
-            /* smaller, lighter gray background */
-            background: #eef2f6;        /* was #eef2f6, keep light */
-            border: 1px solid #d1d9e6;  /* softer border */
+            background: #eef2f6;
+            border: 1px solid #d1d9e6;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -140,31 +140,112 @@
             color: #1e293b;
             font-size: 0.85rem;
             font-weight: 500;
-            transition: 0.2s;
+            transition: none;
             box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-            cursor: default;
+            cursor: grab;
             gap: 4px;
+            position: relative;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .folder-card.dragging {
+            opacity: 0.8;
+            transform: scale(1.05);
+            z-index: 1000;
+            cursor: grabbing;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+            border-color: #3b82f6;
+        }
+
+        .folder-card.drag-over {
+            border-color: #3b82f6;
+            background: #dbeafe;
+            transform: scale(1.03);
         }
 
         .folder-card i {
             font-size: 2.8rem;
             color: #475569;
             margin-bottom: 2px;
+            pointer-events: none;
         }
 
-        /* label background also softer */
-        .folder-card span {
-            background: #dce3ec;   /* lighter than before */
+        /* Folder name styling */
+        .folder-name {
+            background: #dce3ec;
             padding: 2px 14px;
             border-radius: 30px;
             font-size: 0.7rem;
             color: #1e293b;
             letter-spacing: 0.3px;
+            cursor: pointer;
+            transition: 0.2s;
+            user-select: none;
+            min-width: 40px;
+            text-align: center;
+            display: inline-block;
+            pointer-events: auto;
+        }
+
+        .folder-name:hover {
+            background: #c8d2e0;
+            transform: scale(1.05);
+        }
+
+        /* Input for renaming */
+        .folder-name-input {
+            background: white;
+            border: 2px solid #3b82f6;
+            padding: 2px 10px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            color: #1e293b;
+            outline: none;
+            min-width: 60px;
+            text-align: center;
+            font-family: inherit;
+            font-weight: 500;
+        }
+
+        .folder-name-input:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         }
 
         .folder-card:hover {
             background: #e2e8f0;
             border-color: #94a3b8;
+        }
+
+        /* Drag ghost element */
+        .drag-ghost {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.85;
+            transform: scale(1.08);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            border-color: #3b82f6;
+            background: #eef2f6;
+            border-radius: 12px;
+            padding: 10px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .drag-ghost i {
+            font-size: 2.8rem;
+            color: #475569;
+        }
+
+        .drag-ghost span {
+            background: #dce3ec;
+            padding: 2px 14px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            color: #1e293b;
         }
 
         /* Responsive */
@@ -254,7 +335,6 @@
                         <h2>Images</h2>
                     </div>
                     <div class="header-actions">
-                        <!-- ADD FOLDER BUTTON : icon only (folder + plus) -->
                         <button class="add-folder-btn" id="addFolderBtn" title="Create new folder">
                             <i class="fas fa-folder-plus"></i>
                         </button>
@@ -286,10 +366,8 @@
         </aside>
     </main>
 
-    <!-- hidden file input -->
     <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
 
-    <!-- ===== JAVASCRIPT - Image upload + folder creation ===== -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         "use strict";
@@ -303,6 +381,9 @@
             console.error('Elements not found');
             return;
         }
+
+        let dragData = null;
+        let ghostElement = null;
 
         // ----- render images (from FileList) -----
         function renderImages(files) {
@@ -331,22 +412,275 @@
             });
         }
 
-        // ----- ADD FOLDER (creates a folder-card) -----
+        // ----- Drag and Drop Functions -----
+        function createGhostElement(card) {
+            const ghost = document.createElement('div');
+            ghost.className = 'drag-ghost';
+            ghost.style.position = 'fixed';
+            ghost.style.pointerEvents = 'none';
+            ghost.style.zIndex = '9999';
+            
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-folder';
+            
+            const nameSpan = document.createElement('span');
+            const folderNameEl = card.querySelector('.folder-name');
+            nameSpan.textContent = folderNameEl ? folderNameEl.textContent : 'Folder';
+            
+            ghost.appendChild(icon);
+            ghost.appendChild(nameSpan);
+            
+            return ghost;
+        }
+
+        function isInsideGrid(grid, clientX, clientY) {
+            const rect = grid.getBoundingClientRect();
+            return clientX >= rect.left && clientX <= rect.right &&
+                   clientY >= rect.top && clientY <= rect.bottom;
+        }
+
+        function findDropTarget(grid, clientX, clientY) {
+            const cards = grid.querySelectorAll('.folder-card:not(.dragging)');
+            for (let card of cards) {
+                const rect = card.getBoundingClientRect();
+                if (clientX >= rect.left && clientX <= rect.right &&
+                    clientY >= rect.top && clientY <= rect.bottom) {
+                    return card;
+                }
+            }
+            return null;
+        }
+
+        function initDrag(card, e) {
+            if (e.target.closest('.folder-name-input') || e.target.closest('.folder-name')) {
+                return;
+            }
+
+            const startX = e.clientX || e.touches?.[0]?.clientX || 0;
+            const startY = e.clientY || e.touches?.[0]?.clientY || 0;
+
+            dragData = {
+                card: card,
+                startX: startX,
+                startY: startY,
+                offsetX: 0,
+                offsetY: 0,
+                isDragging: false
+            };
+
+            ghostElement = createGhostElement(card);
+            document.body.appendChild(ghostElement);
+            ghostElement.style.display = 'none';
+
+            card.classList.add('dragging');
+        }
+
+        function moveDrag(e) {
+            if (!dragData || !ghostElement) return;
+
+            const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
+            const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
+
+            const dx = clientX - dragData.startX;
+            const dy = clientY - dragData.startY;
+
+            if (!dragData.isDragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+                dragData.isDragging = true;
+                const cardRect = dragData.card.getBoundingClientRect();
+                ghostElement.style.display = 'flex';
+                ghostElement.style.left = (clientX - cardRect.width / 2) + 'px';
+                ghostElement.style.top = (clientY - 40) + 'px';
+                
+                document.querySelectorAll('.folder-card.drag-over').forEach(el => {
+                    el.classList.remove('drag-over');
+                });
+            }
+
+            if (dragData.isDragging) {
+                ghostElement.style.left = (clientX - 62) + 'px';
+                ghostElement.style.top = (clientY - 50) + 'px';
+
+                if (isInsideGrid(imageGrid, clientX, clientY)) {
+                    const target = findDropTarget(imageGrid, clientX, clientY);
+                    document.querySelectorAll('.folder-card.drag-over').forEach(el => {
+                        if (el !== target) el.classList.remove('drag-over');
+                    });
+                    if (target && target !== dragData.card) {
+                        target.classList.add('drag-over');
+                    }
+                } else {
+                    document.querySelectorAll('.folder-card.drag-over').forEach(el => {
+                        el.classList.remove('drag-over');
+                    });
+                }
+            }
+        }
+
+        function endDrag(e) {
+            if (!dragData) return;
+
+            const clientX = e.clientX || e.changedTouches?.[0]?.clientX || 0;
+            const clientY = e.clientY || e.changedTouches?.[0]?.clientY || 0;
+
+            document.querySelectorAll('.folder-card.drag-over').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+
+            if (dragData.isDragging) {
+                const inside = isInsideGrid(imageGrid, clientX, clientY);
+                const target = findDropTarget(imageGrid, clientX, clientY);
+
+                if (inside && target && target !== dragData.card) {
+                    // Swap the cards
+                    const parent = imageGrid;
+                    const card1 = dragData.card;
+                    const card2 = target;
+                    
+                    const clone1 = card1.cloneNode(true);
+                    const clone2 = card2.cloneNode(true);
+                    
+                    // Re-add event listeners for clone1
+                    const nameSpan1 = clone1.querySelector('.folder-name');
+                    if (nameSpan1) {
+                        nameSpan1.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            makeFolderNameEditable(nameSpan1, clone1);
+                        });
+                    }
+                    
+                    // Re-add drag events for clones
+                    clone1.addEventListener('mousedown', function(e) {
+                        initDrag(this, e);
+                    });
+                    clone1.addEventListener('touchstart', function(e) {
+                        initDrag(this, e);
+                    }, { passive: true });
+                    
+                    clone2.addEventListener('mousedown', function(e) {
+                        initDrag(this, e);
+                    });
+                    clone2.addEventListener('touchstart', function(e) {
+                        initDrag(this, e);
+                    }, { passive: true });
+                    
+                    const idx1 = Array.from(parent.children).indexOf(card1);
+                    const idx2 = Array.from(parent.children).indexOf(card2);
+                    
+                    if (idx1 < idx2) {
+                        parent.insertBefore(clone2, card1);
+                        parent.insertBefore(clone1, card2);
+                    } else {
+                        parent.insertBefore(clone1, card2);
+                        parent.insertBefore(clone2, card1);
+                    }
+                    
+                    card1.remove();
+                    card2.remove();
+                }
+            }
+
+            // Clean up
+            if (ghostElement) {
+                ghostElement.remove();
+                ghostElement = null;
+            }
+            if (dragData.card) {
+                dragData.card.classList.remove('dragging');
+            }
+            document.querySelectorAll('.folder-card.drag-over').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+            dragData = null;
+        }
+
+        // ----- Rename functionality -----
+        function makeFolderNameEditable(folderNameSpan, folderCard) {
+            const currentName = folderNameSpan.textContent;
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'folder-name-input';
+            input.value = currentName;
+            
+            folderNameSpan.replaceWith(input);
+            input.focus();
+            input.select();
+
+            function saveRename() {
+                const newName = input.value.trim() || currentName;
+                const newSpan = document.createElement('span');
+                newSpan.className = 'folder-name';
+                newSpan.textContent = newName;
+                
+                newSpan.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    makeFolderNameEditable(newSpan, folderCard);
+                });
+                
+                input.replaceWith(newSpan);
+            }
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    input.blur();
+                } else if (e.key === 'Escape') {
+                    const newSpan = document.createElement('span');
+                    newSpan.className = 'folder-name';
+                    newSpan.textContent = currentName;
+                    
+                    newSpan.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        makeFolderNameEditable(newSpan, folderCard);
+                    });
+                    
+                    input.replaceWith(newSpan);
+                }
+            });
+
+            input.addEventListener('blur', saveRename);
+        }
+
+        // ----- ADD FOLDER (creates a folder-card with rename and drag capability) -----
         function createFolderCard() {
             const folderCount = imageGrid.querySelectorAll('.folder-card').length + 1;
             const folderName = `Folder ${folderCount}`;
 
             const card = document.createElement('div');
             card.className = 'folder-card';
+            
             const icon = document.createElement('i');
             icon.className = 'fas fa-folder';
-            const label = document.createElement('span');
-            label.textContent = folderName;
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'folder-name';
+            nameSpan.textContent = folderName;
+            
+            // Click on name starts renaming
+            nameSpan.addEventListener('click', function(e) {
+                e.stopPropagation();
+                makeFolderNameEditable(nameSpan, card);
+            });
+
+            // Drag events
+            card.addEventListener('mousedown', function(e) {
+                initDrag(this, e);
+            });
+            card.addEventListener('touchstart', function(e) {
+                initDrag(this, e);
+            }, { passive: true });
 
             card.appendChild(icon);
-            card.appendChild(label);
+            card.appendChild(nameSpan);
             imageGrid.appendChild(card);
         }
+
+        // Global drag event listeners
+        document.addEventListener('mousemove', moveDrag);
+        document.addEventListener('touchmove', moveDrag, { passive: true });
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchend', endDrag);
+        document.addEventListener('touchcancel', endDrag);
 
         // ----- event listeners -----
         addBtn.addEventListener("click", function (e) {
@@ -378,7 +712,7 @@
             }
         });
 
-        // ----- ADD FOLDER BUTTON (icon only) -----
+        // ----- ADD FOLDER BUTTON -----
         addFolderBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             createFolderCard();
