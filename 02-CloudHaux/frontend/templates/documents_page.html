@@ -439,8 +439,43 @@
                 font-size: 1.1rem;
             }
         }
+
+        .custom-context-menu {
+    position: fixed;
+    z-index: 10000;
+    min-width: 180px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    padding: 6px;
+    display: none;
+}
+.custom-context-menu.open { display: block; }
+.ccm-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 7px;
+    font-size: 0.85rem;
+    color: #1f2937;
+    cursor: pointer;
+}
+.ccm-item i { width: 16px; text-align: center; color: #475569; }
+.ccm-item:hover { background: #f1f5f9; }
+.ccm-item.ccm-danger { color: #dc2626; }
+.ccm-item.ccm-danger i { color: #dc2626; }
+.ccm-item.ccm-danger:hover { background: #fee2e2; }
+.ccm-separator { height: 1px; background: #eef0f3; margin: 5px 4px; }
     </style>
 </head>
+<div class="custom-context-menu" id="customContextMenu">
+    <div class="ccm-item"><i class="fas fa-share-alt"></i> Share</div>
+    <div class="ccm-item"><i class="fas fa-folder-open"></i> Move to</div>
+    <div class="ccm-separator"></div>
+    <div class="ccm-item ccm-danger"><i class="fas fa-trash"></i> Delete</div>
+</div>
 <body>
     <header class="topbar">
         <div class="logo">CloudHaux</div>
@@ -535,6 +570,31 @@
         const folderStore = {};
         let dragData = null;
         let ghostElement = null;
+
+        const contextMenu = document.getElementById('customContextMenu');
+
+function openContextMenu(x, y) {
+    const maxX = window.innerWidth - 190;
+    const maxY = window.innerHeight - 120;
+    contextMenu.style.left = Math.min(x, maxX) + 'px';
+    contextMenu.style.top = Math.min(y, maxY) + 'px';
+    contextMenu.classList.add('open');
+}
+function closeContextMenu() { contextMenu.classList.remove('open'); }
+function attachContextMenu(card) {
+    card.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        openContextMenu(e.clientX, e.clientY);
+    });
+}
+document.addEventListener('click', function(e) {
+    if (!contextMenu.contains(e.target)) closeContextMenu();
+});
+document.addEventListener('scroll', closeContextMenu, true);
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeContextMenu();
+});
 
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
@@ -741,6 +801,7 @@
                             openFolder(folderName, folderStore[folderName]);
                         }
                     });
+                    attachContextMenu(clone1);
                     
                     // Re-add event listeners for clone2
                     const nameSpan2 = clone2.querySelector('.folder-name');
@@ -765,7 +826,7 @@
                             removeItem(clone2);
                         });
                     }
-                    
+                    attachContextMenu(clone2);
                     // Re-add click event for opening folder
                     clone2.addEventListener('click', function(e) {
                         if (e.target.closest('.folder-remove') || e.target.closest('.folder-name-input')) {
@@ -990,9 +1051,11 @@
                 initDrag(this, e);
             }, { passive: true });
             
-            card.appendChild(removeBtn);
+             card.appendChild(removeBtn);
             card.appendChild(icon);
             card.appendChild(nameSpan);
+
+            attachContextMenu(card);
             
             return card;
         }
