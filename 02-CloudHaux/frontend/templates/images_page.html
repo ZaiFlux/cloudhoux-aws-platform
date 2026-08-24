@@ -301,7 +301,7 @@
             }
         }
 
-                .custom-context-menu {
+        .custom-context-menu {
             position: fixed;
             z-index: 10000;
             min-width: 180px;
@@ -397,11 +397,11 @@
 
     <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
 
-        <div class="custom-context-menu" id="customContextMenu">
-        <div class="ccm-item"><i class="fas fa-share-alt"></i> Share</div>
-        <div class="ccm-item"><i class="fas fa-folder-open"></i> Move to</div>
+    <div class="custom-context-menu" id="customContextMenu">
+        <div class="ccm-item" id="ccmShare"><i class="fas fa-share-alt"></i> Share</div>
+        <div class="ccm-item" id="ccmMove"><i class="fas fa-folder-open"></i> Move to</div>
         <div class="ccm-separator"></div>
-        <div class="ccm-item ccm-danger"><i class="fas fa-trash"></i> Delete</div>
+        <div class="ccm-item ccm-danger" id="ccmDelete"><i class="fas fa-trash"></i> Delete</div>
     </div>
 
     <script>
@@ -421,23 +421,51 @@
         let dragData = null;
         let ghostElement = null;
 
-                const contextMenu = document.getElementById('customContextMenu');
+        const contextMenu = document.getElementById('customContextMenu');
+        let contextTarget = null;
+        const ccmDelete = document.getElementById('ccmDelete');
 
-        function openContextMenu(x, y) {
+        function openContextMenu(x, y, targetCard) {
+            contextTarget = targetCard;
             const maxX = window.innerWidth - 190;
             const maxY = window.innerHeight - 120;
             contextMenu.style.left = Math.min(x, maxX) + 'px';
             contextMenu.style.top = Math.min(y, maxY) + 'px';
             contextMenu.classList.add('open');
         }
-        function closeContextMenu() { contextMenu.classList.remove('open'); }
+
+        function closeContextMenu() {
+            contextMenu.classList.remove('open');
+            contextTarget = null;
+        }
+
         function attachContextMenu(card) {
             card.addEventListener('contextmenu', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                openContextMenu(e.clientX, e.clientY);
+                openContextMenu(e.clientX, e.clientY, card);
             });
         }
+
+        // DELETE action for images and folders
+        ccmDelete.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (contextTarget) {
+                // If it's an image card, revoke any object URLs if needed
+                const img = contextTarget.querySelector('img');
+                if (img && img.src && img.src.startsWith('blob:')) {
+                    URL.revokeObjectURL(img.src);
+                }
+                contextTarget.style.transition = '0.2s';
+                contextTarget.style.transform = 'scale(0.8)';
+                contextTarget.style.opacity = '0';
+                setTimeout(() => {
+                    contextTarget.remove();
+                }, 200);
+            }
+            closeContextMenu();
+        });
+
         document.addEventListener('click', function(e) {
             if (!contextMenu.contains(e.target)) closeContextMenu();
         });
@@ -457,7 +485,7 @@
                 return;
             }
 
-                        imageFiles.forEach((file) => {
+            imageFiles.forEach((file) => {
                 const reader = new FileReader();
                 reader.onload = function (loadEvent) {
                     const imgSrc = loadEvent.target.result;
@@ -473,9 +501,6 @@
                 reader.readAsDataURL(file);
             });
         }
-
-        // ----- Drag and Drop Functions -----
-        
 
         // ----- Drag and Drop Functions -----
         function createGhostElement(card) {
@@ -596,7 +621,6 @@
                 const target = findDropTarget(imageGrid, clientX, clientY);
 
                 if (inside && target && target !== dragData.card) {
-                    // Swap the cards
                     const parent = imageGrid;
                     const card1 = dragData.card;
                     const card2 = target;
@@ -612,6 +636,12 @@
                             makeFolderNameEditable(nameSpan1, clone1);
                         });
                     }
+                    clone1.addEventListener('dblclick', function(e) {
+                        const nameEl = this.querySelector('.folder-name');
+                        if (nameEl) {
+                            makeFolderNameEditable(nameEl, this);
+                        }
+                    });
                     
                     // Re-add drag events for clones
                     clone1.addEventListener('mousedown', function(e) {
@@ -621,12 +651,31 @@
                         initDrag(this, e);
                     }, { passive: true });
                     
+                    // Re-add event listeners for clone2
+                    const nameSpan2 = clone2.querySelector('.folder-name');
+                    if (nameSpan2) {
+                        nameSpan2.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            makeFolderNameEditable(nameSpan2, clone2);
+                        });
+                    }
+                    clone2.addEventListener('dblclick', function(e) {
+                        const nameEl = this.querySelector('.folder-name');
+                        if (nameEl) {
+                            makeFolderNameEditable(nameEl, this);
+                        }
+                    });
+                    
                     clone2.addEventListener('mousedown', function(e) {
                         initDrag(this, e);
                     });
                     clone2.addEventListener('touchstart', function(e) {
                         initDrag(this, e);
                     }, { passive: true });
+
+                    // Re-attach context menu to clones
+                    attachContextMenu(clone1);
+                    attachContextMenu(clone2);
                     
                     const idx1 = Array.from(parent.children).indexOf(card1);
                     const idx2 = Array.from(parent.children).indexOf(card2);
@@ -644,7 +693,6 @@
                 }
             }
 
-            // Clean up
             if (ghostElement) {
                 ghostElement.remove();
                 ghostElement = null;
@@ -680,6 +728,13 @@
                 newSpan.addEventListener('click', function(e) {
                     e.stopPropagation();
                     makeFolderNameEditable(newSpan, folderCard);
+                });
+                
+                folderCard.addEventListener('dblclick', function(e) {
+                    const nameSpan = this.querySelector('.folder-name');
+                    if (nameSpan) {
+                        makeFolderNameEditable(nameSpan, this);
+                    }
                 });
                 
                 input.replaceWith(newSpan);
@@ -721,13 +776,18 @@
             nameSpan.className = 'folder-name';
             nameSpan.textContent = folderName;
             
-            // Click on name starts renaming
             nameSpan.addEventListener('click', function(e) {
                 e.stopPropagation();
                 makeFolderNameEditable(nameSpan, card);
             });
+            
+            card.addEventListener('dblclick', function(e) {
+                const nameEl = this.querySelector('.folder-name');
+                if (nameEl) {
+                    makeFolderNameEditable(nameEl, this);
+                }
+            });
 
-            // Drag events
             card.addEventListener('mousedown', function(e) {
                 initDrag(this, e);
             });
@@ -735,7 +795,7 @@
                 initDrag(this, e);
             }, { passive: true });
 
-         card.appendChild(icon);
+            card.appendChild(icon);
             card.appendChild(nameSpan);
             imageGrid.appendChild(card);
             attachContextMenu(card);
@@ -761,7 +821,6 @@
             fileInput.value = "";
         });
 
-        // drag & drop images
         imageGrid.addEventListener("dragover", function (e) {
             e.preventDefault();
             this.style.backgroundColor = "#f0f4ff";
@@ -778,11 +837,13 @@
             }
         });
 
-        // ----- ADD FOLDER BUTTON -----
         addFolderBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             createFolderCard();
         });
+
+        // Seed with a sample folder
+        setTimeout(() => { createFolderCard(); }, 100);
     });
     </script>
 </body>

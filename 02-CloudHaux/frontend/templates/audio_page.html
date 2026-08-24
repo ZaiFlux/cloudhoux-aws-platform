@@ -447,10 +447,10 @@
     <!-- hidden file input -->
     <input type="file" id="fileInput" accept=".mp3,.wav,.ogg,.aac,.flac,.m4a" multiple style="display:none;">
         <div class="custom-context-menu" id="customContextMenu">
-        <div class="ccm-item"><i class="fas fa-share-alt"></i> Share</div>
-        <div class="ccm-item"><i class="fas fa-folder-open"></i> Move to</div>
+        <div class="ccm-item" id="ccmShare"><i class="fas fa-share-alt"></i> Share</div>
+        <div class="ccm-item" id="ccmMove"><i class="fas fa-folder-open"></i> Move to</div>
         <div class="ccm-separator"></div>
-        <div class="ccm-item ccm-danger"><i class="fas fa-trash"></i> Delete</div>
+        <div class="ccm-item ccm-danger" id="ccmDelete"><i class="fas fa-trash"></i> Delete</div>
     </div>
 
     <!-- ===== JAVASCRIPT - Audio upload + folder creation with drag & drop ===== -->
@@ -471,23 +471,45 @@
         let dragData = null;
         let ghostElement = null;
 
-                const contextMenu = document.getElementById('customContextMenu');
+        const contextMenu = document.getElementById('customContextMenu');
+        let contextTarget = null;
+        const ccmDelete = document.getElementById('ccmDelete');
 
-        function openContextMenu(x, y) {
+        function openContextMenu(x, y, targetCard) {
+            contextTarget = targetCard;
             const maxX = window.innerWidth - 190;
             const maxY = window.innerHeight - 120;
             contextMenu.style.left = Math.min(x, maxX) + 'px';
             contextMenu.style.top = Math.min(y, maxY) + 'px';
             contextMenu.classList.add('open');
         }
-        function closeContextMenu() { contextMenu.classList.remove('open'); }
+
+        function closeContextMenu() {
+            contextMenu.classList.remove('open');
+            contextTarget = null;
+        }
+
         function attachContextMenu(card) {
             card.addEventListener('contextmenu', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                openContextMenu(e.clientX, e.clientY);
+                openContextMenu(e.clientX, e.clientY, card);
             });
         }
+
+        // DELETE action
+        ccmDelete.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (contextTarget) {
+                const audioSrc = contextTarget.querySelector('audio source');
+                if (audioSrc && audioSrc.src && audioSrc.src.startsWith('blob:')) {
+                    URL.revokeObjectURL(audioSrc.src);
+                }
+                contextTarget.remove();
+            }
+            closeContextMenu();
+        });
+
         document.addEventListener('click', function(e) {
             if (!contextMenu.contains(e.target)) closeContextMenu();
         });
@@ -806,6 +828,10 @@
                     clone2.addEventListener('touchstart', function(e) {
                         initDrag(this, e);
                     }, { passive: true });
+
+                    // Re-attach context menu to clones
+                    attachContextMenu(clone1);
+                    attachContextMenu(clone2);
                     
                     const idx1 = Array.from(parent.children).indexOf(card1);
                     const idx2 = Array.from(parent.children).indexOf(card2);

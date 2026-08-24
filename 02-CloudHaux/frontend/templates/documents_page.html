@@ -47,7 +47,6 @@
             gap: 8px;
         }
 
-        /* ADD FOLDER BUTTON (icon only) - matches images page */
         .add-folder-btn {
             background: transparent;
             border: none;
@@ -97,7 +96,6 @@
             position: relative;
         }
 
-        /* ----- FOLDER CARD — with drag support ----- */
         .folder-card {
             width: 125px;
             height: 100px;
@@ -142,7 +140,6 @@
             pointer-events: none;
         }
 
-        /* Folder name styling */
         .folder-name {
             background: #dce3ec;
             padding: 2px 14px;
@@ -164,7 +161,6 @@
             transform: scale(1.05);
         }
 
-        /* Input for renaming */
         .folder-name-input {
             background: white;
             border: 2px solid #3b82f6;
@@ -339,7 +335,6 @@
             margin-right: 10px;
         }
 
-        /* Drag ghost element */
         .drag-ghost {
             position: fixed;
             pointer-events: none;
@@ -441,41 +436,35 @@
         }
 
         .custom-context-menu {
-    position: fixed;
-    z-index: 10000;
-    min-width: 180px;
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    padding: 6px;
-    display: none;
-}
-.custom-context-menu.open { display: block; }
-.ccm-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 12px;
-    border-radius: 7px;
-    font-size: 0.85rem;
-    color: #1f2937;
-    cursor: pointer;
-}
-.ccm-item i { width: 16px; text-align: center; color: #475569; }
-.ccm-item:hover { background: #f1f5f9; }
-.ccm-item.ccm-danger { color: #dc2626; }
-.ccm-item.ccm-danger i { color: #dc2626; }
-.ccm-item.ccm-danger:hover { background: #fee2e2; }
-.ccm-separator { height: 1px; background: #eef0f3; margin: 5px 4px; }
+            position: fixed;
+            z-index: 10000;
+            min-width: 180px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            padding: 6px;
+            display: none;
+        }
+        .custom-context-menu.open { display: block; }
+        .ccm-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 7px;
+            font-size: 0.85rem;
+            color: #1f2937;
+            cursor: pointer;
+        }
+        .ccm-item i { width: 16px; text-align: center; color: #475569; }
+        .ccm-item:hover { background: #f1f5f9; }
+        .ccm-item.ccm-danger { color: #dc2626; }
+        .ccm-item.ccm-danger i { color: #dc2626; }
+        .ccm-item.ccm-danger:hover { background: #fee2e2; }
+        .ccm-separator { height: 1px; background: #eef0f3; margin: 5px 4px; }
     </style>
 </head>
-<div class="custom-context-menu" id="customContextMenu">
-    <div class="ccm-item"><i class="fas fa-share-alt"></i> Share</div>
-    <div class="ccm-item"><i class="fas fa-folder-open"></i> Move to</div>
-    <div class="ccm-separator"></div>
-    <div class="ccm-item ccm-danger"><i class="fas fa-trash"></i> Delete</div>
-</div>
 <body>
     <header class="topbar">
         <div class="logo">CloudHaux</div>
@@ -552,6 +541,13 @@
         </div>
     </div>
 
+    <div class="custom-context-menu" id="customContextMenu">
+        <div class="ccm-item" id="ccmShare"><i class="fas fa-share-alt"></i> Share</div>
+        <div class="ccm-item" id="ccmMove"><i class="fas fa-folder-open"></i> Move to</div>
+        <div class="ccm-separator"></div>
+        <div class="ccm-item ccm-danger" id="ccmDelete"><i class="fas fa-trash"></i> Delete</div>
+    </div>
+
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         "use strict";
@@ -572,29 +568,55 @@
         let ghostElement = null;
 
         const contextMenu = document.getElementById('customContextMenu');
+        let contextTarget = null;
+        const ccmDelete = document.getElementById('ccmDelete');
 
-function openContextMenu(x, y) {
-    const maxX = window.innerWidth - 190;
-    const maxY = window.innerHeight - 120;
-    contextMenu.style.left = Math.min(x, maxX) + 'px';
-    contextMenu.style.top = Math.min(y, maxY) + 'px';
-    contextMenu.classList.add('open');
-}
-function closeContextMenu() { contextMenu.classList.remove('open'); }
-function attachContextMenu(card) {
-    card.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        openContextMenu(e.clientX, e.clientY);
-    });
-}
-document.addEventListener('click', function(e) {
-    if (!contextMenu.contains(e.target)) closeContextMenu();
-});
-document.addEventListener('scroll', closeContextMenu, true);
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeContextMenu();
-});
+        function openContextMenu(x, y, targetCard) {
+            contextTarget = targetCard;
+            const maxX = window.innerWidth - 190;
+            const maxY = window.innerHeight - 120;
+            contextMenu.style.left = Math.min(x, maxX) + 'px';
+            contextMenu.style.top = Math.min(y, maxY) + 'px';
+            contextMenu.classList.add('open');
+        }
+
+        function closeContextMenu() {
+            contextMenu.classList.remove('open');
+            contextTarget = null;
+        }
+
+        function attachContextMenu(card) {
+            card.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                openContextMenu(e.clientX, e.clientY, card);
+            });
+        }
+
+        ccmDelete.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (contextTarget) {
+                const folderName = contextTarget.dataset.folderName;
+                if (folderName && folderStore[folderName]) {
+                    delete folderStore[folderName];
+                }
+                contextTarget.style.transition = '0.2s';
+                contextTarget.style.transform = 'scale(0.8)';
+                contextTarget.style.opacity = '0';
+                setTimeout(() => {
+                    contextTarget.remove();
+                }, 200);
+            }
+            closeContextMenu();
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!contextMenu.contains(e.target)) closeContextMenu();
+        });
+        document.addEventListener('scroll', closeContextMenu, true);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeContextMenu();
+        });
 
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
@@ -640,7 +662,6 @@ document.addEventListener('keydown', function(e) {
             return icons[ext] || 'fa-file';
         }
 
-        // ----- Drag and Drop Functions -----
         function createGhostElement(card) {
             const ghost = document.createElement('div');
             ghost.className = 'drag-ghost';
@@ -759,7 +780,6 @@ document.addEventListener('keydown', function(e) {
                 const target = findDropTarget(documentsGrid, clientX, clientY);
 
                 if (inside && target && target !== dragData.card) {
-                    // Swap the cards
                     const parent = documentsGrid;
                     const card1 = dragData.card;
                     const card2 = target;
@@ -767,7 +787,6 @@ document.addEventListener('keydown', function(e) {
                     const clone1 = card1.cloneNode(true);
                     const clone2 = card2.cloneNode(true);
                     
-                    // Re-add event listeners for clone1
                     const nameSpan1 = clone1.querySelector('.folder-name');
                     if (nameSpan1) {
                         nameSpan1.addEventListener('click', function(e) {
@@ -782,7 +801,6 @@ document.addEventListener('keydown', function(e) {
                         }
                     });
                     
-                    // Re-add remove button event
                     const removeBtn1 = clone1.querySelector('.folder-remove');
                     if (removeBtn1) {
                         removeBtn1.addEventListener('click', function(e) {
@@ -791,7 +809,6 @@ document.addEventListener('keydown', function(e) {
                         });
                     }
                     
-                    // Re-add click event for opening folder
                     clone1.addEventListener('click', function(e) {
                         if (e.target.closest('.folder-remove') || e.target.closest('.folder-name-input')) {
                             return;
@@ -803,7 +820,6 @@ document.addEventListener('keydown', function(e) {
                     });
                     attachContextMenu(clone1);
                     
-                    // Re-add event listeners for clone2
                     const nameSpan2 = clone2.querySelector('.folder-name');
                     if (nameSpan2) {
                         nameSpan2.addEventListener('click', function(e) {
@@ -818,7 +834,6 @@ document.addEventListener('keydown', function(e) {
                         }
                     });
                     
-                    // Re-add remove button event
                     const removeBtn2 = clone2.querySelector('.folder-remove');
                     if (removeBtn2) {
                         removeBtn2.addEventListener('click', function(e) {
@@ -827,7 +842,6 @@ document.addEventListener('keydown', function(e) {
                         });
                     }
                     attachContextMenu(clone2);
-                    // Re-add click event for opening folder
                     clone2.addEventListener('click', function(e) {
                         if (e.target.closest('.folder-remove') || e.target.closest('.folder-name-input')) {
                             return;
@@ -838,7 +852,6 @@ document.addEventListener('keydown', function(e) {
                         }
                     });
                     
-                    // Re-add drag events for clones
                     clone1.addEventListener('mousedown', function(e) {
                         initDrag(this, e);
                     });
@@ -869,7 +882,6 @@ document.addEventListener('keydown', function(e) {
                 }
             }
 
-            // Clean up
             if (ghostElement) {
                 ghostElement.remove();
                 ghostElement = null;
@@ -883,7 +895,6 @@ document.addEventListener('keydown', function(e) {
             dragData = null;
         }
 
-        // ----- Rename functionality -----
         function makeFolderNameEditable(folderNameSpan, folderCard) {
             const currentName = folderNameSpan.textContent;
             
@@ -1043,25 +1054,21 @@ document.addEventListener('keydown', function(e) {
                 }
             });
             
-            // Drag events
             card.addEventListener('mousedown', function(e) {
                 initDrag(this, e);
             });
             card.addEventListener('touchstart', function(e) {
                 initDrag(this, e);
             }, { passive: true });
-            
-             card.appendChild(removeBtn);
+
+            card.appendChild(removeBtn);
             card.appendChild(icon);
             card.appendChild(nameSpan);
-
+            documentsGrid.appendChild(card);
             attachContextMenu(card);
-            
-            return card;
         }
 
-        // Global drag event listeners
-        document.addEventListener('mousemove', moveDrag);
+            document.addEventListener('mousemove', moveDrag);
         document.addEventListener('touchmove', moveDrag, { passive: true });
         document.addEventListener('mouseup', endDrag);
         document.addEventListener('touchend', endDrag);

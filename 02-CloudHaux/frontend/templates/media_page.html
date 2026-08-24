@@ -340,7 +340,7 @@
             }
         }
 
-                .custom-context-menu {
+        .custom-context-menu {
             position: fixed;
             z-index: 10000;
             min-width: 180px;
@@ -437,12 +437,13 @@
     <!-- hidden file input -->
     <input type="file" id="fileInput" accept=".mp4,.mov,.avi,.mkv,.mp3,.wav,.ogg,.m4a" multiple style="display:none;">
 
-        <div class="custom-context-menu" id="customContextMenu">
-        <div class="ccm-item"><i class="fas fa-share-alt"></i> Share</div>
-        <div class="ccm-item"><i class="fas fa-folder-open"></i> Move to</div>
+    <div class="custom-context-menu" id="customContextMenu">
+        <div class="ccm-item" id="ccmShare"><i class="fas fa-share-alt"></i> Share</div>
+        <div class="ccm-item" id="ccmMove"><i class="fas fa-folder-open"></i> Move to</div>
         <div class="ccm-separator"></div>
-        <div class="ccm-item ccm-danger"><i class="fas fa-trash"></i> Delete</div>
+        <div class="ccm-item ccm-danger" id="ccmDelete"><i class="fas fa-trash"></i> Delete</div>
     </div>
+
     <!-- ===== JAVASCRIPT - Media upload + folder creation with drag & drop ===== -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -461,23 +462,46 @@
         let dragData = null;
         let ghostElement = null;
 
-                const contextMenu = document.getElementById('customContextMenu');
+        const contextMenu = document.getElementById('customContextMenu');
+        let contextTarget = null;
+        const ccmDelete = document.getElementById('ccmDelete');
 
-        function openContextMenu(x, y) {
+        function openContextMenu(x, y, targetCard) {
+            contextTarget = targetCard;
             const maxX = window.innerWidth - 190;
             const maxY = window.innerHeight - 120;
             contextMenu.style.left = Math.min(x, maxX) + 'px';
             contextMenu.style.top = Math.min(y, maxY) + 'px';
             contextMenu.classList.add('open');
         }
-        function closeContextMenu() { contextMenu.classList.remove('open'); }
+
+        function closeContextMenu() {
+            contextMenu.classList.remove('open');
+            contextTarget = null;
+        }
+
         function attachContextMenu(card) {
             card.addEventListener('contextmenu', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                openContextMenu(e.clientX, e.clientY);
+                openContextMenu(e.clientX, e.clientY, card);
             });
         }
+
+        // DELETE action for media cards and folders
+        ccmDelete.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (contextTarget) {
+                contextTarget.style.transition = '0.2s';
+                contextTarget.style.transform = 'scale(0.8)';
+                contextTarget.style.opacity = '0';
+                setTimeout(() => {
+                    contextTarget.remove();
+                }, 200);
+            }
+            closeContextMenu();
+        });
+
         document.addEventListener('click', function(e) {
             if (!contextMenu.contains(e.target)) closeContextMenu();
         });
@@ -628,7 +652,6 @@
                 const target = findDropTarget(mediaGrid, clientX, clientY);
 
                 if (inside && target && target !== dragData.card) {
-                    // Swap the cards
                     const parent = mediaGrid;
                     const card1 = dragData.card;
                     const card2 = target;
@@ -636,7 +659,6 @@
                     const clone1 = card1.cloneNode(true);
                     const clone2 = card2.cloneNode(true);
                     
-                    // Re-add event listeners for clone1
                     const nameSpan1 = clone1.querySelector('.folder-name');
                     if (nameSpan1) {
                         nameSpan1.addEventListener('click', function(e) {
@@ -651,7 +673,6 @@
                         }
                     });
                     
-                    // Re-add drag events for clones
                     clone1.addEventListener('mousedown', function(e) {
                         initDrag(this, e);
                     });
@@ -659,12 +680,29 @@
                         initDrag(this, e);
                     }, { passive: true });
                     
+                    const nameSpan2 = clone2.querySelector('.folder-name');
+                    if (nameSpan2) {
+                        nameSpan2.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            makeFolderNameEditable(nameSpan2, clone2);
+                        });
+                    }
+                    clone2.addEventListener('dblclick', function(e) {
+                        const nameEl = this.querySelector('.folder-name');
+                        if (nameEl) {
+                            makeFolderNameEditable(nameEl, this);
+                        }
+                    });
+                    
                     clone2.addEventListener('mousedown', function(e) {
                         initDrag(this, e);
                     });
                     clone2.addEventListener('touchstart', function(e) {
                         initDrag(this, e);
                     }, { passive: true });
+
+                    attachContextMenu(clone1);
+                    attachContextMenu(clone2);
                     
                     const idx1 = Array.from(parent.children).indexOf(card1);
                     const idx2 = Array.from(parent.children).indexOf(card2);
@@ -682,7 +720,6 @@
                 }
             }
 
-            // Clean up
             if (ghostElement) {
                 ghostElement.remove();
                 ghostElement = null;
@@ -782,13 +819,12 @@
                 type.className = "media-type";
                 type.textContent = mediaInfo.type;
                 
-                               card.appendChild(icon);
+                card.appendChild(icon);
                 card.appendChild(name);
                 card.appendChild(size);
                 card.appendChild(type);
                 mediaGrid.appendChild(card);
                 attachContextMenu(card);
-            
             });
         }
 
@@ -819,7 +855,6 @@
                 }
             });
 
-            // Drag events
             card.addEventListener('mousedown', function(e) {
                 initDrag(this, e);
             });
@@ -827,12 +862,11 @@
                 initDrag(this, e);
             }, { passive: true });
 
-                      card.appendChild(icon);
+            card.appendChild(icon);
             card.appendChild(nameSpan);
             mediaGrid.appendChild(card);
             attachContextMenu(card);
         }
-        
 
         // Global drag event listeners
         document.addEventListener('mousemove', moveDrag);
@@ -854,7 +888,6 @@
             fileInput.value = "";
         });
 
-        // drag & drop
         mediaGrid.addEventListener("dragover", function (e) {
             e.preventDefault();
             this.style.backgroundColor = "#f0f4ff";
@@ -871,11 +904,13 @@
             }
         });
 
-        // ----- ADD FOLDER BUTTON -----
         addFolderBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             createFolderCard();
         });
+
+        // Seed with a sample folder
+        setTimeout(() => { createFolderCard(); }, 100);
     });
     </script>
 </body>
