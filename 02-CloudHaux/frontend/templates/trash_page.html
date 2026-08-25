@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudHaux · Trash</title>
+    <link rel="stylesheet" href="../static/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .trash_viewer {
+            width: 100%;
+            min-height: 400px;
+            padding: 30px;
+            border: 1px solid #d9d9d9;
+            border-radius: 16px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .trash_header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: none;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .trash_header h2 {
+            font-size: 1.3rem;
+            color: #111827;
+            margin: 0;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .empty-trash-btn {
+            background: #ef4444;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .empty-trash-btn:hover {
+            background: #dc2626;
+            transform: scale(1.02);
+        }
+
+        .empty-trash-btn:active {
+            transform: scale(0.96);
+        }
+
+        .restore-all-btn {
+            background: #3b82f6;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .restore-all-btn:hover {
+            background: #2563eb;
+            transform: scale(1.02);
+        }
+
+        .restore-all-btn:active {
+            transform: scale(0.96);
+        }
+
+        .trash_grid {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-start;
+            justify-content: flex-start;
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 24px;
+            min-height: 400px;
+            border: 1px solid #e5e7eb;
+            transition: 0.2s;
+            position: relative;
+        }
+
+        .trash_empty {
+            width: 100%;
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .trash_empty i {
+            font-size: 64px;
+            color: #d1d5db;
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        .trash_empty h3 {
+            font-size: 1.2rem;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .trash_empty p {
+            font-size: 0.95rem;
+            color: #6b7280;
+        }
+
+        .trash-item-card {
+            width: 160px;
+            height: 120px;
+            border-radius: 12px;
+            background: #eef2f6;
+            border: 1px solid #d1d9e6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #1e293b;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            gap: 4px;
+            position: relative;
+            user-select: none;
+            padding: 10px;
+        }
+
+        .trash-item-card:hover {
+            background: #e2e8f0;
+            border-color: #94a3b8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .trash-item-card i {
+            font-size: 2.8rem;
+            color: #475569;
+            margin-bottom: 2px;
+        }
+
+        .trash-item-card .item-name {
+            font-size: 0.75rem;
+            color: #334155;
+            text-align: center;
+            max-width: 140px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .trash-item-card .item-meta {
+            font-size: 0.65rem;
+            color: #6b7280;
+            background: #dce3ec;
+            padding: 2px 12px;
+            border-radius: 20px;
+        }
+
+        .trash-item-card .item-actions {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: 0.2s;
+        }
+
+        .trash-item-card:hover .item-actions {
+            opacity: 1;
+        }
+
+        .trash-item-card .item-actions button {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+
+        .trash-item-card .item-actions .restore-btn {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .trash-item-card .item-actions .restore-btn:hover {
+            background: #2563eb;
+            transform: scale(1.1);
+        }
+
+        .trash-item-card .item-actions .delete-btn {
+            background: #ef4444;
+            color: white;
+        }
+
+        .trash-item-card .item-actions .delete-btn:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+        .trash-item-card .deleted-date {
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #f1f5f9;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.55rem;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+            white-space: nowrap;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #1e293b;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            z-index: 10000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast.success {
+            background: #059669;
+        }
+
+        .toast.error {
+            background: #dc2626;
+        }
+
+        .toast.info {
+            background: #3b82f6;
+        }
+
+        @media (max-width: 768px) {
+            .trash_grid {
+                min-height: 300px;
+                padding: 16px;
+            }
+            .trash-item-card {
+                width: 130px;
+                height: 100px;
+            }
+            .trash-item-card i {
+                font-size: 2rem;
+            }
+            .header-actions {
+                flex-wrap: wrap;
+            }
+            .empty-trash-btn,
+            .restore-all-btn {
+                padding: 8px 14px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .trash_grid {
+                min-height: 200px;
+                gap: 12px;
+                padding: 12px;
+            }
+            .trash_header h2 {
+                font-size: 1rem;
+            }
+            .trash-item-card {
+                width: 100px;
+                height: 85px;
+            }
+            .trash-item-card i {
+                font-size: 1.6rem;
+            }
+            .trash-item-card .item-name {
+                font-size: 0.65rem;
+                max-width: 80px;
+            }
+            .trash-item-card .item-meta {
+                font-size: 0.55rem;
+                padding: 1px 8px;
+            }
+            .trash-item-card .deleted-date {
+                font-size: 0.5rem;
+                padding: 1px 6px;
+            }
+            .empty-trash-btn,
+            .restore-all-btn {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+            .empty-trash-btn i,
+            .restore-all-btn i {
+                font-size: 11px;
+            }
+        }
+
+        .custom-context-menu {
+            position: fixed;
+            z-index: 10000;
+            min-width: 180px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            padding: 6px;
+            display: none;
+        }
+        .custom-context-menu.open { display: block; }
+        .ccm-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 7px;
+            font-size: 0.85rem;
+            color: #1f2937;
+            cursor: pointer;
+        }
+        .ccm-item i { width: 16px; text-align: center; color: #475569; }
+        .ccm-item:hover { background: #f1f5f9; }
+        .ccm-item.ccm-success { color: #059669; }
+        .ccm-item.ccm-success i { color: #059669; }
+        .ccm-item.ccm-success:hover { background: #d1fae5; }
+        .ccm-item.ccm-danger { color: #dc2626; }
+        .ccm-item.ccm-danger i { color: #dc2626; }
+        .ccm-item.ccm-danger:hover { background: #fee2e2; }
+        .ccm-separator { height: 1px; background: #eef0f3; margin: 5px 4px; }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="logo">CloudHaux</div>
+        <div class="search-container">
+            <input type="search" placeholder="Search files...">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+        <div class="profile">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+        </div>
+    </header>
+
+    <nav class="left_nav_bar">
+        <button type="button" class="add_file_btn" id="addFileBtn">
+            <i class="fas fa-plus" style="margin-right: 8px;"></i> Add Files
+        </button>
+        <input type="file" id="fileInput" webkitdirectory multiple style="display:none;">
+        <a href="#all_files">All Files</a>
+        <a href="#recent_files">Recent</a>
+        <a href="#favorites">Favorites</a>
+        <a href="#trash" class="active">Trash</a>
+    </nav>
+
+    <main class="dashboard_content">
+        <div class="main_content">
+            <section class="trash_viewer">
+                <div class="trash_header">
+                    <div class="header-left">
+                        <h2>🗑️ Trash</h2>
+                    </div>
+                    <div class="header-actions">
+                        <button class="restore-all-btn" id="restoreAllBtn">
+                            <i class="fas fa-undo"></i> Restore All
+                        </button>
+                        <button class="empty-trash-btn" id="emptyTrashBtn">
+                            <i class="fas fa-trash"></i> Empty Trash
+                        </button>
+                    </div>
+                </div>
+                <div class="trash_grid" id="trashGrid"></div>
+            </section>
+        </div>
+
+        <aside class="right_panel">
+            <div class="button_group">
+                <button class="category_btn images" onclick="window.location.href='images_page.html'">
+                    <i class="fas fa-image"></i> Images
+                </button>
+                <button class="category_btn documents" onclick="window.location.href='documents_page.html'">
+                    <i class="fas fa-file-alt"></i> Documents
+                </button>
+                <button class="category_btn media_files" onclick="window.location.href='media_page.html'">
+                    <i class="fas fa-video"></i> Media
+                </button>
+                <button class="category_btn audio_files" onclick="window.location.href='audio_page.html'">
+                    <i class="fas fa-music"></i> Audio
+                </button>
+                <button class="category_btn safe_vault" onclick="window.location.href='dashboard.html'">
+                    <i class="fas fa-lock"></i> Safe Vault
+                </button>
+            </div>
+        </aside>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <div class="custom-context-menu" id="customContextMenu">
+        <div class="ccm-item ccm-success" id="ccmRestore"><i class="fas fa-undo"></i> Restore</div>
+        <div class="ccm-separator"></div>
+        <div class="ccm-item ccm-danger" id="ccmDelete"><i class="fas fa-trash"></i> Delete Permanently</div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        "use strict";
+
+        const trashGrid = document.getElementById('trashGrid');
+        const toast = document.getElementById('toast');
+        const emptyTrashBtn = document.getElementById('emptyTrashBtn');
+        const restoreAllBtn = document.getElementById('restoreAllBtn');
+
+        const trashStore = [];
+        let idCounter = 0;
+
+        const contextMenu = document.getElementById('customContextMenu');
+        let contextTarget = null;
+        const ccmRestore = document.getElementById('ccmRestore');
+        const ccmDelete = document.getElementById('ccmDelete');
+
+        function showToast(message, type = 'info') {
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            // Force reflow
+            void toast.offsetWidth;
+            toast.classList.add('show');
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function getFileIcon(fileName) {
+            const ext = fileName.split('.').pop().toLowerCase();
+            const icons = {
+                'pdf': 'fa-file-pdf',
+                'doc': 'fa-file-word',
+                'docx': 'fa-file-word',
+                'txt': 'fa-file-alt',
+                'xls': 'fa-file-excel',
+                'xlsx': 'fa-file-excel',
+                'csv': 'fa-file-csv',
+                'ppt': 'fa-file-powerpoint',
+                'pptx': 'fa-file-powerpoint',
+                'js': 'fa-file-code',
+                'html': 'fa-file-code',
+                'htm': 'fa-file-code',
+                'css': 'fa-file-code',
+                'json': 'fa-file-code',
+                'xml': 'fa-file-code',
+                'py': 'fa-file-code',
+                'java': 'fa-file-code',
+                'cpp': 'fa-file-code',
+                'c': 'fa-file-code',
+                'php': 'fa-file-code',
+                'rb': 'fa-file-code',
+                'go': 'fa-file-code',
+                'rs': 'fa-file-code',
+                'swift': 'fa-file-code',
+                'kt': 'fa-file-code',
+                'md': 'fa-file-alt',
+                'zip': 'fa-file-archive',
+                'rar': 'fa-file-archive',
+                '7z': 'fa-file-archive',
+                'jpg': 'fa-file-image',
+                'jpeg': 'fa-file-image',
+                'png': 'fa-file-image',
+                'gif': 'fa-file-image',
+                'svg': 'fa-file-image',
+                'mp3': 'fa-file-audio',
+                'wav': 'fa-file-audio',
+                'mp4': 'fa-file-video',
+                'avi': 'fa-file-video',
+                'mov': 'fa-file-video'
+            };
+            return icons[ext] || 'fa-file';
+        }
+
+        function formatDate(date) {
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+            if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+            if (diff < 604800000) return Math.floor(diff / 86400000) + 'd ago';
+            
+            return date.toLocaleDateString();
+        }
+
+        function createTrashItem(file) {
+            const item = {
+                id: ++idCounter,
+                name: file.name,
+                size: file.size,
+                type: file.type || 'unknown',
+                deletedAt: new Date(),
+                file: file
+            };
+            trashStore.push(item);
+            return renderTrashItem(item);
+        }
+
+        function renderTrashItem(item) {
+            const card = document.createElement('div');
+            card.className = 'trash-item-card';
+            card.dataset.id = item.id;
+
+            const icon = document.createElement('i');
+            icon.className = 'fas ' + getFileIcon(item.name);
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'item-name';
+            nameSpan.textContent = item.name;
+
+            const metaSpan = document.createElement('span');
+            metaSpan.className = 'item-meta';
+            metaSpan.textContent = formatFileSize(item.size);
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'item-actions';
+
+            const restoreBtn = document.createElement('button');
+            restoreBtn.className = 'restore-btn';
+            restoreBtn.innerHTML = '<i class="fas fa-undo"></i>';
+            restoreBtn.title = 'Restore';
+            restoreBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                restoreItem(item.id);
+            });
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteBtn.title = 'Delete Permanently';
+            deleteBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                deletePermanently(item.id);
+            });
+
+            actionsDiv.appendChild(restoreBtn);
+            actionsDiv.appendChild(deleteBtn);
+
+            const dateSpan = document.createElement('span');
+            dateSpan.className = 'deleted-date';
+            dateSpan.textContent = '🗑️ ' + formatDate(item.deletedAt);
+
+            card.appendChild(icon);
+            card.appendChild(nameSpan);
+            card.appendChild(metaSpan);
+            card.appendChild(actionsDiv);
+            card.appendChild(dateSpan);
+
+            card.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                openContextMenu(e.clientX, e.clientY, item.id);
+            });
+
+            return card;
+        }
+
+        function openContextMenu(x, y, itemId) {
+            contextTarget = itemId;
+            const maxX = window.innerWidth - 190;
+            const maxY = window.innerHeight - 120;
+            contextMenu.style.left = Math.min(x, maxX) + 'px';
+            contextMenu.style.top = Math.min(y, maxY) + 'px';
+            contextMenu.classList.add('open');
+        }
+
+        function closeContextMenu() {
+            contextMenu.classList.remove('open');
+            contextTarget = null;
+        }
+
+        function restoreItem(id) {
+            const index = trashStore.findIndex(item => item.id === id);
+            if (index !== -1) {
+                const item = trashStore[index];
+                trashStore.splice(index, 1);
+                
+                const card = trashGrid.querySelector(`.trash-item-card[data-id="${id}"]`);
+                if (card) {
+                    card.style.transition = '0.3s';
+                    card.style.transform = 'scale(0.8)';
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        card.remove();
+                        showToast(`Restored "${item.name}"`, 'success');
+                        updateEmptyState();
+                    }, 300);
+                }
+            }
+            closeContextMenu();
+        }
+
+        function deletePermanently(id) {
+            const index = trashStore.findIndex(item => item.id === id);
+            if (index !== -1) {
+                const item = trashStore[index];
+                trashStore.splice(index, 1);
+                
+                const card = trashGrid.querySelector(`.trash-item-card[data-id="${id}"]`);
+                if (card) {
+                    card.style.transition = '0.2s';
+                    card.style.transform = 'scale(0.9)';
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        card.remove();
+                        showToast(`Deleted "${item.name}" permanently`, 'error');
+                        updateEmptyState();
+                    }, 200);
+                }
+            }
+            closeContextMenu();
+        }
+
+        function updateEmptyState() {
+            const existingEmpty = trashGrid.querySelector('.trash_empty');
+            if (trashStore.length === 0) {
+                if (!existingEmpty) {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.className = 'trash_empty';
+                    emptyDiv.innerHTML = `
+                        <i class="fas fa-trash-alt"></i>
+                        <h3>Trash is empty</h3>
+                        <p>Files you delete will appear here</p>
+                    `;
+                    trashGrid.appendChild(emptyDiv);
+                }
+            } else {
+                if (existingEmpty) {
+                    existingEmpty.remove();
+                }
+            }
+        }
+
+        function emptyTrash() {
+            if (trashStore.length === 0) {
+                showToast('Trash is already empty', 'info');
+                return;
+            }
+
+            if (confirm('Are you sure you want to permanently delete all items in the trash?')) {
+                const count = trashStore.length;
+                trashStore.length = 0;
+                trashGrid.innerHTML = '';
+                showToast(`Permanently deleted ${count} item${count > 1 ? 's' : ''}`, 'error');
+                updateEmptyState();
+            }
+        }
+
+        function restoreAll() {
+            if (trashStore.length === 0) {
+                showToast('Trash is empty', 'info');
+                return;
+            }
+
+            const count = trashStore.length;
+            const cards = trashGrid.querySelectorAll('.trash-item-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.transition = '0.3s';
+                    card.style.transform = 'scale(0.8)';
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        card.remove();
+                    }, 300);
+                }, index * 100);
+            });
+
+            setTimeout(() => {
+                trashStore.length = 0;
+                showToast(`Restored ${count} item${count > 1 ? 's' : ''}`, 'success');
+                updateEmptyState();
+            }, (cards.length * 100) + 350);
+        }
+
+        ccmRestore.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (contextTarget) {
+                restoreItem(contextTarget);
+            }
+        });
+
+        ccmDelete.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (contextTarget) {
+                deletePermanently(contextTarget);
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!contextMenu.contains(e.target)) closeContextMenu();
+        });
+        document.addEventListener('scroll', closeContextMenu, true);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeContextMenu();
+        });
+
+        emptyTrashBtn.addEventListener('click', emptyTrash);
+        restoreAllBtn.addEventListener('click', restoreAll);
+
+        // Add files to trash (for demo purposes)
+        const fileInput = document.getElementById('fileInput');
+        const addBtn = document.getElementById('addFileBtn');
+
+        addBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+
+            const fileArray = Array.from(files);
+            const existingEmpty = trashGrid.querySelector('.trash_empty');
+            if (existingEmpty) existingEmpty.remove();
+
+            fileArray.forEach((file, index) => {
+                setTimeout(() => {
+                    const card = createTrashItem(file);
+                    trashGrid.appendChild(card);
+                    if (index === fileArray.length - 1) {
+                        showToast(`Added ${fileArray.length} item${fileArray.length > 1 ? 's' : ''} to trash`, 'info');
+                    }
+                }, index * 150);
+            });
+
+            fileInput.value = '';
+            updateEmptyState();
+        });
+
+        // Drop support
+        trashGrid.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.backgroundColor = '#f0f4ff';
+        });
+        trashGrid.addEventListener('dragleave', function(e) {
+            this.style.backgroundColor = '#f9fafb';
+        });
+        trashGrid.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.backgroundColor = '#f9fafb';
+            const files = e.dataTransfer.files;
+            if (files && files.length > 0) {
+                const existingEmpty = trashGrid.querySelector('.trash_empty');
+                if (existingEmpty) existingEmpty.remove();
+
+                const fileArray = Array.from(files);
+                fileArray.forEach((file, index) => {
+                    setTimeout(() => {
+                        const card = createTrashItem(file);
+                        trashGrid.appendChild(card);
+                        if (index === fileArray.length - 1) {
+                            showToast(`Added ${fileArray.length} item${fileArray.length > 1 ? 's' : ''} to trash`, 'info');
+                        }
+                    }, index * 150);
+                });
+                updateEmptyState();
+            }
+        });
+
+        // Initialize empty state
+        updateEmptyState();
+    });
+    </script>
+</body>
+</html>

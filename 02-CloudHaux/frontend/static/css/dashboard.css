@@ -198,15 +198,13 @@ body{
 
 .all_files,
 .recent_files,
-.favorites,
-.trash{
+.favorites{
     scroll-margin-top: 90px;
 }
 
 .recent_files,
 .favorites,
-.all_files,
-.trash {
+.all_files {
     width:100%;
     min-height: 400px;
     padding:20px;
@@ -217,8 +215,8 @@ body{
 
 .recent_files h2,
 .favorites h2,
-.all_files h2,
-.trash h2{
+.all_files h2
+{
     font-size:1.3rem;
     margin-bottom:15px;
 }
