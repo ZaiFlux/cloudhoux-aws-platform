@@ -342,3 +342,52 @@ body{
     font-size: 14px;
     color: #6b7280;
 }
+
+/* ==========================
+   RENAME FUNCTIONALITY STYLES
+========================== */
+
+/* File name - make it clickable while keeping original look */
+.file-name {
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    color: #111827;
+    display: block;
+    margin-bottom: 8px;
+    word-break: break-word;
+    transition: color 0.2s;
+}
+
+.file-name:hover {
+    color: #2563eb;
+}
+
+/* Rename input - matches original file name style */
+.rename-input {
+    font-size: 16px;
+    font-weight: bold;
+    color: #111827;
+    background: white;
+    border: 2px solid #3b82f6;
+    border-radius: 4px;
+    padding: 2px 6px;
+    width: 100%;
+    margin-bottom: 8px;
+    outline: none;
+    font-family: inherit;
+}
+
+.rename-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* No files message */
+.no-files {
+    text-align: center;
+    color: #9ca3af;
+    padding: 40px 20px;
+    font-size: 14px;
+    grid-column: 1 / -1;
+}
