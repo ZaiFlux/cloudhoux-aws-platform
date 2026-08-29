@@ -6,6 +6,107 @@
     <title>CloudHaux Dashboard</title>
     <link rel="stylesheet" href="../static/css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Custom Context Menu Styles */
+        .custom-context-menu {
+            position: fixed;
+            z-index: 10000;
+            min-width: 180px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            padding: 6px;
+            display: none;
+        }
+        .custom-context-menu.open { display: block; }
+        .ccm-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 7px;
+            font-size: 0.85rem;
+            color: #1f2937;
+            cursor: pointer;
+        }
+        .ccm-item i { width: 16px; text-align: center; color: #475569; }
+        .ccm-item:hover { background: #f1f5f9; }
+        .ccm-item.ccm-danger { color: #dc2626; }
+        .ccm-item.ccm-danger i { color: #dc2626; }
+        .ccm-item.ccm-danger:hover { background: #fee2e2; }
+        .ccm-separator { height: 1px; background: #eef0f3; margin: 5px 4px; }
+
+        /* File item styles - COMPACT VERSION */
+        .file-item {
+            cursor: context-menu;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: #f9fafb;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 6px;
+            transition: 0.2s;
+        }
+        .file-item:hover {
+            background: #f3f4f6;
+            border-color: #7c3aed;
+        }
+        .file-item i {
+            font-size: 16px;
+            color: #6b7280;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .file-item .file-name {
+            flex: 1;
+            font-size: 13px;
+            color: #374151;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: 0.2s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .file-item .file-name:hover {
+            background: #e5e7eb;
+        }
+        .file-item .file-size {
+            font-size: 11px;
+            color: #6b7280;
+            background: white;
+            padding: 1px 8px;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+        .file-name-input {
+            background: white;
+            border: 2px solid #3b82f6;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #1e293b;
+            outline: none;
+            flex: 1;
+            font-family: inherit;
+            font-weight: 500;
+            min-width: 60px;
+        }
+        .file-name-input:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Compact sections */
+        #recentFileList, #favoritesFileList, #fileList {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body>
     <header class="topbar">
@@ -36,9 +137,11 @@
         <div class="main_content">
             <section id="recent_files" class="recent_files">
                 <h2>Recent Files</h2>
+                <div id="recentFileList"></div>
             </section>
             <section id="favorites" class="favorites">
                 <h2>Favorites</h2>
+                <div id="favoritesFileList"></div>
             </section>
             <section id="all_files" class="all_files">
                 <h2>All Files</h2>
@@ -67,6 +170,365 @@
         </aside>
     </main>
 
-    <script src="../static/js/dashboard.js"></script>
+    <!-- Custom Context Menu -->
+    <div class="custom-context-menu" id="customContextMenu">
+        <div class="ccm-item" id="ccmOpen"><i class="fas fa-eye"></i> Open</div>
+        <div class="ccm-item" id="ccmShare"><i class="fas fa-share-alt"></i> Share</div>
+        <div class="ccm-item" id="ccmMove"><i class="fas fa-folder-open"></i> Move to</div>
+        <div class="ccm-item" id="ccmFavorite"><i class="fas fa-star"></i> Add to Favorites</div>
+        <div class="ccm-separator"></div>
+        <div class="ccm-item ccm-danger" id="ccmDelete"><i class="fas fa-trash"></i> Delete</div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        "use strict";
+
+        const fileInput = document.getElementById("fileInput");
+        const addBtn = document.getElementById("addFileBtn");
+        const fileList = document.getElementById("fileList");
+        const recentFileList = document.getElementById("recentFileList");
+        const favoritesFileList = document.getElementById("favoritesFileList");
+
+        let allFiles = [];
+        let favoriteFiles = [];
+        let recentFiles = [];
+
+        const contextMenu = document.getElementById('customContextMenu');
+        let contextTarget = null;
+        let contextTargetFile = null;
+
+        function openContextMenu(x, y, targetElement, fileData) {
+            contextTarget = targetElement;
+            contextTargetFile = fileData;
+            const maxX = window.innerWidth - 190;
+            const maxY = window.innerHeight - 120;
+            contextMenu.style.left = Math.min(x, maxX) + 'px';
+            contextMenu.style.top = Math.min(y, maxY) + 'px';
+            contextMenu.classList.add('open');
+        }
+
+        function closeContextMenu() {
+            contextMenu.classList.remove('open');
+            contextTarget = null;
+            contextTargetFile = null;
+        }
+
+        function attachContextMenu(element, fileData) {
+            element.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                openContextMenu(e.clientX, e.clientY, element, fileData);
+            });
+        }
+
+        // Rename function
+        function makeFileNameEditable(nameSpan, fileData, fileElement) {
+            const currentName = nameSpan.textContent;
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'file-name-input';
+            input.value = currentName;
+            
+            nameSpan.replaceWith(input);
+            input.focus();
+            input.select();
+
+            function saveRename() {
+                const newName = input.value.trim() || currentName;
+                
+                if (fileData) {
+                    fileData.name = newName;
+                }
+                
+                const newSpan = document.createElement('span');
+                newSpan.className = 'file-name';
+                newSpan.textContent = newName;
+                
+                newSpan.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    makeFileNameEditable(newSpan, fileData, fileElement);
+                });
+                
+                input.replaceWith(newSpan);
+            }
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    input.blur();
+                } else if (e.key === 'Escape') {
+                    const newSpan = document.createElement('span');
+                    newSpan.className = 'file-name';
+                    newSpan.textContent = currentName;
+                    
+                    newSpan.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        makeFileNameEditable(newSpan, fileData, fileElement);
+                    });
+                    
+                    input.replaceWith(newSpan);
+                }
+            });
+
+            input.addEventListener('blur', saveRename);
+        }
+
+        document.getElementById('ccmOpen').addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (contextTargetFile) {
+                alert('Opening: ' + contextTargetFile.name);
+            }
+            closeContextMenu();
+        });
+
+        document.getElementById('ccmShare').addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (contextTargetFile) {
+                alert('Share: ' + contextTargetFile.name);
+            }
+            closeContextMenu();
+        });
+
+        document.getElementById('ccmMove').addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (contextTargetFile) {
+                alert('Move: ' + contextTargetFile.name);
+            }
+            closeContextMenu();
+        });
+
+        document.getElementById('ccmFavorite').addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (contextTargetFile && contextTargetFile.id) {
+                if (!favoriteFiles.some(f => f.id === contextTargetFile.id)) {
+                    favoriteFiles.push(contextTargetFile);
+                    renderFavorites();
+                }
+            }
+            closeContextMenu();
+        });
+
+        document.getElementById('ccmDelete').addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (contextTargetFile && contextTargetFile.id) {
+                if (contextTarget) {
+                    contextTarget.style.transition = '0.2s';
+                    contextTarget.style.transform = 'scale(0.8)';
+                    contextTarget.style.opacity = '0';
+                    setTimeout(() => {
+                        contextTarget.remove();
+                        allFiles = allFiles.filter(f => f.id !== contextTargetFile.id);
+                        favoriteFiles = favoriteFiles.filter(f => f.id !== contextTargetFile.id);
+                        recentFiles = recentFiles.filter(f => f.id !== contextTargetFile.id);
+                        renderFavorites();
+                    }, 200);
+                }
+            }
+            closeContextMenu();
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!contextMenu.contains(e.target)) closeContextMenu();
+        });
+        document.addEventListener('scroll', closeContextMenu, true);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeContextMenu();
+        });
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function getFileIcon(fileName) {
+            const ext = fileName.split('.').pop().toLowerCase();
+            const icons = {
+                'jpg': 'fa-file-image',
+                'jpeg': 'fa-file-image',
+                'png': 'fa-file-image',
+                'gif': 'fa-file-image',
+                'svg': 'fa-file-image',
+                'bmp': 'fa-file-image',
+                'webp': 'fa-file-image',
+                'pdf': 'fa-file-pdf',
+                'doc': 'fa-file-word',
+                'docx': 'fa-file-word',
+                'txt': 'fa-file-alt',
+                'xls': 'fa-file-excel',
+                'xlsx': 'fa-file-excel',
+                'csv': 'fa-file-csv',
+                'ppt': 'fa-file-powerpoint',
+                'pptx': 'fa-file-powerpoint',
+                'js': 'fa-file-code',
+                'html': 'fa-file-code',
+                'htm': 'fa-file-code',
+                'css': 'fa-file-code',
+                'json': 'fa-file-code',
+                'xml': 'fa-file-code',
+                'py': 'fa-file-code',
+                'java': 'fa-file-code',
+                'cpp': 'fa-file-code',
+                'c': 'fa-file-code',
+                'php': 'fa-file-code',
+                'rb': 'fa-file-code',
+                'go': 'fa-file-code',
+                'rs': 'fa-file-code',
+                'swift': 'fa-file-code',
+                'kt': 'fa-file-code',
+                'md': 'fa-file-alt',
+                'zip': 'fa-file-archive',
+                'rar': 'fa-file-archive',
+                '7z': 'fa-file-archive',
+                'mp4': 'fa-file-video',
+                'avi': 'fa-file-video',
+                'mkv': 'fa-file-video',
+                'mov': 'fa-file-video',
+                'wmv': 'fa-file-video',
+                'flv': 'fa-file-video',
+                'mp3': 'fa-file-audio',
+                'wav': 'fa-file-audio',
+                'wma': 'fa-file-audio',
+                'aac': 'fa-file-audio',
+                'flac': 'fa-file-audio'
+            };
+            return icons[ext] || 'fa-file';
+        }
+
+        function createFileElement(file) {
+            const div = document.createElement("div");
+            div.className = "file-item";
+            div.dataset.fileId = file.id;
+            
+            const icon = document.createElement("i");
+            icon.className = 'fas ' + getFileIcon(file.name);
+            
+            const name = document.createElement("span");
+            name.className = "file-name";
+            name.textContent = file.name;
+            
+            name.addEventListener('click', function(e) {
+                e.stopPropagation();
+                makeFileNameEditable(name, file, div);
+            });
+            
+            const size = document.createElement("span");
+            size.className = "file-size";
+            size.textContent = formatFileSize(file.size);
+            
+            div.appendChild(icon);
+            div.appendChild(name);
+            div.appendChild(size);
+            
+            attachContextMenu(div, file);
+            
+            return div;
+        }
+
+        function renderAllFiles() {
+            fileList.innerHTML = '';
+            if (allFiles.length === 0) {
+                return;
+            }
+            allFiles.forEach(file => {
+                fileList.appendChild(createFileElement(file));
+            });
+        }
+
+        function renderFavorites() {
+            favoritesFileList.innerHTML = '';
+            if (favoriteFiles.length === 0) {
+                return;
+            }
+            favoriteFiles.forEach(file => {
+                favoritesFileList.appendChild(createFileElement(file));
+            });
+        }
+
+        function renderRecent() {
+            recentFileList.innerHTML = '';
+            const recent = recentFiles.slice(0, 5);
+            if (recent.length === 0) {
+                return;
+            }
+            recent.forEach(file => {
+                recentFileList.appendChild(createFileElement(file));
+            });
+        }
+
+        function processFiles(files) {
+            const fileArray = Array.from(files);
+            fileArray.forEach(file => {
+                const fileData = {
+                    id: Date.now() + Math.random().toString(36).substr(2, 5),
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    lastModified: file.lastModified,
+                    webkitRelativePath: file.webkitRelativePath || file.name
+                };
+                allFiles.push(fileData);
+                recentFiles.unshift(fileData);
+                if (recentFiles.length > 20) recentFiles.pop();
+            });
+            
+            renderAllFiles();
+            renderRecent();
+            renderFavorites();
+        }
+
+        addBtn.addEventListener("click", function(e) {
+            e.stopPropagation();
+            fileInput.click();
+        });
+
+        fileInput.addEventListener("change", function(e) {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+            processFiles(files);
+            fileInput.value = "";
+        });
+
+        fileList.addEventListener("dragover", function(e) {
+            e.preventDefault();
+            this.style.backgroundColor = "#f0f4ff";
+        });
+        fileList.addEventListener("dragleave", function(e) {
+            this.style.backgroundColor = "#f9fafb";
+        });
+        fileList.addEventListener("drop", function(e) {
+            e.preventDefault();
+            this.style.backgroundColor = "#f9fafb";
+            const files = e.dataTransfer.files;
+            if (files && files.length > 0) {
+                processFiles(files);
+            }
+        });
+
+        document.getElementById('imagesBtn').addEventListener('click', function() {
+            window.location.href = 'images_page.html';
+        });
+        document.getElementById('documentsBtn').addEventListener('click', function() {
+            window.location.href = 'documents_page.html';
+        });
+        document.getElementById('mediaBtn').addEventListener('click', function() {
+            window.location.href = 'media_page.html';
+        });
+        document.getElementById('audioBtn').addEventListener('click', function() {
+            window.location.href = 'audio_page.html';
+        });
+        document.getElementById('safeVaultBtn').addEventListener('click', function() {
+            window.location.href = 'dashboard.html';
+        });
+
+        renderAllFiles();
+        renderRecent();
+        renderFavorites();
+    });
+    </script>
 </body>
 </html>
