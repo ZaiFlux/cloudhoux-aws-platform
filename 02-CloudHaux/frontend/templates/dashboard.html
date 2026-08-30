@@ -106,13 +106,58 @@
             max-height: 400px;
             overflow-y: auto;
         }
+
+        /* search highlight */
+        .highlight-match {
+            background: #fef08a;
+            padding: 0 2px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+        .clear-search-btn {
+            background: transparent;
+            border: none;
+            color: #6b7280;
+            font-size: 0.75rem;
+            margin-left: 12px;
+            cursor: pointer;
+            padding: 2px 10px;
+            border-radius: 20px;
+            display: none;
+        }
+        .clear-search-btn:hover {
+            background: #f1f5f9;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Upload status indicator - subtle */
+        .upload-status {
+            font-size: 12px;
+            color: #6b7280;
+            padding: 4px 12px;
+            background: #f3f4f6;
+            border-radius: 20px;
+            display: none;
+            margin-left: 12px;
+        }
+        .upload-status.active {
+            display: inline-block;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
     </style>
 </head>
 <body>
     <header class="topbar">
         <div class="logo">CloudHaux</div>
         <div class="search-container">
-            <input type="search" placeholder="Search files...">
+            <input type="search" id="globalSearch" placeholder="Search files...">
             <i class="fas fa-search search-icon"></i>
         </div>
         <div class="profile">
@@ -144,7 +189,11 @@
                 <div id="favoritesFileList"></div>
             </section>
             <section id="all_files" class="all_files">
-                <h2>All Files</h2>
+                <div class="section-header">
+                    <h2>All Files</h2>
+                    <span class="upload-status" id="uploadStatus">Uploading...</span>
+                    <button class="clear-search-btn" id="clearSearchBtn">✕ clear</button>
+                </div>
                 <div id="fileList"></div>
             </section>
         </div>
@@ -189,6 +238,9 @@
         const fileList = document.getElementById("fileList");
         const recentFileList = document.getElementById("recentFileList");
         const favoritesFileList = document.getElementById("favoritesFileList");
+        const searchInput = document.getElementById("globalSearch");
+        const clearSearchBtn = document.getElementById("clearSearchBtn");
+        const uploadStatus = document.getElementById("uploadStatus");
 
         let allFiles = [];
         let favoriteFiles = [];
@@ -198,6 +250,7 @@
         let contextTarget = null;
         let contextTargetFile = null;
 
+        // ---------- context menu ----------
         function openContextMenu(x, y, targetElement, fileData) {
             contextTarget = targetElement;
             contextTargetFile = fileData;
@@ -222,94 +275,75 @@
             });
         }
 
-        // Rename function
+        // ---------- rename ----------
         function makeFileNameEditable(nameSpan, fileData, fileElement) {
             const currentName = nameSpan.textContent;
-            
             const input = document.createElement('input');
             input.type = 'text';
             input.className = 'file-name-input';
             input.value = currentName;
-            
             nameSpan.replaceWith(input);
             input.focus();
             input.select();
 
             function saveRename() {
                 const newName = input.value.trim() || currentName;
-                
-                if (fileData) {
-                    fileData.name = newName;
-                }
-                
+                if (fileData) fileData.name = newName;
                 const newSpan = document.createElement('span');
                 newSpan.className = 'file-name';
                 newSpan.textContent = newName;
-                
                 newSpan.addEventListener('click', function(e) {
                     e.stopPropagation();
                     makeFileNameEditable(newSpan, fileData, fileElement);
                 });
-                
                 input.replaceWith(newSpan);
+                const q = searchInput.value.trim();
+                if (q) performSearch(q);
+                else renderAllSections('');
             }
 
             input.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    input.blur();
-                } else if (e.key === 'Escape') {
+                if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+                else if (e.key === 'Escape') {
                     const newSpan = document.createElement('span');
                     newSpan.className = 'file-name';
                     newSpan.textContent = currentName;
-                    
                     newSpan.addEventListener('click', function(e) {
                         e.stopPropagation();
                         makeFileNameEditable(newSpan, fileData, fileElement);
                     });
-                    
                     input.replaceWith(newSpan);
                 }
             });
-
             input.addEventListener('blur', saveRename);
         }
 
+        // ---------- context menu actions ----------
         document.getElementById('ccmOpen').addEventListener('click', function(e) {
             e.stopPropagation();
-            if (contextTargetFile) {
-                alert('Opening: ' + contextTargetFile.name);
-            }
+            if (contextTargetFile) alert('Opening: ' + contextTargetFile.name);
             closeContextMenu();
         });
-
         document.getElementById('ccmShare').addEventListener('click', function(e) {
             e.stopPropagation();
-            if (contextTargetFile) {
-                alert('Share: ' + contextTargetFile.name);
-            }
+            if (contextTargetFile) alert('Share: ' + contextTargetFile.name);
             closeContextMenu();
         });
-
         document.getElementById('ccmMove').addEventListener('click', function(e) {
             e.stopPropagation();
-            if (contextTargetFile) {
-                alert('Move: ' + contextTargetFile.name);
-            }
+            if (contextTargetFile) alert('Move: ' + contextTargetFile.name);
             closeContextMenu();
         });
-
         document.getElementById('ccmFavorite').addEventListener('click', function(e) {
             e.stopPropagation();
             if (contextTargetFile && contextTargetFile.id) {
                 if (!favoriteFiles.some(f => f.id === contextTargetFile.id)) {
                     favoriteFiles.push(contextTargetFile);
-                    renderFavorites();
+                    renderFavorites(searchInput.value.trim());
                 }
             }
             closeContextMenu();
         });
-
         document.getElementById('ccmDelete').addEventListener('click', function(e) {
             e.stopPropagation();
             if (contextTargetFile && contextTargetFile.id) {
@@ -322,7 +356,9 @@
                         allFiles = allFiles.filter(f => f.id !== contextTargetFile.id);
                         favoriteFiles = favoriteFiles.filter(f => f.id !== contextTargetFile.id);
                         recentFiles = recentFiles.filter(f => f.id !== contextTargetFile.id);
-                        renderFavorites();
+                        const q = searchInput.value.trim();
+                        if (q) performSearch(q);
+                        else renderAllSections('');
                     }, 200);
                 }
             }
@@ -337,6 +373,7 @@
             if (e.key === 'Escape') closeContextMenu();
         });
 
+        // ---------- helpers ----------
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
             const k = 1024;
@@ -348,156 +385,232 @@
         function getFileIcon(fileName) {
             const ext = fileName.split('.').pop().toLowerCase();
             const icons = {
-                'jpg': 'fa-file-image',
-                'jpeg': 'fa-file-image',
-                'png': 'fa-file-image',
-                'gif': 'fa-file-image',
-                'svg': 'fa-file-image',
-                'bmp': 'fa-file-image',
-                'webp': 'fa-file-image',
-                'pdf': 'fa-file-pdf',
-                'doc': 'fa-file-word',
-                'docx': 'fa-file-word',
-                'txt': 'fa-file-alt',
-                'xls': 'fa-file-excel',
-                'xlsx': 'fa-file-excel',
-                'csv': 'fa-file-csv',
-                'ppt': 'fa-file-powerpoint',
-                'pptx': 'fa-file-powerpoint',
-                'js': 'fa-file-code',
-                'html': 'fa-file-code',
-                'htm': 'fa-file-code',
-                'css': 'fa-file-code',
-                'json': 'fa-file-code',
-                'xml': 'fa-file-code',
-                'py': 'fa-file-code',
-                'java': 'fa-file-code',
-                'cpp': 'fa-file-code',
-                'c': 'fa-file-code',
-                'php': 'fa-file-code',
-                'rb': 'fa-file-code',
-                'go': 'fa-file-code',
-                'rs': 'fa-file-code',
-                'swift': 'fa-file-code',
-                'kt': 'fa-file-code',
-                'md': 'fa-file-alt',
-                'zip': 'fa-file-archive',
-                'rar': 'fa-file-archive',
-                '7z': 'fa-file-archive',
-                'mp4': 'fa-file-video',
-                'avi': 'fa-file-video',
-                'mkv': 'fa-file-video',
-                'mov': 'fa-file-video',
-                'wmv': 'fa-file-video',
-                'flv': 'fa-file-video',
-                'mp3': 'fa-file-audio',
-                'wav': 'fa-file-audio',
-                'wma': 'fa-file-audio',
-                'aac': 'fa-file-audio',
-                'flac': 'fa-file-audio'
+                'jpg': 'fa-file-image','jpeg': 'fa-file-image','png': 'fa-file-image','gif': 'fa-file-image',
+                'svg': 'fa-file-image','bmp': 'fa-file-image','webp': 'fa-file-image',
+                'pdf': 'fa-file-pdf','doc': 'fa-file-word','docx': 'fa-file-word',
+                'txt': 'fa-file-alt','xls': 'fa-file-excel','xlsx': 'fa-file-excel',
+                'csv': 'fa-file-csv','ppt': 'fa-file-powerpoint','pptx': 'fa-file-powerpoint',
+                'js': 'fa-file-code','html': 'fa-file-code','htm': 'fa-file-code','css': 'fa-file-code',
+                'json': 'fa-file-code','xml': 'fa-file-code','py': 'fa-file-code','java': 'fa-file-code',
+                'cpp': 'fa-file-code','c': 'fa-file-code','php': 'fa-file-code','rb': 'fa-file-code',
+                'go': 'fa-file-code','rs': 'fa-file-code','swift': 'fa-file-code','kt': 'fa-file-code',
+                'md': 'fa-file-alt','zip': 'fa-file-archive','rar': 'fa-file-archive','7z': 'fa-file-archive',
+                'mp4': 'fa-file-video','avi': 'fa-file-video','mkv': 'fa-file-video','mov': 'fa-file-video',
+                'wmv': 'fa-file-video','flv': 'fa-file-video','mp3': 'fa-file-audio','wav': 'fa-file-audio',
+                'wma': 'fa-file-audio','aac': 'fa-file-audio','flac': 'fa-file-audio'
             };
             return icons[ext] || 'fa-file';
         }
 
-        function createFileElement(file) {
+        // ---------- create file element with highlight ----------
+        function createFileElement(file, highlightText = '') {
             const div = document.createElement("div");
             div.className = "file-item";
             div.dataset.fileId = file.id;
-            
+
             const icon = document.createElement("i");
             icon.className = 'fas ' + getFileIcon(file.name);
-            
+
             const name = document.createElement("span");
             name.className = "file-name";
-            name.textContent = file.name;
-            
+
+            if (highlightText && highlightText.length > 0) {
+                const lowerName = file.name.toLowerCase();
+                const lowerQuery = highlightText.toLowerCase();
+                if (lowerName.includes(lowerQuery)) {
+                    const idx = lowerName.indexOf(lowerQuery);
+                    const before = file.name.slice(0, idx);
+                    const match = file.name.slice(idx, idx + highlightText.length);
+                    const after = file.name.slice(idx + highlightText.length);
+                    name.innerHTML = `${before}<span class="highlight-match">${match}</span>${after}`;
+                } else {
+                    name.textContent = file.name;
+                }
+            } else {
+                name.textContent = file.name;
+            }
+
             name.addEventListener('click', function(e) {
                 e.stopPropagation();
                 makeFileNameEditable(name, file, div);
             });
-            
+
             const size = document.createElement("span");
             size.className = "file-size";
             size.textContent = formatFileSize(file.size);
-            
+
             div.appendChild(icon);
             div.appendChild(name);
             div.appendChild(size);
-            
+
             attachContextMenu(div, file);
-            
+
             return div;
         }
 
-        function renderAllFiles() {
+        // ---------- render functions ----------
+        function renderAllFiles(highlight = '') {
             fileList.innerHTML = '';
-            if (allFiles.length === 0) {
-                return;
-            }
+            if (allFiles.length === 0) return;
+            // Use DocumentFragment for batch DOM updates
+            const fragment = document.createDocumentFragment();
             allFiles.forEach(file => {
-                fileList.appendChild(createFileElement(file));
+                fragment.appendChild(createFileElement(file, highlight));
             });
+            fileList.appendChild(fragment);
         }
 
-        function renderFavorites() {
+        function renderFavorites(highlight = '') {
             favoritesFileList.innerHTML = '';
-            if (favoriteFiles.length === 0) {
-                return;
-            }
+            if (favoriteFiles.length === 0) return;
+            const fragment = document.createDocumentFragment();
             favoriteFiles.forEach(file => {
-                favoritesFileList.appendChild(createFileElement(file));
+                fragment.appendChild(createFileElement(file, highlight));
             });
+            favoritesFileList.appendChild(fragment);
         }
 
-        function renderRecent() {
+        function renderRecent(highlight = '') {
             recentFileList.innerHTML = '';
             const recent = recentFiles.slice(0, 5);
-            if (recent.length === 0) {
+            if (recent.length === 0) return;
+            const fragment = document.createDocumentFragment();
+            recent.forEach(file => {
+                fragment.appendChild(createFileElement(file, highlight));
+            });
+            recentFileList.appendChild(fragment);
+        }
+
+        function renderAllSections(highlight = '') {
+            renderAllFiles(highlight);
+            renderRecent(highlight);
+            renderFavorites(highlight);
+        }
+
+        // ---------- search ----------
+        function performSearch(query) {
+            const q = query.trim();
+            if (q === '') {
+                clearSearchBtn.style.display = 'none';
+                renderAllSections('');
                 return;
             }
-            recent.forEach(file => {
-                recentFileList.appendChild(createFileElement(file));
-            });
+            clearSearchBtn.style.display = 'inline-block';
+            renderAllSections(q);
         }
 
+        searchInput.addEventListener('input', function(e) {
+            performSearch(this.value);
+        });
+
+        clearSearchBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            clearSearchBtn.style.display = 'none';
+            renderAllSections('');
+            searchInput.focus();
+        });
+
+        // ---------- OPTIMIZED file processing with chunking ----------
         function processFiles(files) {
             const fileArray = Array.from(files);
-            fileArray.forEach(file => {
-                const fileData = {
-                    id: Date.now() + Math.random().toString(36).substr(2, 5),
-                    name: file.name,
-                    size: file.size,
-                    type: file.type,
-                    lastModified: file.lastModified,
-                    webkitRelativePath: file.webkitRelativePath || file.name
-                };
-                allFiles.push(fileData);
-                recentFiles.unshift(fileData);
-                if (recentFiles.length > 20) recentFiles.pop();
-            });
+            const totalFiles = fileArray.length;
             
-            renderAllFiles();
-            renderRecent();
-            renderFavorites();
+            if (totalFiles === 0) return;
+            
+            // Show upload status
+            uploadStatus.textContent = `Uploading ${totalFiles} files...`;
+            uploadStatus.classList.add('active');
+            
+            // Process in chunks to prevent UI freeze
+            const CHUNK_SIZE = 10;
+            let processedCount = 0;
+            
+            function processChunk(startIndex) {
+                const endIndex = Math.min(startIndex + CHUNK_SIZE, totalFiles);
+                
+                for (let i = startIndex; i < endIndex; i++) {
+                    const file = fileArray[i];
+                    const fileData = {
+                        id: Date.now() + Math.random().toString(36).substr(2, 5) + i,
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        lastModified: file.lastModified,
+                        webkitRelativePath: file.webkitRelativePath || file.name
+                    };
+                    allFiles.push(fileData);
+                    recentFiles.unshift(fileData);
+                    if (recentFiles.length > 20) recentFiles.pop();
+                    processedCount++;
+                }
+                
+                // Update status
+                uploadStatus.textContent = `Uploading ${processedCount}/${totalFiles}...`;
+                
+                // Render what we have so far
+                const q = searchInput.value.trim();
+                if (q) performSearch(q);
+                else renderAllSections('');
+                
+                // Process next chunk
+                if (endIndex < totalFiles) {
+                    // Use requestAnimationFrame for smooth UI
+                    requestAnimationFrame(() => {
+                        setTimeout(() => processChunk(endIndex), 50);
+                    });
+                } else {
+                    // All done
+                    uploadStatus.textContent = `✓ ${totalFiles} files uploaded`;
+                    setTimeout(() => {
+                        uploadStatus.classList.remove('active');
+                        setTimeout(() => {
+                            uploadStatus.textContent = '';
+                            uploadStatus.style.display = 'none';
+                        }, 2000);
+                    }, 800);
+                    // Force final render
+                    const q2 = searchInput.value.trim();
+                    if (q2) performSearch(q2);
+                    else renderAllSections('');
+                }
+            }
+            
+            // Start processing
+            processChunk(0);
         }
 
+        // ---------- event listeners ----------
         addBtn.addEventListener("click", function(e) {
             e.stopPropagation();
+            // Reset file input to ensure change event fires even with same file
+            fileInput.value = '';
             fileInput.click();
         });
 
         fileInput.addEventListener("change", function(e) {
             const files = e.target.files;
             if (!files || files.length === 0) return;
-            processFiles(files);
-            fileInput.value = "";
+            
+            // Show status indicator
+            uploadStatus.style.display = 'inline-block';
+            uploadStatus.textContent = 'Preparing...';
+            uploadStatus.classList.add('active');
+            
+            // Process files with delay to let UI update
+            setTimeout(() => {
+                processFiles(files);
+                fileInput.value = "";
+            }, 100);
         });
 
+        // Drag and drop with chunked processing
+        let dragCounter = 0;
         fileList.addEventListener("dragover", function(e) {
             e.preventDefault();
             this.style.backgroundColor = "#f0f4ff";
         });
         fileList.addEventListener("dragleave", function(e) {
+            e.preventDefault();
             this.style.backgroundColor = "#f9fafb";
         });
         fileList.addEventListener("drop", function(e) {
@@ -505,10 +618,16 @@
             this.style.backgroundColor = "#f9fafb";
             const files = e.dataTransfer.files;
             if (files && files.length > 0) {
-                processFiles(files);
+                uploadStatus.style.display = 'inline-block';
+                uploadStatus.textContent = 'Preparing...';
+                uploadStatus.classList.add('active');
+                setTimeout(() => {
+                    processFiles(files);
+                }, 100);
             }
         });
 
+        // category buttons
         document.getElementById('imagesBtn').addEventListener('click', function() {
             window.location.href = 'images_page.html';
         });
@@ -525,9 +644,10 @@
             window.location.href = 'dashboard.html';
         });
 
-        renderAllFiles();
-        renderRecent();
-        renderFavorites();
+        // ---------- INIT ----------
+        renderAllSections('');
+        clearSearchBtn.style.display = 'none';
+        uploadStatus.style.display = 'none';
     });
     </script>
 </body>
