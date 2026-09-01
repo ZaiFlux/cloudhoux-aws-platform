@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CloudHaux Dashboard</title>
+    <title>CloudHaux - Profile</title>
     <link rel="stylesheet" href="../static/css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* Keep everything EXACTLY as original except right panel */
+        /* Right panel - profile settings only */
         .right_panel {
             display: flex;
             flex-direction: column;
             padding: 0 !important;
         }
         
-        /* IMPROVED Profile panel */
         .profile-panel {
             background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
             border-radius: 16px;
@@ -30,7 +29,6 @@
             transition: all 0.2s ease;
         }
         
-        /* Profile header with gradient accent */
         .profile-panel h3 {
             margin: 0 0 1.5rem 0;
             font-size: 1.1rem;
@@ -61,7 +59,6 @@
             font-size: 0.9rem;
         }
         
-        /* Improved avatar section */
         .profile-avatar {
             display: flex;
             align-items: center;
@@ -103,7 +100,6 @@
             color: #22a65e;
         }
         
-        /* Settings list */
         .settings-list {
             flex: 1;
             overflow-y: auto;
@@ -121,7 +117,6 @@
             background: transparent;
         }
         
-        /* Improved settings rows */
         .settings-row {
             display: flex;
             align-items: center;
@@ -175,7 +170,6 @@
             width: auto;
         }
         
-        /* Toggle switches improved */
         .toggle-on {
             color: #1a5ec4;
             font-size: 1.2rem;
@@ -185,7 +179,6 @@
             font-size: 1.2rem;
         }
         
-        /* Improved logout row */
         .logout-row {
             margin-top: auto;
             padding-top: 1rem;
@@ -236,12 +229,11 @@
             transform: translateY(0);
         }
         
-        /* Hide original button group */
+        /* Hide category buttons on profile page */
         .button_group {
             display: none !important;
         }
         
-        /* Ensure dashboard_content has proper height */
         .dashboard_content {
             align-items: stretch;
         }
@@ -251,7 +243,6 @@
             flex-direction: column;
         }
         
-        /* Add a small badge for 2FA */
         .badge-success {
             background: #e6f7ed;
             color: #22a65e;
@@ -265,19 +256,129 @@
             width: auto;
             font-size: 0.6rem;
         }
+
+        /* ===== FILE ITEM STYLES (copied from dashboard) ===== */
+        .file-item {
+            cursor: context-menu;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: #f9fafb;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 6px;
+            transition: 0.2s;
+        }
+        .file-item:hover {
+            background: #f3f4f6;
+            border-color: #7c3aed;
+        }
+        .file-item i {
+            font-size: 16px;
+            color: #6b7280;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .file-item .file-name {
+            flex: 1;
+            font-size: 13px;
+            color: #374151;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: 0.2s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .file-item .file-name:hover {
+            background: #e5e7eb;
+        }
+        .file-item .file-size {
+            font-size: 11px;
+            color: #6b7280;
+            background: white;
+            padding: 1px 8px;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+        .file-name-input {
+            background: white;
+            border: 2px solid #3b82f6;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #1e293b;
+            outline: none;
+            flex: 1;
+            font-family: inherit;
+            font-weight: 500;
+            min-width: 60px;
+        }
+        .file-name-input:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        #recentFileList, #favoritesFileList, #fileList {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .highlight-match {
+            background: #fef08a;
+            padding: 0 2px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+        .clear-search-btn {
+            background: transparent;
+            border: none;
+            color: #6b7280;
+            font-size: 0.75rem;
+            margin-left: 12px;
+            cursor: pointer;
+            padding: 2px 10px;
+            border-radius: 20px;
+            display: none;
+        }
+        .clear-search-btn:hover {
+            background: #f1f5f9;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+        }
+
+        .upload-status {
+            font-size: 12px;
+            color: #6b7280;
+            padding: 4px 12px;
+            background: #f3f4f6;
+            border-radius: 20px;
+            display: none;
+            margin-left: 12px;
+        }
+        .upload-status.active {
+            display: inline-block;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
     </style>
 </head>
 <body>
     <header class="topbar">
         <div class="logo">CloudHaux</div>
         <div class="search-container">
-            <input type="search" placeholder="Search files...">
+            <input type="search" id="globalSearch" placeholder="Search files...">
             <i class="fas fa-search search-icon"></i>
         </div>
         <div class="profile">
-            <svg viewBox="0 0 24 24">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-            </svg>
+            <a href="profile_page.html">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+            </a>
         </div>
     </header>
 
@@ -294,18 +395,24 @@
         <div class="main_content">
             <section id="recent_files" class="recent_files">
                 <h2>Recent Files</h2>
+                <div id="recentFileList"></div>
             </section>
             <section id="favorites" class="favorites">
                 <h2>Favorites</h2>
+                <div id="favoritesFileList"></div>
             </section>
             <section id="all_files" class="all_files">
-                <h2>All Files</h2>
+                <div class="section-header">
+                    <h2>All Files</h2>
+                    <span class="upload-status" id="uploadStatus">Uploading...</span>
+                    <button class="clear-search-btn" id="clearSearchBtn">✕ clear</button>
+                </div>
                 <div id="fileList"></div>
             </section>
         </div>
 
         <aside class="right_panel">
-            <!-- Original button group - HIDDEN but kept for structure -->
+            <!-- Category buttons - HIDDEN on profile page -->
             <div class="button_group">
                 <button class="category_btn images" id="imagesBtn">
                     <i class="fas fa-image"></i> Images
@@ -324,7 +431,7 @@
                 </button>
             </div>
 
-            <!-- IMPROVED Profile panel -->
+            <!-- Profile Settings Panel (replaces category buttons) -->
             <div class="profile-panel">
                 <h3><i class="fas fa-user-cog"></i> Profile Settings</h3>
                 
@@ -391,26 +498,543 @@
         </aside>
     </main>
 
-    <script src="../static/js/dashboard.js"></script>
+    <!-- Custom Context Menu (same as dashboard) -->
+    <div class="custom-context-menu" id="customContextMenu">
+        <div class="ccm-item" id="ccmOpen"><i class="fas fa-eye"></i> Open</div>
+        <div class="ccm-item" id="ccmShare"><i class="fas fa-share-alt"></i> Share</div>
+        <div class="ccm-item" id="ccmMove"><i class="fas fa-folder-open"></i> Move to</div>
+        <div class="ccm-item" id="ccmFavorite"><i class="fas fa-star"></i> Add to Favorites</div>
+        <div class="ccm-separator"></div>
+        <div class="ccm-item ccm-danger" id="ccmDelete"><i class="fas fa-trash"></i> Delete</div>
+    </div>
+
     <script>
-        // Keep original functionality
-        document.getElementById('addFileBtn')?.addEventListener('click', function() {
-            document.getElementById('fileInput')?.click();
+    document.addEventListener('DOMContentLoaded', function() {
+        "use strict";
+
+        // ============================================================
+        // DOM REFERENCES
+        // ============================================================
+        const fileInput = document.getElementById("fileInput");
+        const addBtn = document.getElementById("addFileBtn");
+        const fileList = document.getElementById("fileList");
+        const recentFileList = document.getElementById("recentFileList");
+        const favoritesFileList = document.getElementById("favoritesFileList");
+        const searchInput = document.getElementById("globalSearch");
+        const clearSearchBtn = document.getElementById("clearSearchBtn");
+        const uploadStatus = document.getElementById("uploadStatus");
+
+        // ============================================================
+        // LOAD FILES FROM localStorage (shared with dashboard)
+        // ============================================================
+        function getStoredFiles() {
+            try {
+                const data = localStorage.getItem('cloudHauxFiles');
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function getStoredFavorites() {
+            try {
+                const data = localStorage.getItem('cloudHauxFavorites');
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function getStoredRecent() {
+            try {
+                const data = localStorage.getItem('cloudHauxRecent');
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveStoredFiles(files) {
+            try {
+                localStorage.setItem('cloudHauxFiles', JSON.stringify(files));
+            } catch (e) {}
+        }
+
+        function saveStoredFavorites(files) {
+            try {
+                localStorage.setItem('cloudHauxFavorites', JSON.stringify(files));
+            } catch (e) {}
+        }
+
+        function saveStoredRecent(files) {
+            try {
+                localStorage.setItem('cloudHauxRecent', JSON.stringify(files));
+            } catch (e) {}
+        }
+
+        let allFiles = getStoredFiles();
+        let favoriteFiles = getStoredFavorites();
+        let recentFiles = getStoredRecent();
+
+        // ============================================================
+        // CONTEXT MENU (same as dashboard)
+        // ============================================================
+        const contextMenu = document.getElementById('customContextMenu');
+        let contextTarget = null;
+        let contextTargetFile = null;
+
+        function openContextMenu(x, y, targetElement, fileData) {
+            contextTarget = targetElement;
+            contextTargetFile = fileData;
+            const maxX = window.innerWidth - 190;
+            const maxY = window.innerHeight - 120;
+            contextMenu.style.left = Math.min(x, maxX) + 'px';
+            contextMenu.style.top = Math.min(y, maxY) + 'px';
+            contextMenu.classList.add('open');
+        }
+
+        function closeContextMenu() {
+            contextMenu.classList.remove('open');
+            contextTarget = null;
+            contextTargetFile = null;
+        }
+
+        function attachContextMenu(element, fileData) {
+            element.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                openContextMenu(e.clientX, e.clientY, element, fileData);
+            });
+        }
+
+        // ---------- rename ----------
+        function makeFileNameEditable(nameSpan, fileData, fileElement) {
+            const currentName = nameSpan.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'file-name-input';
+            input.value = currentName;
+            nameSpan.replaceWith(input);
+            input.focus();
+            input.select();
+
+            function saveRename() {
+                const newName = input.value.trim() || currentName;
+                if (fileData) fileData.name = newName;
+                
+                // Save to localStorage
+                saveStoredFiles(allFiles);
+                
+                const newSpan = document.createElement('span');
+                newSpan.className = 'file-name';
+                newSpan.textContent = newName;
+                newSpan.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    makeFileNameEditable(newSpan, fileData, fileElement);
+                });
+                input.replaceWith(newSpan);
+                const q = searchInput.value.trim();
+                if (q) performSearch(q);
+                else renderAllSections('');
+            }
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+                else if (e.key === 'Escape') {
+                    const newSpan = document.createElement('span');
+                    newSpan.className = 'file-name';
+                    newSpan.textContent = currentName;
+                    newSpan.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        makeFileNameEditable(newSpan, fileData, fileElement);
+                    });
+                    input.replaceWith(newSpan);
+                }
+            });
+            input.addEventListener('blur', saveRename);
+        }
+
+        // ---------- context menu actions ----------
+        document.getElementById('ccmOpen').addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (contextTargetFile) alert('Opening: ' + contextTargetFile.name);
+            closeContextMenu();
+        });
+        document.getElementById('ccmShare').addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (contextTargetFile) alert('Share: ' + contextTargetFile.name);
+            closeContextMenu();
+        });
+        document.getElementById('ccmMove').addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (contextTargetFile) alert('Move: ' + contextTargetFile.name);
+            closeContextMenu();
+        });
+        document.getElementById('ccmFavorite').addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (contextTargetFile && contextTargetFile.id) {
+                if (!favoriteFiles.some(f => f.id === contextTargetFile.id)) {
+                    favoriteFiles.push(contextTargetFile);
+                    saveStoredFavorites(favoriteFiles);
+                    renderFavorites(searchInput.value.trim());
+                }
+            }
+            closeContextMenu();
+        });
+        document.getElementById('ccmDelete').addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (contextTargetFile && contextTargetFile.id) {
+                if (contextTarget) {
+                    contextTarget.style.transition = '0.2s';
+                    contextTarget.style.transform = 'scale(0.8)';
+                    contextTarget.style.opacity = '0';
+                    setTimeout(() => {
+                        contextTarget.remove();
+                        allFiles = allFiles.filter(f => f.id !== contextTargetFile.id);
+                        favoriteFiles = favoriteFiles.filter(f => f.id !== contextTargetFile.id);
+                        recentFiles = recentFiles.filter(f => f.id !== contextTargetFile.id);
+                        
+                        saveStoredFiles(allFiles);
+                        saveStoredFavorites(favoriteFiles);
+                        saveStoredRecent(recentFiles);
+                        
+                        const q = searchInput.value.trim();
+                        if (q) performSearch(q);
+                        else renderAllSections('');
+                    }, 200);
+                }
+            }
+            closeContextMenu();
         });
 
-        document.getElementById('fileInput')?.addEventListener('change', function(e) {
-            if (this.files.length > 0) {
-                const fileList = document.getElementById('fileList');
-                const names = Array.from(this.files).map(f => f.name);
-                names.forEach(name => {
-                    const span = document.createElement('span');
-                    span.textContent = '📎 ' + name;
-                    span.style.marginRight = '0.8rem';
-                    fileList.appendChild(span);
-                });
-                this.value = '';
+        document.addEventListener('click', function(e) {
+            if (!contextMenu.contains(e.target)) closeContextMenu();
+        });
+        document.addEventListener('scroll', closeContextMenu, true);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeContextMenu();
+        });
+
+        // ---------- helpers ----------
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function getFileIcon(fileName) {
+            const ext = fileName.split('.').pop().toLowerCase();
+            const icons = {
+                'jpg': 'fa-file-image','jpeg': 'fa-file-image','png': 'fa-file-image','gif': 'fa-file-image',
+                'svg': 'fa-file-image','bmp': 'fa-file-image','webp': 'fa-file-image',
+                'pdf': 'fa-file-pdf','doc': 'fa-file-word','docx': 'fa-file-word',
+                'txt': 'fa-file-alt','xls': 'fa-file-excel','xlsx': 'fa-file-excel',
+                'csv': 'fa-file-csv','ppt': 'fa-file-powerpoint','pptx': 'fa-file-powerpoint',
+                'js': 'fa-file-code','html': 'fa-file-code','htm': 'fa-file-code','css': 'fa-file-code',
+                'json': 'fa-file-code','xml': 'fa-file-code','py': 'fa-file-code','java': 'fa-file-code',
+                'cpp': 'fa-file-code','c': 'fa-file-code','php': 'fa-file-code','rb': 'fa-file-code',
+                'go': 'fa-file-code','rs': 'fa-file-code','swift': 'fa-file-code','kt': 'fa-file-code',
+                'md': 'fa-file-alt','zip': 'fa-file-archive','rar': 'fa-file-archive','7z': 'fa-file-archive',
+                'mp4': 'fa-file-video','avi': 'fa-file-video','mkv': 'fa-file-video','mov': 'fa-file-video',
+                'wmv': 'fa-file-video','flv': 'fa-file-video','mp3': 'fa-file-audio','wav': 'fa-file-audio',
+                'wma': 'fa-file-audio','aac': 'fa-file-audio','flac': 'fa-file-audio'
+            };
+            return icons[ext] || 'fa-file';
+        }
+
+        // ---------- create file element ----------
+        function createFileElement(file, highlightText = '') {
+            const div = document.createElement("div");
+            div.className = "file-item";
+            div.dataset.fileId = file.id;
+
+            const icon = document.createElement("i");
+            icon.className = 'fas ' + getFileIcon(file.name);
+
+            const name = document.createElement("span");
+            name.className = "file-name";
+
+            if (highlightText && highlightText.length > 0) {
+                const lowerName = file.name.toLowerCase();
+                const lowerQuery = highlightText.toLowerCase();
+                if (lowerName.includes(lowerQuery)) {
+                    const idx = lowerName.indexOf(lowerQuery);
+                    const before = file.name.slice(0, idx);
+                    const match = file.name.slice(idx, idx + highlightText.length);
+                    const after = file.name.slice(idx + highlightText.length);
+                    name.innerHTML = `${before}<span class="highlight-match">${match}</span>${after}`;
+                } else {
+                    name.textContent = file.name;
+                }
+            } else {
+                name.textContent = file.name;
+            }
+
+            name.addEventListener('click', function(e) {
+                e.stopPropagation();
+                makeFileNameEditable(name, file, div);
+            });
+
+            const size = document.createElement("span");
+            size.className = "file-size";
+            size.textContent = formatFileSize(file.size);
+
+            div.appendChild(icon);
+            div.appendChild(name);
+            div.appendChild(size);
+
+            attachContextMenu(div, file);
+
+            return div;
+        }
+
+        // ---------- render functions ----------
+        function renderAllFiles(highlight = '') {
+            fileList.innerHTML = '';
+            if (allFiles.length === 0) {
+                fileList.innerHTML = '<div style="color: #9aa8b9; padding: 1rem; text-align: center; font-size: 0.9rem;">No files uploaded yet.</div>';
+                return;
+            }
+            const fragment = document.createDocumentFragment();
+            allFiles.forEach(file => {
+                fragment.appendChild(createFileElement(file, highlight));
+            });
+            fileList.appendChild(fragment);
+        }
+
+        function renderFavorites(highlight = '') {
+            favoritesFileList.innerHTML = '';
+            if (favoriteFiles.length === 0) {
+                favoritesFileList.innerHTML = '<div style="color: #9aa8b9; padding: 0.5rem 0; font-size: 0.85rem;">No favorites yet.</div>';
+                return;
+            }
+            const fragment = document.createDocumentFragment();
+            favoriteFiles.forEach(file => {
+                fragment.appendChild(createFileElement(file, highlight));
+            });
+            favoritesFileList.appendChild(fragment);
+        }
+
+        function renderRecent(highlight = '') {
+            recentFileList.innerHTML = '';
+            const recent = recentFiles.slice(0, 5);
+            if (recent.length === 0) {
+                recentFileList.innerHTML = '<div style="color: #9aa8b9; padding: 0.5rem 0; font-size: 0.85rem;">No recent files.</div>';
+                return;
+            }
+            const fragment = document.createDocumentFragment();
+            recent.forEach(file => {
+                fragment.appendChild(createFileElement(file, highlight));
+            });
+            recentFileList.appendChild(fragment);
+        }
+
+        function renderAllSections(highlight = '') {
+            renderAllFiles(highlight);
+            renderRecent(highlight);
+            renderFavorites(highlight);
+        }
+
+        // ---------- search ----------
+        function performSearch(query) {
+            const q = query.trim();
+            if (q === '') {
+                clearSearchBtn.style.display = 'none';
+                renderAllSections('');
+                return;
+            }
+            clearSearchBtn.style.display = 'inline-block';
+            renderAllSections(q);
+        }
+
+        searchInput.addEventListener('input', function(e) {
+            performSearch(this.value);
+        });
+
+        clearSearchBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            clearSearchBtn.style.display = 'none';
+            renderAllSections('');
+            searchInput.focus();
+        });
+
+        // ---------- process files ----------
+        function processFiles(files) {
+            const fileArray = Array.from(files);
+            const totalFiles = fileArray.length;
+            
+            if (totalFiles === 0) return;
+            
+            uploadStatus.textContent = `Uploading ${totalFiles} files...`;
+            uploadStatus.style.display = 'inline-block';
+            uploadStatus.classList.add('active');
+            
+            const CHUNK_SIZE = 10;
+            let processedCount = 0;
+            
+            function processChunk(startIndex) {
+                const endIndex = Math.min(startIndex + CHUNK_SIZE, totalFiles);
+                
+                for (let i = startIndex; i < endIndex; i++) {
+                    const file = fileArray[i];
+                    const fileData = {
+                        id: Date.now() + Math.random().toString(36).substr(2, 5) + i,
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        lastModified: file.lastModified,
+                        webkitRelativePath: file.webkitRelativePath || file.name
+                    };
+                    allFiles.push(fileData);
+                    recentFiles.unshift(fileData);
+                    if (recentFiles.length > 20) recentFiles.pop();
+                    processedCount++;
+                }
+                
+                // Save to localStorage
+                saveStoredFiles(allFiles);
+                saveStoredRecent(recentFiles);
+                
+                uploadStatus.textContent = `Uploading ${processedCount}/${totalFiles}...`;
+                
+                const q = searchInput.value.trim();
+                if (q) performSearch(q);
+                else renderAllSections('');
+                
+                if (endIndex < totalFiles) {
+                    requestAnimationFrame(() => {
+                        setTimeout(() => processChunk(endIndex), 50);
+                    });
+                } else {
+                    uploadStatus.textContent = `✓ ${totalFiles} files uploaded`;
+                    setTimeout(() => {
+                        uploadStatus.classList.remove('active');
+                        setTimeout(() => {
+                            uploadStatus.textContent = '';
+                            uploadStatus.style.display = 'none';
+                        }, 2000);
+                    }, 800);
+                    const q2 = searchInput.value.trim();
+                    if (q2) performSearch(q2);
+                    else renderAllSections('');
+                }
+            }
+            
+            processChunk(0);
+        }
+
+        // ---------- event listeners ----------
+        addBtn.addEventListener("click", function(e) {
+            e.stopPropagation();
+            fileInput.value = '';
+            fileInput.click();
+        });
+
+        fileInput.addEventListener("change", function(e) {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+            
+            uploadStatus.style.display = 'inline-block';
+            uploadStatus.textContent = 'Preparing...';
+            uploadStatus.classList.add('active');
+            
+            setTimeout(() => {
+                processFiles(files);
+                fileInput.value = "";
+            }, 100);
+        });
+
+                // ============================================================
+        // DRAG AND DROP - COMPLETE VERSION
+        // ============================================================
+        fileList.addEventListener("dragover", function(e) {
+            e.preventDefault();
+            this.style.backgroundColor = "#f0f4ff";
+        });
+
+        fileList.addEventListener("dragleave", function(e) {
+            e.preventDefault();
+            this.style.backgroundColor = "#f9fafb";
+        });
+
+        fileList.addEventListener("drop", function(e) {
+            e.preventDefault();
+            this.style.backgroundColor = "#f9fafb";
+            const files = e.dataTransfer.files;
+            if (files && files.length > 0) {
+                uploadStatus.style.display = 'inline-block';
+                uploadStatus.textContent = 'Preparing...';
+                uploadStatus.classList.add('active');
+                setTimeout(() => {
+                    processFiles(files);
+                }, 100);
             }
         });
+
+        // ============================================================
+        // CATEGORY BUTTONS (navigation)
+        // ============================================================
+        document.getElementById('imagesBtn')?.addEventListener('click', function() {
+            window.location.href = 'images_page.html';
+        });
+        document.getElementById('documentsBtn')?.addEventListener('click', function() {
+            window.location.href = 'documents_page.html';
+        });
+        document.getElementById('mediaBtn')?.addEventListener('click', function() {
+            window.location.href = 'media_page.html';
+        });
+        document.getElementById('audioBtn')?.addEventListener('click', function() {
+            window.location.href = 'audio_page.html';
+        });
+        document.getElementById('safeVaultBtn')?.addEventListener('click', function() {
+            window.location.href = 'dashboard.html';
+        });
+
+        // ============================================================
+        // LOGOUT BUTTON
+        // ============================================================
+        document.querySelector('.logout-row button')?.addEventListener('click', function() {
+            if (confirm('Are you sure you want to sign out?')) {
+                alert('Signing out...');
+                window.location.href = 'login.html';
+            }
+        });
+
+        // ============================================================
+        // LISTEN FOR STORAGE CHANGES (sync with dashboard)
+        // ============================================================
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'cloudHauxFiles') {
+                allFiles = getStoredFiles();
+                const q = searchInput.value.trim();
+                if (q) performSearch(q);
+                else renderAllSections('');
+            }
+            if (e.key === 'cloudHauxFavorites') {
+                favoriteFiles = getStoredFavorites();
+                const q = searchInput.value.trim();
+                if (q) performSearch(q);
+                else renderAllSections('');
+            }
+            if (e.key === 'cloudHauxRecent') {
+                recentFiles = getStoredRecent();
+                const q = searchInput.value.trim();
+                if (q) performSearch(q);
+                else renderAllSections('');
+            }
+        });
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        renderAllSections('');
+        clearSearchBtn.style.display = 'none';
+        uploadStatus.style.display = 'none';
+        
+        console.log('✅ Profile page loaded. Files are synced with dashboard via localStorage.');
+    });
     </script>
 </body>
 </html>

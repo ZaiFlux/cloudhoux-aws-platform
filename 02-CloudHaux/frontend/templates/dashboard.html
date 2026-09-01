@@ -37,9 +37,9 @@
         .ccm-item.ccm-danger:hover { background: #fee2e2; }
         .ccm-separator { height: 1px; background: #eef0f3; margin: 5px 4px; }
 
-        /* File item styles - COMPACT VERSION */
+        /* File item styles - with drag support (no grip handle) */
         .file-item {
-            cursor: context-menu;
+            cursor: grab;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -48,11 +48,32 @@
             border-radius: 6px;
             border: 1px solid #e5e7eb;
             margin-bottom: 6px;
-            transition: 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, background 0.2s, border-color 0.2s;
+            position: relative;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .file-item:active {
+            cursor: grabbing;
         }
         .file-item:hover {
             background: #f3f4f6;
             border-color: #7c3aed;
+        }
+        .file-item.dragging {
+            opacity: 0.6;
+            transform: scale(0.95);
+            border-color: #7c3aed;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+            z-index: 1000;
+            cursor: grabbing;
+        }
+        .file-item.drag-over {
+            border-color: #7c3aed;
+            background: #f0f4ff;
+            transform: scale(1.02);
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.1);
         }
         .file-item i {
             font-size: 16px;
@@ -101,10 +122,23 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         }
 
+        /* Drag placeholder */
+        .drag-placeholder {
+            border: 2px dashed #7c3aed;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: #f8f4ff;
+            height: 42px;
+            opacity: 0.5;
+            transition: all 0.2s;
+        }
+
         /* Compact sections */
         #recentFileList, #favoritesFileList, #fileList {
             max-height: 400px;
             overflow-y: auto;
+            min-height: 60px;
         }
 
         /* search highlight */
@@ -150,6 +184,19 @@
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
+        }
+
+        /* Drop zone highlight for file list */
+        #fileList.drag-over-zone {
+            background: #f8f4ff;
+            border: 2px dashed #7c3aed;
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        /* Smooth animations */
+        .file-item-move {
+            transition: transform 0.2s ease;
         }
     </style>
 </head>
@@ -249,6 +296,142 @@
         const contextMenu = document.getElementById('customContextMenu');
         let contextTarget = null;
         let contextTargetFile = null;
+
+        // ---------- DRAG & DROP REORDERING ----------
+        let draggedItem = null;
+        let dragOverItem = null;
+        let dragStartIndex = -1;
+        let dragEndIndex = -1;
+
+        function makeFileDraggable(element) {
+            element.draggable = true;
+            
+            element.addEventListener('dragstart', function(e) {
+                draggedItem = this;
+                dragStartIndex = Array.from(this.parentNode.children).indexOf(this);
+                this.classList.add('dragging');
+                
+                // Store the file data
+                const fileId = this.dataset.fileId;
+                const fileData = allFiles.find(f => f.id === fileId);
+                if (fileData) {
+                    e.dataTransfer.setData('text/plain', JSON.stringify({
+                        id: fileId,
+                        index: dragStartIndex
+                    }));
+                }
+                e.dataTransfer.effectAllowed = 'move';
+                
+                // Create a ghost image
+                const ghost = this.cloneNode(true);
+                ghost.style.opacity = '0.5';
+                ghost.style.position = 'absolute';
+                ghost.style.top = '-1000px';
+                document.body.appendChild(ghost);
+                e.dataTransfer.setDragImage(ghost, 20, 20);
+                setTimeout(() => document.body.removeChild(ghost), 0);
+            });
+
+            element.addEventListener('dragend', function(e) {
+                this.classList.remove('dragging');
+                
+                // Remove all drag-over highlights
+                document.querySelectorAll('.file-item.drag-over').forEach(el => {
+                    el.classList.remove('drag-over');
+                });
+                fileList.classList.remove('drag-over-zone');
+                
+                // Remove placeholder
+                const placeholder = document.querySelector('.drag-placeholder');
+                if (placeholder) placeholder.remove();
+                
+                // If dropped outside the file list, snap back (do nothing)
+                if (dragEndIndex === -1) {
+                    // Files stay in original order
+                }
+                
+                draggedItem = null;
+                dragOverItem = null;
+                dragStartIndex = -1;
+                dragEndIndex = -1;
+            });
+
+            element.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                
+                // Don't allow dropping on itself
+                if (this === draggedItem) return;
+                
+                // Remove highlight from all items
+                document.querySelectorAll('.file-item.drag-over').forEach(el => {
+                    el.classList.remove('drag-over');
+                });
+                
+                // Highlight current item
+                this.classList.add('drag-over');
+                dragOverItem = this;
+                
+                // Show placeholder
+                const placeholder = document.querySelector('.drag-placeholder');
+                if (!placeholder) {
+                    const ph = document.createElement('div');
+                    ph.className = 'drag-placeholder';
+                    this.parentNode.insertBefore(ph, this);
+                } else {
+                    this.parentNode.insertBefore(placeholder, this);
+                }
+            });
+
+            element.addEventListener('dragleave', function(e) {
+                // Only remove if we're actually leaving the element
+                if (!this.contains(e.relatedTarget)) {
+                    this.classList.remove('drag-over');
+                    const placeholder = document.querySelector('.drag-placeholder');
+                    if (placeholder && placeholder.parentNode) {
+                        placeholder.remove();
+                    }
+                }
+            });
+
+            element.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+                
+                const placeholder = document.querySelector('.drag-placeholder');
+                if (placeholder) placeholder.remove();
+                
+                if (draggedItem && draggedItem !== this) {
+                    dragEndIndex = Array.from(this.parentNode.children).indexOf(this);
+                    
+                    // Get the dragged file ID
+                    const fileId = draggedItem.dataset.fileId;
+                    const fileData = allFiles.find(f => f.id === fileId);
+                    
+                    if (fileData) {
+                        // Get current index of the file in allFiles array
+                        const currentIndex = allFiles.findIndex(f => f.id === fileId);
+                        
+                        // Get the target file ID
+                        const targetId = this.dataset.fileId;
+                        const targetIndex = allFiles.findIndex(f => f.id === targetId);
+                        
+                        if (currentIndex !== -1 && targetIndex !== -1 && currentIndex !== targetIndex) {
+                            // Reorder the array
+                            const [movedItem] = allFiles.splice(currentIndex, 1);
+                            allFiles.splice(targetIndex, 0, movedItem);
+                            
+                            // Re-render
+                            const q = searchInput.value.trim();
+                            if (q) performSearch(q);
+                            else renderAllSections('');
+                        }
+                    }
+                }
+                
+                dragEndIndex = -1;
+            });
+        }
 
         // ---------- context menu ----------
         function openContextMenu(x, y, targetElement, fileData) {
@@ -402,7 +585,7 @@
             return icons[ext] || 'fa-file';
         }
 
-        // ---------- create file element with highlight ----------
+        // ---------- create file element with drag support (no grip handle) ----------
         function createFileElement(file, highlightText = '') {
             const div = document.createElement("div");
             div.className = "file-item";
@@ -443,6 +626,8 @@
             div.appendChild(name);
             div.appendChild(size);
 
+            // Make the whole div draggable
+            makeFileDraggable(div);
             attachContextMenu(div, file);
 
             return div;
@@ -451,8 +636,10 @@
         // ---------- render functions ----------
         function renderAllFiles(highlight = '') {
             fileList.innerHTML = '';
-            if (allFiles.length === 0) return;
-            // Use DocumentFragment for batch DOM updates
+            if (allFiles.length === 0) {
+                fileList.innerHTML = '<div style="color: #9aa8b9; padding: 1rem; text-align: center; font-size: 0.9rem;">Drop files here or click "+ Add Files"</div>';
+                return;
+            }
             const fragment = document.createDocumentFragment();
             allFiles.forEach(file => {
                 fragment.appendChild(createFileElement(file, highlight));
@@ -462,10 +649,16 @@
 
         function renderFavorites(highlight = '') {
             favoritesFileList.innerHTML = '';
-            if (favoriteFiles.length === 0) return;
+            if (favoriteFiles.length === 0) {
+                favoritesFileList.innerHTML = '<div style="color: #9aa8b9; padding: 0.5rem 0; font-size: 0.85rem;">No favorites yet.</div>';
+                return;
+            }
             const fragment = document.createDocumentFragment();
             favoriteFiles.forEach(file => {
-                fragment.appendChild(createFileElement(file, highlight));
+                const el = createFileElement(file, highlight);
+                // Favorites are not draggable (they're a separate list)
+                el.draggable = false;
+                fragment.appendChild(el);
             });
             favoritesFileList.appendChild(fragment);
         }
@@ -473,10 +666,16 @@
         function renderRecent(highlight = '') {
             recentFileList.innerHTML = '';
             const recent = recentFiles.slice(0, 5);
-            if (recent.length === 0) return;
+            if (recent.length === 0) {
+                recentFileList.innerHTML = '<div style="color: #9aa8b9; padding: 0.5rem 0; font-size: 0.85rem;">No recent files.</div>';
+                return;
+            }
             const fragment = document.createDocumentFragment();
             recent.forEach(file => {
-                fragment.appendChild(createFileElement(file, highlight));
+                const el = createFileElement(file, highlight);
+                // Recent files are not draggable (they're a separate list)
+                el.draggable = false;
+                fragment.appendChild(el);
             });
             recentFileList.appendChild(fragment);
         }
@@ -517,11 +716,10 @@
             
             if (totalFiles === 0) return;
             
-            // Show upload status
             uploadStatus.textContent = `Uploading ${totalFiles} files...`;
+            uploadStatus.style.display = 'inline-block';
             uploadStatus.classList.add('active');
             
-            // Process in chunks to prevent UI freeze
             const CHUNK_SIZE = 10;
             let processedCount = 0;
             
@@ -544,22 +742,17 @@
                     processedCount++;
                 }
                 
-                // Update status
                 uploadStatus.textContent = `Uploading ${processedCount}/${totalFiles}...`;
                 
-                // Render what we have so far
                 const q = searchInput.value.trim();
                 if (q) performSearch(q);
                 else renderAllSections('');
                 
-                // Process next chunk
                 if (endIndex < totalFiles) {
-                    // Use requestAnimationFrame for smooth UI
                     requestAnimationFrame(() => {
                         setTimeout(() => processChunk(endIndex), 50);
                     });
                 } else {
-                    // All done
                     uploadStatus.textContent = `✓ ${totalFiles} files uploaded`;
                     setTimeout(() => {
                         uploadStatus.classList.remove('active');
@@ -568,21 +761,18 @@
                             uploadStatus.style.display = 'none';
                         }, 2000);
                     }, 800);
-                    // Force final render
                     const q2 = searchInput.value.trim();
                     if (q2) performSearch(q2);
                     else renderAllSections('');
                 }
             }
             
-            // Start processing
             processChunk(0);
         }
 
         // ---------- event listeners ----------
         addBtn.addEventListener("click", function(e) {
             e.stopPropagation();
-            // Reset file input to ensure change event fires even with same file
             fileInput.value = '';
             fileInput.click();
         });
@@ -591,43 +781,55 @@
             const files = e.target.files;
             if (!files || files.length === 0) return;
             
-            // Show status indicator
             uploadStatus.style.display = 'inline-block';
             uploadStatus.textContent = 'Preparing...';
             uploadStatus.classList.add('active');
             
-            // Process files with delay to let UI update
             setTimeout(() => {
                 processFiles(files);
                 fileInput.value = "";
             }, 100);
         });
 
-        // Drag and drop with chunked processing
-        let dragCounter = 0;
+        // ---------- FILE UPLOAD DRAG AND DROP (for adding files) ----------
         fileList.addEventListener("dragover", function(e) {
             e.preventDefault();
-            this.style.backgroundColor = "#f0f4ff";
-        });
-        fileList.addEventListener("dragleave", function(e) {
-            e.preventDefault();
-            this.style.backgroundColor = "#f9fafb";
-        });
-        fileList.addEventListener("drop", function(e) {
-            e.preventDefault();
-            this.style.backgroundColor = "#f9fafb";
-            const files = e.dataTransfer.files;
-            if (files && files.length > 0) {
-                uploadStatus.style.display = 'inline-block';
-                uploadStatus.textContent = 'Preparing...';
-                uploadStatus.classList.add('active');
-                setTimeout(() => {
-                    processFiles(files);
-                }, 100);
+            e.stopPropagation();
+            // Only highlight if we're not dragging a file from the list (reordering)
+            if (!draggedItem) {
+                this.classList.add('drag-over-zone');
             }
         });
 
-        // category buttons
+        fileList.addEventListener("dragleave", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            // Only remove highlight if we're leaving the container
+            if (!this.contains(e.relatedTarget)) {
+                this.classList.remove('drag-over-zone');
+            }
+        });
+
+        fileList.addEventListener("drop", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.remove('drag-over-zone');
+            
+            // If we're dropping a file from the computer (not reordering)
+            if (!draggedItem) {
+                const files = e.dataTransfer.files;
+                if (files && files.length > 0) {
+                    uploadStatus.style.display = 'inline-block';
+                    uploadStatus.textContent = 'Preparing...';
+                    uploadStatus.classList.add('active');
+                    setTimeout(() => {
+                        processFiles(files);
+                    }, 100);
+                }
+            }
+        });
+
+        // ---------- category buttons ----------
         document.getElementById('imagesBtn').addEventListener('click', function() {
             window.location.href = 'images_page.html';
         });
@@ -648,6 +850,9 @@
         renderAllSections('');
         clearSearchBtn.style.display = 'none';
         uploadStatus.style.display = 'none';
+
+        console.log('✅ Dashboard loaded with drag-and-drop reordering!');
+        console.log('📁 Drag files to reorder them. Drag outside to cancel.');
     });
     </script>
 </body>
