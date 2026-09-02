@@ -527,18 +527,10 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-        // Get icon for audio type
+        // Get icon for audio type - NOW RETURNS MUSICAL NOTE
         function getAudioIcon(fileName) {
-            const ext = fileName.split('.').pop().toLowerCase();
-            const icons = {
-                'mp3': 'fa-music',
-                'wav': 'fa-wave-square',
-                'ogg': 'fa-music',
-                'aac': 'fa-music',
-                'flac': 'fa-music',
-                'm4a': 'fa-music'
-            };
-            return icons[ext] || 'fa-music';
+            // All audio files will show a musical note icon
+            return 'fa-music';
         }
         document.querySelectorAll('.folder-card, .audio-card').forEach(attachContextMenu);
         // ----- Rename functionality -----
@@ -611,7 +603,8 @@
                 
                 const icon = document.createElement("div");
                 icon.className = "audio-icon";
-                icon.innerHTML = `<i class="fas ${getAudioIcon(file.name)}"></i>`;
+                // Using fa-music (musical note) for ALL audio files
+                icon.innerHTML = `<i class="fas fa-music"></i>`;
                 
                 const name = document.createElement("div");
                 name.className = "audio-name";
