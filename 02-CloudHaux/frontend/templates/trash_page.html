@@ -460,18 +460,21 @@
         const emptyTrashBtn = document.getElementById('emptyTrashBtn');
         const restoreAllBtn = document.getElementById('restoreAllBtn');
 
-        const trashStore = [];
-        let idCounter = 0;
+        // READ from localStorage - this is the key fix!
+        let trashFiles = JSON.parse(localStorage.getItem('trashFiles') || '[]');
 
         const contextMenu = document.getElementById('customContextMenu');
         let contextTarget = null;
         const ccmRestore = document.getElementById('ccmRestore');
         const ccmDelete = document.getElementById('ccmDelete');
 
+        function saveToStorage() {
+            localStorage.setItem('trashFiles', JSON.stringify(trashFiles));
+        }
+
         function showToast(message, type = 'info') {
             toast.textContent = message;
             toast.className = 'toast ' + type;
-            // Force reflow
             void toast.offsetWidth;
             toast.classList.add('show');
             clearTimeout(toast._timeout);
@@ -534,7 +537,8 @@
             return icons[ext] || 'fa-file';
         }
 
-        function formatDate(date) {
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
             const now = new Date();
             const diff = now - date;
             
@@ -546,23 +550,10 @@
             return date.toLocaleDateString();
         }
 
-        function createTrashItem(file) {
-            const item = {
-                id: ++idCounter,
-                name: file.name,
-                size: file.size,
-                type: file.type || 'unknown',
-                deletedAt: new Date(),
-                file: file
-            };
-            trashStore.push(item);
-            return renderTrashItem(item);
-        }
-
-        function renderTrashItem(item) {
+        function renderTrashItem(item, index) {
             const card = document.createElement('div');
             card.className = 'trash-item-card';
-            card.dataset.id = item.id;
+            card.dataset.index = index;
 
             const icon = document.createElement('i');
             icon.className = 'fas ' + getFileIcon(item.name);
@@ -584,7 +575,7 @@
             restoreBtn.title = 'Restore';
             restoreBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                restoreItem(item.id);
+                restoreItem(index);
             });
 
             const deleteBtn = document.createElement('button');
@@ -593,7 +584,7 @@
             deleteBtn.title = 'Delete Permanently';
             deleteBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                deletePermanently(item.id);
+                deletePermanently(index);
             });
 
             actionsDiv.appendChild(restoreBtn);
@@ -612,14 +603,35 @@
             card.addEventListener('contextmenu', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                openContextMenu(e.clientX, e.clientY, item.id);
+                openContextMenu(e.clientX, e.clientY, index);
             });
 
             return card;
         }
 
-        function openContextMenu(x, y, itemId) {
-            contextTarget = itemId;
+        function renderTrash() {
+            trashGrid.innerHTML = '';
+            
+            if (trashFiles.length === 0) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'trash_empty';
+                emptyDiv.innerHTML = `
+                    <i class="fas fa-trash-alt"></i>
+                    <h3>Trash is empty</h3>
+                    <p>Files you delete will appear here</p>
+                `;
+                trashGrid.appendChild(emptyDiv);
+                return;
+            }
+
+            trashFiles.forEach((item, index) => {
+                const card = renderTrashItem(item, index);
+                trashGrid.appendChild(card);
+            });
+        }
+
+        function openContextMenu(x, y, index) {
+            contextTarget = index;
             const maxX = window.innerWidth - 190;
             const maxY = window.innerHeight - 120;
             contextMenu.style.left = Math.min(x, maxX) + 'px';
@@ -632,119 +644,66 @@
             contextTarget = null;
         }
 
-        function restoreItem(id) {
-            const index = trashStore.findIndex(item => item.id === id);
-            if (index !== -1) {
-                const item = trashStore[index];
-                trashStore.splice(index, 1);
-                
-                const card = trashGrid.querySelector(`.trash-item-card[data-id="${id}"]`);
-                if (card) {
-                    card.style.transition = '0.3s';
-                    card.style.transform = 'scale(0.8)';
-                    card.style.opacity = '0';
-                    setTimeout(() => {
-                        card.remove();
-                        showToast(`Restored "${item.name}"`, 'success');
-                        updateEmptyState();
-                    }, 300);
-                }
+        function restoreItem(index) {
+            if (index !== undefined && index < trashFiles.length) {
+                const item = trashFiles[index];
+                trashFiles.splice(index, 1);
+                saveToStorage();
+                renderTrash();
+                showToast(`Restored "${item.name}"`, 'success');
             }
             closeContextMenu();
         }
 
-        function deletePermanently(id) {
-            const index = trashStore.findIndex(item => item.id === id);
-            if (index !== -1) {
-                const item = trashStore[index];
-                trashStore.splice(index, 1);
-                
-                const card = trashGrid.querySelector(`.trash-item-card[data-id="${id}"]`);
-                if (card) {
-                    card.style.transition = '0.2s';
-                    card.style.transform = 'scale(0.9)';
-                    card.style.opacity = '0';
-                    setTimeout(() => {
-                        card.remove();
-                        showToast(`Deleted "${item.name}" permanently`, 'error');
-                        updateEmptyState();
-                    }, 200);
-                }
+        function deletePermanently(index) {
+            if (index !== undefined && index < trashFiles.length) {
+                const item = trashFiles[index];
+                trashFiles.splice(index, 1);
+                saveToStorage();
+                renderTrash();
+                showToast(`Deleted "${item.name}" permanently`, 'error');
             }
             closeContextMenu();
-        }
-
-        function updateEmptyState() {
-            const existingEmpty = trashGrid.querySelector('.trash_empty');
-            if (trashStore.length === 0) {
-                if (!existingEmpty) {
-                    const emptyDiv = document.createElement('div');
-                    emptyDiv.className = 'trash_empty';
-                    emptyDiv.innerHTML = `
-                        <i class="fas fa-trash-alt"></i>
-                        <h3>Trash is empty</h3>
-                        <p>Files you delete will appear here</p>
-                    `;
-                    trashGrid.appendChild(emptyDiv);
-                }
-            } else {
-                if (existingEmpty) {
-                    existingEmpty.remove();
-                }
-            }
         }
 
         function emptyTrash() {
-            if (trashStore.length === 0) {
+            if (trashFiles.length === 0) {
                 showToast('Trash is already empty', 'info');
                 return;
             }
 
             if (confirm('Are you sure you want to permanently delete all items in the trash?')) {
-                const count = trashStore.length;
-                trashStore.length = 0;
-                trashGrid.innerHTML = '';
+                const count = trashFiles.length;
+                trashFiles = [];
+                saveToStorage();
+                renderTrash();
                 showToast(`Permanently deleted ${count} item${count > 1 ? 's' : ''}`, 'error');
-                updateEmptyState();
             }
         }
 
         function restoreAll() {
-            if (trashStore.length === 0) {
+            if (trashFiles.length === 0) {
                 showToast('Trash is empty', 'info');
                 return;
             }
 
-            const count = trashStore.length;
-            const cards = trashGrid.querySelectorAll('.trash-item-card');
-            cards.forEach((card, index) => {
-                setTimeout(() => {
-                    card.style.transition = '0.3s';
-                    card.style.transform = 'scale(0.8)';
-                    card.style.opacity = '0';
-                    setTimeout(() => {
-                        card.remove();
-                    }, 300);
-                }, index * 100);
-            });
-
-            setTimeout(() => {
-                trashStore.length = 0;
-                showToast(`Restored ${count} item${count > 1 ? 's' : ''}`, 'success');
-                updateEmptyState();
-            }, (cards.length * 100) + 350);
+            const count = trashFiles.length;
+            trashFiles = [];
+            saveToStorage();
+            renderTrash();
+            showToast(`Restored ${count} item${count > 1 ? 's' : ''}`, 'success');
         }
 
         ccmRestore.addEventListener('click', function(e) {
             e.stopPropagation();
-            if (contextTarget) {
+            if (contextTarget !== null) {
                 restoreItem(contextTarget);
             }
         });
 
         ccmDelete.addEventListener('click', function(e) {
             e.stopPropagation();
-            if (contextTarget) {
+            if (contextTarget !== null) {
                 deletePermanently(contextTarget);
             }
         });
@@ -760,7 +719,7 @@
         emptyTrashBtn.addEventListener('click', emptyTrash);
         restoreAllBtn.addEventListener('click', restoreAll);
 
-        // Add files to trash (for demo purposes)
+        // Add files to trash (for demo/testing)
         const fileInput = document.getElementById('fileInput');
         const addBtn = document.getElementById('addFileBtn');
 
@@ -774,21 +733,21 @@
             if (!files || files.length === 0) return;
 
             const fileArray = Array.from(files);
-            const existingEmpty = trashGrid.querySelector('.trash_empty');
-            if (existingEmpty) existingEmpty.remove();
-
-            fileArray.forEach((file, index) => {
-                setTimeout(() => {
-                    const card = createTrashItem(file);
-                    trashGrid.appendChild(card);
-                    if (index === fileArray.length - 1) {
-                        showToast(`Added ${fileArray.length} item${fileArray.length > 1 ? 's' : ''} to trash`, 'info');
-                    }
-                }, index * 150);
+            fileArray.forEach((file) => {
+                const trashItem = {
+                    id: Date.now() + Math.random().toString(36).substr(2, 5),
+                    name: file.name,
+                    size: file.size,
+                    type: file.type || 'unknown',
+                    deletedAt: new Date().toISOString()
+                };
+                trashFiles.push(trashItem);
             });
-
+            
+            saveToStorage();
+            renderTrash();
+            showToast(`Added ${fileArray.length} item${fileArray.length > 1 ? 's' : ''} to trash`, 'info');
             fileInput.value = '';
-            updateEmptyState();
         });
 
         // Drop support
@@ -804,25 +763,28 @@
             this.style.backgroundColor = '#f9fafb';
             const files = e.dataTransfer.files;
             if (files && files.length > 0) {
-                const existingEmpty = trashGrid.querySelector('.trash_empty');
-                if (existingEmpty) existingEmpty.remove();
-
                 const fileArray = Array.from(files);
-                fileArray.forEach((file, index) => {
-                    setTimeout(() => {
-                        const card = createTrashItem(file);
-                        trashGrid.appendChild(card);
-                        if (index === fileArray.length - 1) {
-                            showToast(`Added ${fileArray.length} item${fileArray.length > 1 ? 's' : ''} to trash`, 'info');
-                        }
-                    }, index * 150);
+                fileArray.forEach((file) => {
+                    const trashItem = {
+                        id: Date.now() + Math.random().toString(36).substr(2, 5),
+                        name: file.name,
+                        size: file.size,
+                        type: file.type || 'unknown',
+                        deletedAt: new Date().toISOString()
+                    };
+                    trashFiles.push(trashItem);
                 });
-                updateEmptyState();
+                saveToStorage();
+                renderTrash();
+                showToast(`Added ${fileArray.length} item${fileArray.length > 1 ? 's' : ''} to trash`, 'info');
             }
         });
 
-        // Initialize empty state
-        updateEmptyState();
+        // Initial render
+        renderTrash();
+
+        console.log('🗑️ Trash page loaded');
+        console.log(`📁 ${trashFiles.length} files in trash`);
     });
     </script>
 </body>

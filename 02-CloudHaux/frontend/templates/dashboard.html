@@ -37,7 +37,7 @@
         .ccm-item.ccm-danger:hover { background: #fee2e2; }
         .ccm-separator { height: 1px; background: #eef0f3; margin: 5px 4px; }
 
-        /* File item styles - with drag support (no grip handle) */
+        /* File item styles */
         .file-item {
             cursor: grab;
             display: flex;
@@ -167,7 +167,7 @@
             align-items: center;
         }
 
-        /* Upload status indicator - subtle */
+        /* Upload status indicator */
         .upload-status {
             font-size: 12px;
             color: #6b7280;
@@ -186,7 +186,7 @@
             50% { opacity: 0.5; }
         }
 
-        /* Drop zone highlight for file list */
+        /* Drop zone highlight */
         #fileList.drag-over-zone {
             background: #f8f4ff;
             border: 2px dashed #7c3aed;
@@ -194,9 +194,70 @@
             padding: 4px;
         }
 
-        /* Smooth animations */
-        .file-item-move {
-            transition: transform 0.2s ease;
+        /* Toast notification */
+        .toast-notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #1e293b;
+            color: white;
+            padding: 14px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            font-size: 14px;
+            z-index: 99999;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 0.4s ease, opacity 0.4s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .toast-notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .toast-notification .toast-icon {
+            font-size: 18px;
+        }
+        .toast-notification .toast-undo {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            padding: 4px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+        .toast-notification .toast-undo:hover {
+            background: rgba(255,255,255,0.25);
+        }
+        .toast-notification .toast-close {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.6);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0 4px;
+        }
+        .toast-notification .toast-close:hover {
+            color: white;
+        }
+
+        /* Trash count badge */
+        .trash-count {
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            padding: 1px 8px;
+            font-size: 11px;
+            margin-left: 6px;
+            display: inline-block;
+        }
+
+        .left_nav_bar a {
+            position: relative;
         }
     </style>
 </head>
@@ -222,7 +283,7 @@
         <a href="#all_files">All Files</a>
         <a href="#recent_files">Recent</a>
         <a href="#favorites">Favorites</a>
-        <a href="trash_page.html">Trash</a>
+        <a href="trash_page.html" id="trashLink">Trash</a>
     </nav>
 
     <main class="dashboard_content">
@@ -273,7 +334,15 @@
         <div class="ccm-item" id="ccmMove"><i class="fas fa-folder-open"></i> Move to</div>
         <div class="ccm-item" id="ccmFavorite"><i class="fas fa-star"></i> Add to Favorites</div>
         <div class="ccm-separator"></div>
-        <div class="ccm-item ccm-danger" id="ccmDelete"><i class="fas fa-trash"></i> Delete</div>
+        <div class="ccm-item ccm-danger" id="ccmDelete"><i class="fas fa-trash"></i> Move to Trash</div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-notification" id="toastNotification">
+        <span class="toast-icon">🗑️</span>
+        <span id="toastMessage">File moved to trash</span>
+        <button class="toast-undo" id="toastUndoBtn">Undo</button>
+        <button class="toast-close" id="toastCloseBtn">×</button>
     </div>
 
     <script>
@@ -289,13 +358,143 @@
         const clearSearchBtn = document.getElementById("clearSearchBtn");
         const uploadStatus = document.getElementById("uploadStatus");
 
+        // Use a shared global variable for trash (no localStorage)
+        if (!window.trashFiles) {
+            window.trashFiles = [];
+        }
+        
         let allFiles = [];
         let favoriteFiles = [];
         let recentFiles = [];
+        
+        // Store for undo functionality
+        let lastDeletedFile = null;
+        let lastDeletedElement = null;
+        let toastTimeout = null;
 
         const contextMenu = document.getElementById('customContextMenu');
         let contextTarget = null;
         let contextTargetFile = null;
+
+        // Toast elements
+        const toast = document.getElementById('toastNotification');
+        const toastMessage = document.getElementById('toastMessage');
+        const toastUndoBtn = document.getElementById('toastUndoBtn');
+        const toastCloseBtn = document.getElementById('toastCloseBtn');
+
+        // ---------- Toast functions ----------
+        function showToast(message, fileData, element) {
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            lastDeletedFile = fileData;
+            lastDeletedElement = element;
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                hideToast();
+            }, 5000);
+        }
+
+        function hideToast() {
+            toast.classList.remove('show');
+            clearTimeout(toastTimeout);
+            lastDeletedFile = null;
+            lastDeletedElement = null;
+        }
+
+        toastCloseBtn.addEventListener('click', hideToast);
+        
+        toastUndoBtn.addEventListener('click', function() {
+            if (lastDeletedFile && lastDeletedElement) {
+                restoreFromTrash(lastDeletedFile, lastDeletedElement);
+                hideToast();
+            }
+        });
+
+        // ---------- Trash functions ----------
+        function moveToTrash(fileData, element) {
+            const trashItem = {
+                ...fileData,
+                deletedAt: new Date().toISOString()
+            };
+            window.trashFiles.push(trashItem);
+            
+            const fileId = fileData.id;
+            
+            const index = allFiles.findIndex(f => f.id === fileId);
+            if (index !== -1) {
+                allFiles.splice(index, 1);
+            }
+            
+            const favIndex = favoriteFiles.findIndex(f => f.id === fileId);
+            if (favIndex !== -1) {
+                favoriteFiles.splice(favIndex, 1);
+            }
+            
+            const recIndex = recentFiles.findIndex(f => f.id === fileId);
+            if (recIndex !== -1) {
+                recentFiles.splice(recIndex, 1);
+            }
+            
+            if (element) {
+                element.style.transition = '0.3s';
+                element.style.transform = 'scale(0.8)';
+                element.style.opacity = '0';
+                setTimeout(() => {
+                    element.remove();
+                    const q = searchInput.value.trim();
+                    if (q) performSearch(q);
+                    else renderAllSections('');
+                }, 300);
+            }
+            
+            showToast(`"${fileData.name}" moved to trash`, fileData, element);
+            updateTrashCount();
+        }
+
+        function restoreFromTrash(fileData, element) {
+            const trashIndex = window.trashFiles.findIndex(f => f.id === fileData.id);
+            if (trashIndex !== -1) {
+                window.trashFiles.splice(trashIndex, 1);
+            }
+            
+            const restoredFile = {
+                id: fileData.id || Date.now() + Math.random().toString(36).substr(2, 5),
+                name: fileData.name,
+                size: fileData.size || 0,
+                type: fileData.type || '',
+                lastModified: fileData.lastModified || Date.now(),
+                webkitRelativePath: fileData.webkitRelativePath || fileData.name
+            };
+            
+            const exists = allFiles.some(f => f.id === restoredFile.id);
+            if (!exists) {
+                allFiles.push(restoredFile);
+            }
+            
+            const q = searchInput.value.trim();
+            if (q) performSearch(q);
+            else renderAllSections('');
+            
+            updateTrashCount();
+        }
+
+        function updateTrashCount() {
+            const trashLink = document.getElementById('trashLink');
+            if (trashLink) {
+                const count = window.trashFiles.length;
+                const existingBadge = trashLink.querySelector('.trash-count');
+                if (existingBadge) existingBadge.remove();
+                
+                if (count > 0) {
+                    const badge = document.createElement('span');
+                    badge.className = 'trash-count';
+                    badge.textContent = count;
+                    trashLink.appendChild(badge);
+                }
+            }
+        }
 
         // ---------- DRAG & DROP REORDERING ----------
         let draggedItem = null;
@@ -311,7 +510,6 @@
                 dragStartIndex = Array.from(this.parentNode.children).indexOf(this);
                 this.classList.add('dragging');
                 
-                // Store the file data
                 const fileId = this.dataset.fileId;
                 const fileData = allFiles.find(f => f.id === fileId);
                 if (fileData) {
@@ -322,7 +520,6 @@
                 }
                 e.dataTransfer.effectAllowed = 'move';
                 
-                // Create a ghost image
                 const ghost = this.cloneNode(true);
                 ghost.style.opacity = '0.5';
                 ghost.style.position = 'absolute';
@@ -335,20 +532,13 @@
             element.addEventListener('dragend', function(e) {
                 this.classList.remove('dragging');
                 
-                // Remove all drag-over highlights
                 document.querySelectorAll('.file-item.drag-over').forEach(el => {
                     el.classList.remove('drag-over');
                 });
                 fileList.classList.remove('drag-over-zone');
                 
-                // Remove placeholder
                 const placeholder = document.querySelector('.drag-placeholder');
                 if (placeholder) placeholder.remove();
-                
-                // If dropped outside the file list, snap back (do nothing)
-                if (dragEndIndex === -1) {
-                    // Files stay in original order
-                }
                 
                 draggedItem = null;
                 dragOverItem = null;
@@ -360,19 +550,15 @@
                 e.preventDefault();
                 e.dataTransfer.dropEffect = 'move';
                 
-                // Don't allow dropping on itself
                 if (this === draggedItem) return;
                 
-                // Remove highlight from all items
                 document.querySelectorAll('.file-item.drag-over').forEach(el => {
                     el.classList.remove('drag-over');
                 });
                 
-                // Highlight current item
                 this.classList.add('drag-over');
                 dragOverItem = this;
                 
-                // Show placeholder
                 const placeholder = document.querySelector('.drag-placeholder');
                 if (!placeholder) {
                     const ph = document.createElement('div');
@@ -384,7 +570,6 @@
             });
 
             element.addEventListener('dragleave', function(e) {
-                // Only remove if we're actually leaving the element
                 if (!this.contains(e.relatedTarget)) {
                     this.classList.remove('drag-over');
                     const placeholder = document.querySelector('.drag-placeholder');
@@ -404,24 +589,18 @@
                 if (draggedItem && draggedItem !== this) {
                     dragEndIndex = Array.from(this.parentNode.children).indexOf(this);
                     
-                    // Get the dragged file ID
                     const fileId = draggedItem.dataset.fileId;
                     const fileData = allFiles.find(f => f.id === fileId);
                     
                     if (fileData) {
-                        // Get current index of the file in allFiles array
                         const currentIndex = allFiles.findIndex(f => f.id === fileId);
-                        
-                        // Get the target file ID
                         const targetId = this.dataset.fileId;
                         const targetIndex = allFiles.findIndex(f => f.id === targetId);
                         
                         if (currentIndex !== -1 && targetIndex !== -1 && currentIndex !== targetIndex) {
-                            // Reorder the array
                             const [movedItem] = allFiles.splice(currentIndex, 1);
                             allFiles.splice(targetIndex, 0, movedItem);
                             
-                            // Re-render
                             const q = searchInput.value.trim();
                             if (q) performSearch(q);
                             else renderAllSections('');
@@ -527,23 +706,11 @@
             }
             closeContextMenu();
         });
+        
         document.getElementById('ccmDelete').addEventListener('click', function(e) {
             e.stopPropagation();
             if (contextTargetFile && contextTargetFile.id) {
-                if (contextTarget) {
-                    contextTarget.style.transition = '0.2s';
-                    contextTarget.style.transform = 'scale(0.8)';
-                    contextTarget.style.opacity = '0';
-                    setTimeout(() => {
-                        contextTarget.remove();
-                        allFiles = allFiles.filter(f => f.id !== contextTargetFile.id);
-                        favoriteFiles = favoriteFiles.filter(f => f.id !== contextTargetFile.id);
-                        recentFiles = recentFiles.filter(f => f.id !== contextTargetFile.id);
-                        const q = searchInput.value.trim();
-                        if (q) performSearch(q);
-                        else renderAllSections('');
-                    }, 200);
-                }
+                moveToTrash(contextTargetFile, contextTarget);
             }
             closeContextMenu();
         });
@@ -585,7 +752,7 @@
             return icons[ext] || 'fa-file';
         }
 
-        // ---------- create file element with drag support (no grip handle) ----------
+        // ---------- create file element ----------
         function createFileElement(file, highlightText = '') {
             const div = document.createElement("div");
             div.className = "file-item";
@@ -626,7 +793,6 @@
             div.appendChild(name);
             div.appendChild(size);
 
-            // Make the whole div draggable
             makeFileDraggable(div);
             attachContextMenu(div, file);
 
@@ -656,7 +822,6 @@
             const fragment = document.createDocumentFragment();
             favoriteFiles.forEach(file => {
                 const el = createFileElement(file, highlight);
-                // Favorites are not draggable (they're a separate list)
                 el.draggable = false;
                 fragment.appendChild(el);
             });
@@ -673,7 +838,6 @@
             const fragment = document.createDocumentFragment();
             recent.forEach(file => {
                 const el = createFileElement(file, highlight);
-                // Recent files are not draggable (they're a separate list)
                 el.draggable = false;
                 fragment.appendChild(el);
             });
@@ -684,6 +848,7 @@
             renderAllFiles(highlight);
             renderRecent(highlight);
             renderFavorites(highlight);
+            updateTrashCount();
         }
 
         // ---------- search ----------
@@ -709,7 +874,7 @@
             searchInput.focus();
         });
 
-        // ---------- OPTIMIZED file processing with chunking ----------
+        // ---------- file processing ----------
         function processFiles(files) {
             const fileArray = Array.from(files);
             const totalFiles = fileArray.length;
@@ -791,11 +956,10 @@
             }, 100);
         });
 
-        // ---------- FILE UPLOAD DRAG AND DROP (for adding files) ----------
+        // FILE UPLOAD DRAG AND DROP
         fileList.addEventListener("dragover", function(e) {
             e.preventDefault();
             e.stopPropagation();
-            // Only highlight if we're not dragging a file from the list (reordering)
             if (!draggedItem) {
                 this.classList.add('drag-over-zone');
             }
@@ -804,7 +968,6 @@
         fileList.addEventListener("dragleave", function(e) {
             e.preventDefault();
             e.stopPropagation();
-            // Only remove highlight if we're leaving the container
             if (!this.contains(e.relatedTarget)) {
                 this.classList.remove('drag-over-zone');
             }
@@ -815,7 +978,6 @@
             e.stopPropagation();
             this.classList.remove('drag-over-zone');
             
-            // If we're dropping a file from the computer (not reordering)
             if (!draggedItem) {
                 const files = e.dataTransfer.files;
                 if (files && files.length > 0) {
@@ -850,9 +1012,12 @@
         renderAllSections('');
         clearSearchBtn.style.display = 'none';
         uploadStatus.style.display = 'none';
+        updateTrashCount();
 
         console.log('✅ Dashboard loaded with drag-and-drop reordering!');
         console.log('📁 Drag files to reorder them. Drag outside to cancel.');
+        console.log('🗑️ Deleted files go to trash. Use Undo to restore.');
+        console.log(`📊 ${window.trashFiles.length} files in trash`);
     });
     </script>
 </body>
