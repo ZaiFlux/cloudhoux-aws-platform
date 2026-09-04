@@ -259,6 +259,33 @@
         .left_nav_bar a {
             position: relative;
         }
+
+        /* No matches message */
+        .no-matches-message {
+            display: none;
+            color: #6b7280;
+            font-size: 0.9rem;
+            padding: 20px;
+            text-align: center;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px dashed #d1d5db;
+            margin: 10px 0;
+        }
+        .no-matches-message i {
+            display: block;
+            font-size: 28px;
+            color: #9aa8b9;
+            margin-bottom: 8px;
+        }
+        .no-matches-message.show {
+            display: block;
+        }
+        
+        /* Search results wrapper */
+        .search-results-container {
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -288,6 +315,12 @@
 
     <main class="dashboard_content">
         <div class="main_content">
+            <!-- No matches message that appears under the search box -->
+            <div class="no-matches-message" id="noMatchesMessage">
+                <i class="fas fa-search"></i>
+                No matches found for "<span id="searchQueryDisplay"></span>"
+            </div>
+
             <section id="recent_files" class="recent_files">
                 <h2>Recent Files</h2>
                 <div id="recentFileList"></div>
@@ -357,6 +390,8 @@
         const searchInput = document.getElementById("globalSearch");
         const clearSearchBtn = document.getElementById("clearSearchBtn");
         const uploadStatus = document.getElementById("uploadStatus");
+        const noMatchesMessage = document.getElementById("noMatchesMessage");
+        const searchQueryDisplay = document.getElementById("searchQueryDisplay");
 
         // Use a shared global variable for trash (no localStorage)
         if (!window.trashFiles) {
@@ -844,11 +879,32 @@
             recentFileList.appendChild(fragment);
         }
 
+        // ---------- Check if any files match the search ----------
+        function hasSearchMatches(query) {
+            if (!query || query.trim() === '') return true;
+            const q = query.toLowerCase().trim();
+            return allFiles.some(file => file.name.toLowerCase().includes(q));
+        }
+
         function renderAllSections(highlight = '') {
             renderAllFiles(highlight);
             renderRecent(highlight);
             renderFavorites(highlight);
             updateTrashCount();
+            
+            // Show/hide "no matches" message
+            const q = searchInput.value.trim();
+            if (q !== '') {
+                const hasMatches = hasSearchMatches(q);
+                if (!hasMatches) {
+                    searchQueryDisplay.textContent = q;
+                    noMatchesMessage.classList.add('show');
+                } else {
+                    noMatchesMessage.classList.remove('show');
+                }
+            } else {
+                noMatchesMessage.classList.remove('show');
+            }
         }
 
         // ---------- search ----------
@@ -870,11 +926,12 @@
         clearSearchBtn.addEventListener('click', function() {
             searchInput.value = '';
             clearSearchBtn.style.display = 'none';
+            noMatchesMessage.classList.remove('show');
             renderAllSections('');
             searchInput.focus();
         });
 
-        // ---------- file processing ----------
+                // ---------- file processing ----------
         function processFiles(files) {
             const fileArray = Array.from(files);
             const totalFiles = fileArray.length;
@@ -1018,6 +1075,7 @@
         console.log('📁 Drag files to reorder them. Drag outside to cancel.');
         console.log('🗑️ Deleted files go to trash. Use Undo to restore.');
         console.log(`📊 ${window.trashFiles.length} files in trash`);
+        
     });
     </script>
 </body>
