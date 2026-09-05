@@ -376,6 +376,34 @@
         .ccm-item.ccm-danger i { color: #dc2626; }
         .ccm-item.ccm-danger:hover { background: #fee2e2; }
         .ccm-separator { height: 1px; background: #eef0f3; margin: 5px 4px; }
+
+        /* search highlight */
+        .highlight-match {
+            background-color: yellow !important;
+            color: #000 !important;
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+        .no-match-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 1rem;
+            font-weight: 500;
+            display: none;
+            z-index: 50;
+            pointer-events: none;
+        }
+        .no-match-message.show {
+            display: block;
+        }
     </style>
 
 
@@ -385,7 +413,7 @@
     <header class="topbar">
         <div class="logo">CloudHaux</div>
         <div class="search-container">
-            <input type="search" placeholder="Search files...">
+            <input type="search" placeholder="Search files..." id="globalSearch">
             <i class="fas fa-search search-icon"></i>
         </div>
         <div class="profile">
@@ -418,7 +446,10 @@
                         </button>
                     </div>
                 </div>
-                <div class="audio_grid" id="audioGrid"></div>
+                <div class="audio_grid" id="audioGrid">
+                    <!-- no-match message -->
+                    <div class="no-match-message" id="noMatchMessage">No file match</div>
+                </div>
             </section>
         </div>
 
@@ -453,7 +484,7 @@
         <div class="ccm-item ccm-danger" id="ccmDelete"><i class="fas fa-trash"></i> Delete</div>
     </div>
 
-    <!-- ===== JAVASCRIPT - Audio upload + folder creation with drag & drop ===== -->
+    <!-- ===== JAVASCRIPT - Audio upload + folder creation with drag & drop + SEARCH ===== -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         "use strict";
@@ -462,8 +493,10 @@
         const addBtn = document.getElementById("addFileBtn");
         const audioGrid = document.getElementById("audioGrid");
         const addFolderBtn = document.getElementById("addFolderBtn");
+        const searchInput = document.getElementById("globalSearch");
+        const noMatchMsg = document.getElementById("noMatchMessage");
 
-        if (!fileInput || !addBtn || !audioGrid || !addFolderBtn) {
+        if (!fileInput || !addBtn || !audioGrid || !addFolderBtn || !searchInput) {
             console.error('Elements not found');
             return;
         }
@@ -506,6 +539,8 @@
                     URL.revokeObjectURL(audioSrc.src);
                 }
                 contextTarget.remove();
+                // re-run search to update no-match state
+                performSearch(searchInput.value);
             }
             closeContextMenu();
         });
@@ -529,10 +564,9 @@
 
         // Get icon for audio type - NOW RETURNS MUSICAL NOTE
         function getAudioIcon(fileName) {
-            // All audio files will show a musical note icon
             return 'fa-music';
         }
-        document.querySelectorAll('.folder-card, .audio-card').forEach(attachContextMenu);
+
         // ----- Rename functionality -----
         function makeFolderNameEditable(folderNameSpan, folderCard) {
             const currentName = folderNameSpan.textContent;
@@ -565,6 +599,8 @@
                 });
                 
                 input.replaceWith(newSpan);
+                // re-run search to update highlight after rename
+                performSearch(searchInput.value);
             }
 
             input.addEventListener('keydown', function(e) {
@@ -603,7 +639,6 @@
                 
                 const icon = document.createElement("div");
                 icon.className = "audio-icon";
-                // Using fa-music (musical note) for ALL audio files
                 icon.innerHTML = `<i class="fas fa-music"></i>`;
                 
                 const name = document.createElement("div");
@@ -636,6 +671,8 @@
                 audioGrid.appendChild(card);
                 attachContextMenu(card);
             });
+            // after adding, run search to highlight if any
+            performSearch(searchInput.value);
         }
 
         // ----- Drag and Drop Functions -----
@@ -726,7 +763,6 @@
                 ghostElement.style.left = (clientX - cardRect.width / 2) + 'px';
                 ghostElement.style.top = (clientY - 40) + 'px';
                 
-                // Remove any previous drag-over highlights
                 document.querySelectorAll('.folder-card.drag-over').forEach(el => {
                     el.classList.remove('drag-over');
                 });
@@ -736,7 +772,6 @@
                 ghostElement.style.left = (clientX - 62) + 'px';
                 ghostElement.style.top = (clientY - 50) + 'px';
 
-                // Check if inside grid
                 if (isInsideGrid(audioGrid, clientX, clientY)) {
                     const target = findDropTarget(audioGrid, clientX, clientY);
                     document.querySelectorAll('.folder-card.drag-over').forEach(el => {
@@ -759,7 +794,6 @@
             const clientX = e.clientX || e.changedTouches?.[0]?.clientX || 0;
             const clientY = e.clientY || e.changedTouches?.[0]?.clientY || 0;
 
-            // Remove drag-over highlights
             document.querySelectorAll('.folder-card.drag-over').forEach(el => {
                 el.classList.remove('drag-over');
             });
@@ -769,7 +803,6 @@
                 const target = findDropTarget(audioGrid, clientX, clientY);
 
                 if (inside && target && target !== dragData.card) {
-                    // Swap the cards
                     const parent = audioGrid;
                     const card1 = dragData.card;
                     const card2 = target;
@@ -777,7 +810,6 @@
                     const clone1 = card1.cloneNode(true);
                     const clone2 = card2.cloneNode(true);
                     
-                    // Re-add event listeners for clone1
                     const nameSpan1 = clone1.querySelector('.folder-name');
                     if (nameSpan1) {
                         nameSpan1.addEventListener('click', function(e) {
@@ -792,7 +824,6 @@
                         }
                     });
                     
-                    // Re-add event listeners for clone2
                     const nameSpan2 = clone2.querySelector('.folder-name');
                     if (nameSpan2) {
                         nameSpan2.addEventListener('click', function(e) {
@@ -807,7 +838,6 @@
                         }
                     });
                     
-                    // Re-add drag events for clones
                     clone1.addEventListener('mousedown', function(e) {
                         initDrag(this, e);
                     });
@@ -822,7 +852,6 @@
                         initDrag(this, e);
                     }, { passive: true });
 
-                    // Re-attach context menu to clones
                     attachContextMenu(clone1);
                     attachContextMenu(clone2);
                     
@@ -842,7 +871,6 @@
                 }
             }
 
-            // Clean up
             if (ghostElement) {
                 ghostElement.remove();
                 ghostElement = null;
@@ -854,6 +882,8 @@
                 el.classList.remove('drag-over');
             });
             dragData = null;
+            // re-run search after drag
+            performSearch(searchInput.value);
         }
 
         // ----- ADD FOLDER with rename and drag capability -----
@@ -871,13 +901,11 @@
             nameSpan.className = 'folder-name';
             nameSpan.textContent = folderName;
             
-            // Click on name starts renaming
             nameSpan.addEventListener('click', function(e) {
                 e.stopPropagation();
                 makeFolderNameEditable(nameSpan, card);
             });
             
-            // Double click on card starts renaming
             card.addEventListener('dblclick', function(e) {
                 const nameEl = this.querySelector('.folder-name');
                 if (nameEl) {
@@ -885,7 +913,6 @@
                 }
             });
 
-            // Drag events
             card.addEventListener('mousedown', function(e) {
                 initDrag(this, e);
             });
@@ -897,7 +924,8 @@
             card.appendChild(nameSpan);
             audioGrid.appendChild(card);
             attachContextMenu(card);
-
+            // re-run search to update no-match
+            performSearch(searchInput.value);
         }
 
         // Global drag event listeners
@@ -906,6 +934,61 @@
         document.addEventListener('mouseup', endDrag);
         document.addEventListener('touchend', endDrag);
         document.addEventListener('touchcancel', endDrag);
+
+        // ----- SEARCH FUNCTIONALITY -----
+        function performSearch(query) {
+            const cards = audioGrid.querySelectorAll('.audio-card, .folder-card');
+            const normalizedQuery = query.trim().toLowerCase();
+            let anyMatch = false;
+
+            // Remove previous highlights and show all
+            cards.forEach(card => {
+                const nameEl = card.querySelector('.audio-name') || card.querySelector('.folder-name');
+                if (nameEl) {
+                    // Remove any highlight wrapper
+                    const parent = nameEl.parentNode;
+                    if (nameEl.innerHTML.includes('highlight-match')) {
+                        nameEl.innerHTML = nameEl.textContent; // revert to plain text
+                    }
+                    card.style.display = ''; // show all initially
+                }
+            });
+
+            if (normalizedQuery === '') {
+                noMatchMsg.classList.remove('show');
+                return;
+            }
+
+            cards.forEach(card => {
+                const nameEl = card.querySelector('.audio-name') || card.querySelector('.folder-name');
+                if (!nameEl) return;
+                const fileName = nameEl.textContent.toLowerCase();
+                const match = fileName.includes(normalizedQuery);
+                if (match) {
+                    anyMatch = true;
+                    // Highlight the matched portion
+                    const originalText = nameEl.textContent;
+                    const lowerText = originalText.toLowerCase();
+                    const startIdx = lowerText.indexOf(normalizedQuery);
+                    if (startIdx !== -1) {
+                        const before = originalText.substring(0, startIdx);
+                        const matchText = originalText.substring(startIdx, startIdx + normalizedQuery.length);
+                        const after = originalText.substring(startIdx + normalizedQuery.length);
+                        nameEl.innerHTML = `${before}<span class="highlight-match">${matchText}</span>${after}`;
+                    }
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Show no-match message if no matches and query not empty
+            if (!anyMatch && normalizedQuery !== '') {
+                noMatchMsg.classList.add('show');
+            } else {
+                noMatchMsg.classList.remove('show');
+            }
+        }
 
         // ----- event listeners -----
         addBtn.addEventListener("click", function (e) {
@@ -942,6 +1025,19 @@
             e.stopPropagation();
             createFolderCard();
         });
+
+        // ----- SEARCH INPUT LISTENER -----
+        searchInput.addEventListener('input', function(e) {
+            performSearch(e.target.value);
+        });
+
+        // initial search after any render
+        // also observe mutations to re-run search when new items added via drag-drop etc?
+        // we call performSearch after each render/add/delete.
+        // also after folder rename we call performSearch inside rename handler.
+        // For file drop via drag we call after render.
+        // For folder creation we call after creation.
+        // For delete we call inside delete.
     });
     </script>
 </body>
