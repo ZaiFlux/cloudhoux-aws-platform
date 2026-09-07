@@ -165,6 +165,26 @@
             color: #ffffff;
         }
 
+        /* SEARCH HIGHLIGHT STYLES */
+        .search-highlight {
+            background-color: #fef08a; /* Bright yellow */
+            color: #78350f;            /* Brown text matching theme */
+            font-weight: 800;
+            padding: 0 2px;
+            border-radius: 3px;
+        }
+
+        .no-results {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #6b7280;
+            font-size: 1.2rem;
+            display: none;
+        }
+
         .folder-name-input {
             background: white;
             border: 2px solid #d97706;
@@ -310,38 +330,14 @@
         }
 
         /* Yellow document icon style - applied to all document files */
-        .file-item i.fa-file-alt {
-            color: #d97706 !important;
-        }
-
-        .file-item i.fa-file-pdf {
-            color: #d97706 !important;
-        }
-
-        .file-item i.fa-file-word {
-            color: #d97706 !important;
-        }
-
-        .file-item i.fa-file-excel {
-            color: #d97706 !important;
-        }
-
-        .file-item i.fa-file-powerpoint {
-            color: #d97706 !important;
-        }
-
-        .file-item i.fa-file-csv {
-            color: #d97706 !important;
-        }
-
-        /* Other file types keep their default colors */
-        .file-item i.fa-file-code {
-            color: #6b7280 !important;
-        }
-
-        .file-item i.fa-file-archive {
-            color: #6b7280 !important;
-        }
+        .file-item i.fa-file-alt { color: #d97706 !important; }
+        .file-item i.fa-file-pdf { color: #d97706 !important; }
+        .file-item i.fa-file-word { color: #d97706 !important; }
+        .file-item i.fa-file-excel { color: #d97706 !important; }
+        .file-item i.fa-file-powerpoint { color: #d97706 !important; }
+        .file-item i.fa-file-csv { color: #d97706 !important; }
+        .file-item i.fa-file-code { color: #6b7280 !important; }
+        .file-item i.fa-file-archive { color: #6b7280 !important; }
 
         .file-item .file-name {
             flex: 1;
@@ -408,74 +404,27 @@
             font-weight: 600;
         }
 
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
         @media (max-width: 768px) {
-            .documents_grid {
-                min-height: 300px;
-                padding: 16px;
-            }
-            .folder-card {
-                width: 100px;
-                height: 100px;
-            }
-            .add-folder-btn {
-                width: 38px;
-                height: 38px;
-                font-size: 1.4rem;
-            }
-            .add-folder-btn i {
-                font-size: 1.3rem;
-            }
-            .folder-modal {
-                padding: 20px;
-                max-width: 95%;
-            }
+            .documents_grid { min-height: 300px; padding: 16px; }
+            .folder-card { width: 100px; height: 100px; }
+            .add-folder-btn { width: 38px; height: 38px; font-size: 1.4rem; }
+            .add-folder-btn i { font-size: 1.3rem; }
+            .folder-modal { padding: 20px; max-width: 95%; }
         }
 
         @media (max-width: 480px) {
-            .documents_grid {
-                min-height: 200px;
-                gap: 12px;
-                padding: 12px;
-            }
-            .documents_header h2 {
-                font-size: 1rem;
-            }
-            .folder-card {
-                width: 80px;
-                height: 80px;
-            }
-            .folder-card i {
-                font-size: 2rem;
-            }
-            .file-item {
-                padding: 8px 10px;
-                font-size: 12px;
-            }
-            .file-item .file-name {
-                font-size: 11px;
-            }
-            .add-folder-btn {
-                width: 34px;
-                height: 34px;
-            }
-            .add-folder-btn i {
-                font-size: 1.1rem;
-            }
+            .documents_grid { min-height: 200px; gap: 12px; padding: 12px; }
+            .documents_header h2 { font-size: 1rem; }
+            .folder-card { width: 80px; height: 80px; }
+            .folder-card i { font-size: 2rem; }
+            .file-item { padding: 8px 10px; font-size: 12px; }
+            .file-item .file-name { font-size: 11px; }
+            .add-folder-btn { width: 34px; height: 34px; }
+            .add-folder-btn i { font-size: 1.1rem; }
         }
 
         .custom-context-menu {
@@ -512,7 +461,7 @@
     <header class="topbar">
         <div class="logo">CloudHaux</div>
         <div class="search-container">
-            <input type="search" placeholder="Search files...">
+            <input type="search" placeholder="Search files..." id="globalSearchInput">
             <i class="fas fa-search search-icon"></i>
         </div>
         <div class="profile">
@@ -549,7 +498,9 @@
                 <div class="uploading-indicator" id="uploadingIndicator">
                     <i class="fas fa-spinner"></i> Uploading files...
                 </div>
-                <div class="documents_grid" id="documentsGrid"></div>
+                <div class="documents_grid" id="documentsGrid">
+                    <div class="no-results" id="noResultsMsg">No folders found matching your search.</div>
+                </div>
             </section>
         </div>
 
@@ -600,6 +551,8 @@
         const documentsGrid = document.getElementById("documentsGrid");
         const uploadIndicator = document.getElementById("uploadingIndicator");
         const addFolderBtn = document.getElementById("addFolderBtn");
+        const searchInput = document.getElementById("globalSearchInput");
+        const noResultsMsg = document.getElementById("noResultsMsg");
         
         const folderOverlay = document.getElementById("folderOverlay");
         const modalCloseBtn = document.getElementById("modalCloseBtn");
@@ -648,6 +601,9 @@
                 contextTarget.style.opacity = '0';
                 setTimeout(() => {
                     contextTarget.remove();
+                    if (searchInput && searchInput.value) {
+                        handleSearch({ target: { value: searchInput.value } });
+                    }
                 }, 200);
             }
             closeContextMenu();
@@ -671,34 +627,16 @@
 
         function getFileIcon(fileName) {
             const ext = fileName.split('.').pop().toLowerCase();
-            
-            const documentExtensions = [
-                'pdf', 'doc', 'docx', 'txt', 'xls', 'xlsx', 'csv', 
-                'ppt', 'pptx', 'odt', 'ods', 'odp', 'rtf', 'tex',
-                'wps', 'wpd', 'pages', 'numbers', 'key', 'md',
-                'log', 'msg', 'eml', 'epub', 'mobi', 'azw'
-            ];
-            
-            const codeExtensions = [
-                'js', 'html', 'htm', 'css', 'json', 'xml', 
-                'py', 'java', 'cpp', 'c', 'php', 'rb', 
-                'go', 'rs', 'swift', 'kt', 'ts', 'jsx', 'tsx'
-            ];
-            
+            const documentExtensions = ['pdf', 'doc', 'docx', 'txt', 'xls', 'xlsx', 'csv', 'ppt', 'pptx', 'odt', 'ods', 'odp', 'rtf', 'tex', 'wps', 'wpd', 'pages', 'numbers', 'key', 'md', 'log', 'msg', 'eml', 'epub', 'mobi', 'azw'];
+            const codeExtensions = ['js', 'html', 'htm', 'css', 'json', 'xml', 'py', 'java', 'cpp', 'c', 'php', 'rb', 'go', 'rs', 'swift', 'kt', 'ts', 'jsx', 'tsx'];
             const archiveExtensions = ['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'];
             const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'ico'];
             
-            if (documentExtensions.includes(ext)) {
-                return 'fa-file-alt';
-            } else if (codeExtensions.includes(ext)) {
-                return 'fa-file-code';
-            } else if (archiveExtensions.includes(ext)) {
-                return 'fa-file-archive';
-            } else if (imageExtensions.includes(ext)) {
-                return 'fa-file-image';
-            } else {
-                return 'fa-file';
-            }
+            if (documentExtensions.includes(ext)) return 'fa-file-alt';
+            else if (codeExtensions.includes(ext)) return 'fa-file-code';
+            else if (archiveExtensions.includes(ext)) return 'fa-file-archive';
+            else if (imageExtensions.includes(ext)) return 'fa-file-image';
+            else return 'fa-file';
         }
 
         function createGhostElement(card) {
@@ -740,35 +678,20 @@
         }
 
         function initDrag(card, e) {
-            if (e.target.closest('.folder-name-input') || e.target.closest('.folder-name')) {
-                return;
-            }
-
+            if (e.target.closest('.folder-name-input') || e.target.closest('.folder-name')) return;
             const startX = e.clientX || e.touches?.[0]?.clientX || 0;
             const startY = e.clientY || e.touches?.[0]?.clientY || 0;
-
-            dragData = {
-                card: card,
-                startX: startX,
-                startY: startY,
-                offsetX: 0,
-                offsetY: 0,
-                isDragging: false
-            };
-
+            dragData = { card: card, startX: startX, startY: startY, isDragging: false };
             ghostElement = createGhostElement(card);
             document.body.appendChild(ghostElement);
             ghostElement.style.display = 'none';
-
             card.classList.add('dragging');
         }
 
         function moveDrag(e) {
             if (!dragData || !ghostElement) return;
-
             const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
             const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
-
             const dx = clientX - dragData.startX;
             const dy = clientY - dragData.startY;
 
@@ -778,10 +701,7 @@
                 ghostElement.style.display = 'flex';
                 ghostElement.style.left = (clientX - cardRect.width / 2) + 'px';
                 ghostElement.style.top = (clientY - 40) + 'px';
-                
-                document.querySelectorAll('.folder-card.drag-over').forEach(el => {
-                    el.classList.remove('drag-over');
-                });
+                document.querySelectorAll('.folder-card.drag-over').forEach(el => el.classList.remove('drag-over'));
             }
 
             if (dragData.isDragging) {
@@ -793,121 +713,56 @@
                     document.querySelectorAll('.folder-card.drag-over').forEach(el => {
                         if (el !== target) el.classList.remove('drag-over');
                     });
-                    if (target && target !== dragData.card) {
-                        target.classList.add('drag-over');
-                    }
+                    if (target && target !== dragData.card) target.classList.add('drag-over');
                 } else {
-                    document.querySelectorAll('.folder-card.drag-over').forEach(el => {
-                        el.classList.remove('drag-over');
-                    });
+                    document.querySelectorAll('.folder-card.drag-over').forEach(el => el.classList.remove('drag-over'));
                 }
             }
         }
 
         function endDrag(e) {
             if (!dragData) return;
-
             const clientX = e.clientX || e.changedTouches?.[0]?.clientX || 0;
             const clientY = e.clientY || e.changedTouches?.[0]?.clientY || 0;
-
-            document.querySelectorAll('.folder-card.drag-over').forEach(el => {
-                el.classList.remove('drag-over');
-            });
+            document.querySelectorAll('.folder-card.drag-over').forEach(el => el.classList.remove('drag-over'));
 
             if (dragData.isDragging) {
                 const inside = isInsideGrid(documentsGrid, clientX, clientY);
                 const target = findDropTarget(documentsGrid, clientX, clientY);
-
                 if (inside && target && target !== dragData.card) {
                     const parent = documentsGrid;
                     const card1 = dragData.card;
                     const card2 = target;
-                    
                     const clone1 = card1.cloneNode(true);
                     const clone2 = card2.cloneNode(true);
                     
+                    // Re-attach event listeners to clone1
                     const nameSpan1 = clone1.querySelector('.folder-name');
-                    if (nameSpan1) {
-                        nameSpan1.addEventListener('click', function(e) {
-                            e.stopPropagation();
-                            makeFolderNameEditable(nameSpan1, clone1);
-                        });
-                    }
-                    clone1.addEventListener('dblclick', function(e) {
-                        const nameEl = this.querySelector('.folder-name');
-                        if (nameEl) {
-                            makeFolderNameEditable(nameEl, this);
-                        }
-                    });
-                    
+                    if (nameSpan1) nameSpan1.addEventListener('click', function(e) { e.stopPropagation(); makeFolderNameEditable(nameSpan1, clone1); });
+                    clone1.addEventListener('dblclick', function(e) { const nameEl = this.querySelector('.folder-name'); if (nameEl) makeFolderNameEditable(nameEl, this); });
                     const removeBtn1 = clone1.querySelector('.folder-remove');
-                    if (removeBtn1) {
-                        removeBtn1.addEventListener('click', function(e) {
-                            e.stopPropagation();
-                            removeItem(clone1);
-                        });
-                    }
-                    
-                    clone1.addEventListener('click', function(e) {
-                        if (e.target.closest('.folder-remove') || e.target.closest('.folder-name-input')) {
-                            return;
-                        }
-                        const folderName = this.dataset.folderName;
-                        if (folderStore[folderName]) {
-                            openFolder(folderName, folderStore[folderName]);
-                        }
-                    });
+                    if (removeBtn1) removeBtn1.addEventListener('click', function(e) { e.stopPropagation(); removeItem(clone1); });
+                    clone1.addEventListener('click', function(e) { if (e.target.closest('.folder-remove') || e.target.closest('.folder-name-input')) return; const folderName = this.dataset.folderName; if (folderStore[folderName]) openFolder(folderName, folderStore[folderName]); });
                     attachContextMenu(clone1);
-                    
+
+                    // Re-attach event listeners to clone2
                     const nameSpan2 = clone2.querySelector('.folder-name');
-                    if (nameSpan2) {
-                        nameSpan2.addEventListener('click', function(e) {
-                            e.stopPropagation();
-                            makeFolderNameEditable(nameSpan2, clone2);
-                        });
-                    }
-                    clone2.addEventListener('dblclick', function(e) {
-                        const nameEl = this.querySelector('.folder-name');
-                        if (nameEl) {
-                            makeFolderNameEditable(nameEl, this);
-                        }
-                    });
-                    
+                    if (nameSpan2) nameSpan2.addEventListener('click', function(e) { e.stopPropagation(); makeFolderNameEditable(nameSpan2, clone2); });
+                    clone2.addEventListener('dblclick', function(e) { const nameEl = this.querySelector('.folder-name'); if (nameEl) makeFolderNameEditable(nameEl, this); });
                     const removeBtn2 = clone2.querySelector('.folder-remove');
-                    if (removeBtn2) {
-                        removeBtn2.addEventListener('click', function(e) {
-                            e.stopPropagation();
-                            removeItem(clone2);
-                        });
-                    }
+                    if (removeBtn2) removeBtn2.addEventListener('click', function(e) { e.stopPropagation(); removeItem(clone2); });
+                    clone2.addEventListener('click', function(e) { if (e.target.closest('.folder-remove') || e.target.closest('.folder-name-input')) return; const folderName = this.dataset.folderName; if (folderStore[folderName]) openFolder(folderName, folderStore[folderName]); });
                     attachContextMenu(clone2);
-                    clone2.addEventListener('click', function(e) {
-                        if (e.target.closest('.folder-remove') || e.target.closest('.folder-name-input')) {
-                            return;
-                        }
-                        const folderName = this.dataset.folderName;
-                        if (folderStore[folderName]) {
-                            openFolder(folderName, folderStore[folderName]);
-                        }
-                    });
+
+                    // Add drag events to clones
+                    clone1.addEventListener('mousedown', function(e) { initDrag(this, e); });
+                    clone1.addEventListener('touchstart', function(e) { initDrag(this, e); }, { passive: true });
+                    clone2.addEventListener('mousedown', function(e) { initDrag(this, e); });
+                    clone2.addEventListener('touchstart', function(e) { initDrag(this, e); }, { passive: true });
                     
-                    clone1.addEventListener('mousedown', function(e) {
-                        initDrag(this, e);
-                    });
-                    clone1.addEventListener('touchstart', function(e) {
-                        initDrag(this, e);
-                    }, { passive: true });
-                    
-                    clone2.addEventListener('mousedown', function(e) {
-                        initDrag(this, e);
-                    });
-                    clone2.addEventListener('touchstart', function(e) {
-                        initDrag(this, e);
-                    }, { passive: true });
-                    
+                    // Swap in DOM
                     const idx1 = Array.from(parent.children).indexOf(card1);
                     const idx2 = Array.from(parent.children).indexOf(card2);
-                    
                     if (idx1 < idx2) {
                         parent.insertBefore(clone2, card1);
                         parent.insertBefore(clone1, card2);
@@ -915,104 +770,71 @@
                         parent.insertBefore(clone1, card2);
                         parent.insertBefore(clone2, card1);
                     }
-                    
                     card1.remove();
                     card2.remove();
                 }
             }
 
-            if (ghostElement) {
-                ghostElement.remove();
-                ghostElement = null;
-            }
-            if (dragData.card) {
-                dragData.card.classList.remove('dragging');
-            }
-            document.querySelectorAll('.folder-card.drag-over').forEach(el => {
-                el.classList.remove('drag-over');
-            });
+            if (ghostElement) { ghostElement.remove(); ghostElement = null; }
+            if (dragData.card) dragData.card.classList.remove('dragging');
+            document.querySelectorAll('.folder-card.drag-over').forEach(el => el.classList.remove('drag-over'));
             dragData = null;
         }
 
         function makeFolderNameEditable(folderNameSpan, folderCard) {
             const currentName = folderNameSpan.textContent;
-            
             const input = document.createElement('input');
             input.type = 'text';
             input.className = 'folder-name-input';
             input.value = currentName;
-            
             folderNameSpan.replaceWith(input);
             input.focus();
             input.select();
 
             function saveRename() {
                 const newName = input.value.trim() || currentName;
-                
                 const oldName = folderCard.dataset.folderName;
                 if (oldName && folderStore[oldName]) {
                     folderStore[newName] = folderStore[oldName];
                     delete folderStore[oldName];
                 }
                 folderCard.dataset.folderName = newName;
-                
                 const newSpan = document.createElement('span');
                 newSpan.className = 'folder-name';
                 newSpan.textContent = newName;
-                
-                newSpan.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    makeFolderNameEditable(newSpan, folderCard);
-                });
-                
-                folderCard.addEventListener('dblclick', function(e) {
-                    const nameSpan = this.querySelector('.folder-name');
-                    if (nameSpan) {
-                        makeFolderNameEditable(nameSpan, this);
-                    }
-                });
-                
+                newSpan.addEventListener('click', function(e) { e.stopPropagation(); makeFolderNameEditable(newSpan, folderCard); });
+                folderCard.addEventListener('dblclick', function(e) { const nameSpan = this.querySelector('.folder-name'); if (nameSpan) makeFolderNameEditable(nameSpan, this); });
                 input.replaceWith(newSpan);
             }
 
             input.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    input.blur();
-                } else if (e.key === 'Escape') {
+                if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+                else if (e.key === 'Escape') {
                     const newSpan = document.createElement('span');
                     newSpan.className = 'folder-name';
                     newSpan.textContent = currentName;
-                    
-                    newSpan.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        makeFolderNameEditable(newSpan, folderCard);
-                    });
-                    
+                    newSpan.addEventListener('click', function(e) { e.stopPropagation(); makeFolderNameEditable(newSpan, folderCard); });
                     input.replaceWith(newSpan);
                 }
             });
-
             input.addEventListener('blur', saveRename);
         }
 
         function removeItem(card) {
             const folderName = card.dataset.folderName;
-            if (folderName && folderStore[folderName]) {
-                delete folderStore[folderName];
-            }
+            if (folderName && folderStore[folderName]) delete folderStore[folderName];
             card.style.transition = '0.2s';
             card.style.transform = 'scale(0.8)';
             card.style.opacity = '0';
             setTimeout(() => {
                 card.remove();
+                if (searchInput && searchInput.value) handleSearch({ target: { value: searchInput.value } });
             }, 200);
         }
 
         function openFolder(folderName, files) {
             modalFolderName.textContent = folderName;
             modalFileList.innerHTML = '';
-            
             const sortedFiles = [...files].sort((a, b) => a.name.localeCompare(b.name));
             
             if (sortedFiles.length === 0) {
@@ -1024,26 +846,20 @@
                 sortedFiles.forEach(file => {
                     const fileItem = document.createElement("div");
                     fileItem.className = "file-item";
-                    
                     const icon = document.createElement("i");
-                    const iconClass = getFileIcon(file.name);
-                    icon.className = 'fas ' + iconClass;
-                    
+                    icon.className = 'fas ' + getFileIcon(file.name);
                     const name = document.createElement("span");
                     name.className = "file-name";
                     name.textContent = file.name;
-                    
                     const size = document.createElement("span");
                     size.className = "file-size";
                     size.textContent = formatFileSize(file.size);
-                    
                     fileItem.appendChild(icon);
                     fileItem.appendChild(name);
                     fileItem.appendChild(size);
                     modalFileList.appendChild(fileItem);
                 });
             }
-            
             folderOverlay.classList.add('active');
         }
 
@@ -1051,7 +867,63 @@
             folderOverlay.classList.remove('active');
         }
 
-             function createFolderCard(folderName, files) {
+        // ==========================================
+        // ADDED SEARCH FUNCTIONALITY HERE
+        // ==========================================
+        
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function highlightText(element, query) {
+            if (!query) {
+                element.innerHTML = element.textContent; // Restore original text
+                return;
+            }
+            
+            const text = element.textContent;
+            const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi');
+            
+            // Split text and wrap matching parts in <mark class="search-highlight">
+            element.innerHTML = text.replace(regex, '<mark class="search-highlight">$1</mark>');
+        }
+
+        function handleSearch(e) {
+            const query = e.target.value.trim();
+            let visibleCount = 0; // To track if any results are found
+
+            // 1. Search and highlight folder cards
+            const folderCards = documentsGrid.querySelectorAll('.folder-card');
+
+            folderCards.forEach(card => {
+                const nameSpan = card.querySelector('.folder-name');
+                if (nameSpan) {
+                    // Check if the folder name matches
+                    if (nameSpan.textContent.toLowerCase().includes(query.toLowerCase())) {
+                        card.style.display = 'flex'; // Show card
+                        highlightText(nameSpan, query); // Highlight matching text
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none'; // Hide card
+                    }
+                }
+            });
+
+            // 2. Toggle the "No results" message
+            if (visibleCount === 0 && query !== '') {
+                noResultsMsg.style.display = 'block';
+            } else {
+                noResultsMsg.style.display = 'none';
+            }
+        }
+
+        // Attach the event listener to the search box
+        if (searchInput) {
+            searchInput.addEventListener('input', handleSearch);
+        }
+        // ==========================================
+        
+        function createFolderCard(folderName, files) {
             const card = document.createElement("div");
             card.className = "folder-card";
             card.dataset.folderName = folderName;
@@ -1128,7 +1000,6 @@
                     }
                     folders[folderName].push(file);
                 } else {
-                    // Handle files without folder structure (direct file drops)
                     const folderName = "Dropped Files";
                     if (!folders[folderName]) {
                         folders[folderName] = [];
@@ -1224,6 +1095,4 @@
         // Uncomment to add a sample folder
         // addSampleFolder();
     });
-    </script>
-</body>
-</html>
+</script>
