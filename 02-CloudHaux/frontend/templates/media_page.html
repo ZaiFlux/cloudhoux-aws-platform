@@ -368,6 +368,34 @@
         .ccm-item.ccm-danger i { color: #dc2626; }
         .ccm-item.ccm-danger:hover { background: #fee2e2; }
         .ccm-separator { height: 1px; background: #eef0f3; margin: 5px 4px; }
+
+        /* search highlight */
+        .highlight-match {
+            background-color: yellow !important;
+            color: #000 !important;
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+        .no-match-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 1rem;
+            font-weight: 500;
+            display: none;
+            z-index: 50;
+            pointer-events: none;
+        }
+        .no-match-message.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -375,7 +403,7 @@
     <header class="topbar">
         <div class="logo">CloudHaux</div>
         <div class="search-container">
-            <input type="search" placeholder="Search files...">
+            <input type="search" placeholder="Search files..." id="globalSearch">
             <i class="fas fa-search search-icon"></i>
         </div>
         <div class="profile">
@@ -408,7 +436,9 @@
                         </button>
                     </div>
                 </div>
-                <div class="media_grid" id="mediaGrid"></div>
+                <div class="media_grid" id="mediaGrid">
+                    <div class="no-match-message" id="noMatchMessage">No file match</div>
+                </div>
             </section>
         </div>
 
@@ -444,7 +474,7 @@
         <div class="ccm-item ccm-danger" id="ccmDelete"><i class="fas fa-trash"></i> Delete</div>
     </div>
 
-    <!-- ===== JAVASCRIPT - Media upload + folder creation with drag & drop ===== -->
+    <!-- ===== JAVASCRIPT - Media upload + folder creation with drag & drop + SEARCH ===== -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         "use strict";
@@ -453,8 +483,10 @@
         const addBtn = document.getElementById("addFileBtn");
         const mediaGrid = document.getElementById("mediaGrid");
         const addFolderBtn = document.getElementById("addFolderBtn");
+        const searchInput = document.getElementById("globalSearch");
+        const noMatchMsg = document.getElementById("noMatchMessage");
 
-        if (!fileInput || !addBtn || !mediaGrid || !addFolderBtn) {
+        if (!fileInput || !addBtn || !mediaGrid || !addFolderBtn || !searchInput) {
             console.error('Elements not found');
             return;
         }
@@ -497,6 +529,7 @@
                 contextTarget.style.opacity = '0';
                 setTimeout(() => {
                     contextTarget.remove();
+                    performSearch(searchInput.value);
                 }, 200);
             }
             closeContextMenu();
@@ -717,6 +750,7 @@
                     
                     card1.remove();
                     card2.remove();
+                    performSearch(searchInput.value);
                 }
             }
 
@@ -765,6 +799,7 @@
                 });
                 
                 input.replaceWith(newSpan);
+                performSearch(searchInput.value);
             }
 
             input.addEventListener('keydown', function(e) {
@@ -826,6 +861,7 @@
                 mediaGrid.appendChild(card);
                 attachContextMenu(card);
             });
+            performSearch(searchInput.value);
         }
 
         // ----- ADD FOLDER with rename and drag capability -----
@@ -866,6 +902,7 @@
             card.appendChild(nameSpan);
             mediaGrid.appendChild(card);
             attachContextMenu(card);
+            performSearch(searchInput.value);
         }
 
         // Global drag event listeners
@@ -874,6 +911,56 @@
         document.addEventListener('mouseup', endDrag);
         document.addEventListener('touchend', endDrag);
         document.addEventListener('touchcancel', endDrag);
+
+        // ----- SEARCH FUNCTIONALITY -----
+        function performSearch(query) {
+            const cards = mediaGrid.querySelectorAll('.media-card, .folder-card');
+            const normalizedQuery = query.trim().toLowerCase();
+            let anyMatch = false;
+
+            cards.forEach(card => {
+                let nameEl = card.querySelector('.media-name') || card.querySelector('.folder-name');
+                if (nameEl) {
+                    if (nameEl.innerHTML.includes('highlight-match')) {
+                        nameEl.innerHTML = nameEl.textContent;
+                    }
+                }
+                card.style.display = '';
+            });
+
+            if (normalizedQuery === '') {
+                noMatchMsg.classList.remove('show');
+                return;
+            }
+
+            cards.forEach(card => {
+                let nameEl = card.querySelector('.media-name') || card.querySelector('.folder-name');
+                if (!nameEl) return;
+                const fileName = nameEl.textContent.toLowerCase();
+                const match = fileName.includes(normalizedQuery);
+                if (match) {
+                    anyMatch = true;
+                    const originalText = nameEl.textContent;
+                    const lowerText = originalText.toLowerCase();
+                    const startIdx = lowerText.indexOf(normalizedQuery);
+                    if (startIdx !== -1) {
+                        const before = originalText.substring(0, startIdx);
+                        const matchText = originalText.substring(startIdx, startIdx + normalizedQuery.length);
+                        const after = originalText.substring(startIdx + normalizedQuery.length);
+                        nameEl.innerHTML = `${before}<span class="highlight-match">${matchText}</span>${after}`;
+                    }
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (!anyMatch && normalizedQuery !== '') {
+                noMatchMsg.classList.add('show');
+            } else {
+                noMatchMsg.classList.remove('show');
+            }
+        }
 
         // ----- event listeners -----
         addBtn.addEventListener("click", function (e) {
@@ -907,6 +994,11 @@
         addFolderBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             createFolderCard();
+        });
+
+        // Search input listener
+        searchInput.addEventListener('input', function(e) {
+            performSearch(e.target.value);
         });
 
         // Seed with a sample folder
