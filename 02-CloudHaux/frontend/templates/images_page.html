@@ -329,6 +329,34 @@
         .ccm-item.ccm-danger i { color: #dc2626; }
         .ccm-item.ccm-danger:hover { background: #fee2e2; }
         .ccm-separator { height: 1px; background: #eef0f3; margin: 5px 4px; }
+
+        /* search highlight */
+        .highlight-match {
+            background-color: yellow !important;
+            color: #000 !important;
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+        .no-match-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 1rem;
+            font-weight: 500;
+            display: none;
+            z-index: 50;
+            pointer-events: none;
+        }
+        .no-match-message.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -336,7 +364,7 @@
     <header class="topbar">
         <div class="logo">CloudHaux</div>
         <div class="search-container">
-            <input type="search" placeholder="Search files...">
+            <input type="search" placeholder="Search files..." id="globalSearch">
             <i class="fas fa-search search-icon"></i>
         </div>
         <div class="profile">
@@ -369,7 +397,10 @@
                         </button>
                     </div>
                 </div>
-                <div class="images_grid" id="imageGrid"></div>
+                <div class="images_grid" id="imageGrid">
+                    <!-- no-match message -->
+                    <div class="no-match-message" id="noMatchMessage">No file match</div>
+                </div>
             </section>
         </div>
 
@@ -412,8 +443,10 @@
         const addBtn = document.getElementById("addFileBtn");
         const imageGrid = document.getElementById("imageGrid");
         const addFolderBtn = document.getElementById("addFolderBtn");
+        const searchInput = document.getElementById("globalSearch");
+        const noMatchMsg = document.getElementById("noMatchMessage");
 
-        if (!fileInput || !addBtn || !imageGrid || !addFolderBtn) {
+        if (!fileInput || !addBtn || !imageGrid || !addFolderBtn || !searchInput) {
             console.error('Elements not found');
             return;
         }
@@ -451,7 +484,6 @@
         ccmDelete.addEventListener('click', function(e) {
             e.stopPropagation();
             if (contextTarget) {
-                // If it's an image card, revoke any object URLs if needed
                 const img = contextTarget.querySelector('img');
                 if (img && img.src && img.src.startsWith('blob:')) {
                     URL.revokeObjectURL(img.src);
@@ -461,6 +493,7 @@
                 contextTarget.style.opacity = '0';
                 setTimeout(() => {
                     contextTarget.remove();
+                    performSearch(searchInput.value);
                 }, 200);
             }
             closeContextMenu();
@@ -494,9 +527,12 @@
                     const img = document.createElement("img");
                     img.src = imgSrc;
                     img.alt = file.name || "image";
+                    // store name for search
+                    card.dataset.filename = file.name;
                     card.appendChild(img);
                     imageGrid.appendChild(card);
                     attachContextMenu(card);
+                    performSearch(searchInput.value);
                 };
                 reader.readAsDataURL(file);
             });
@@ -690,6 +726,7 @@
                     
                     card1.remove();
                     card2.remove();
+                    performSearch(searchInput.value);
                 }
             }
 
@@ -738,6 +775,7 @@
                 });
                 
                 input.replaceWith(newSpan);
+                performSearch(searchInput.value);
             }
 
             input.addEventListener('keydown', function(e) {
@@ -799,6 +837,7 @@
             card.appendChild(nameSpan);
             imageGrid.appendChild(card);
             attachContextMenu(card);
+            performSearch(searchInput.value);
         }
 
         // Global drag event listeners
@@ -807,6 +846,79 @@
         document.addEventListener('mouseup', endDrag);
         document.addEventListener('touchend', endDrag);
         document.addEventListener('touchcancel', endDrag);
+
+        // ----- SEARCH FUNCTIONALITY -----
+        function performSearch(query) {
+            const cards = imageGrid.querySelectorAll('.image-card, .folder-card');
+            const normalizedQuery = query.trim().toLowerCase();
+            let anyMatch = false;
+
+            cards.forEach(card => {
+                let nameEl = card.querySelector('.folder-name');
+                let fileName = '';
+                if (!nameEl) {
+                    // image card: use dataset.filename or alt
+                    const img = card.querySelector('img');
+                    if (img) {
+                        fileName = img.alt || '';
+                    }
+                } else {
+                    fileName = nameEl.textContent;
+                }
+                // remove any existing highlight
+                if (nameEl) {
+                    if (nameEl.innerHTML.includes('highlight-match')) {
+                        nameEl.innerHTML = nameEl.textContent;
+                    }
+                } else {
+                    // image card: we can't highlight inside img, but we can highlight a separate label? we'll just show/hide.
+                    // For simplicity, we just show/hide image cards.
+                }
+                card.style.display = '';
+            });
+
+            if (normalizedQuery === '') {
+                noMatchMsg.classList.remove('show');
+                return;
+            }
+
+            cards.forEach(card => {
+                let nameEl = card.querySelector('.folder-name');
+                let fileName = '';
+                if (!nameEl) {
+                    const img = card.querySelector('img');
+                    if (img) {
+                        fileName = img.alt || '';
+                    }
+                } else {
+                    fileName = nameEl.textContent;
+                }
+                const match = fileName.toLowerCase().includes(normalizedQuery);
+                if (match) {
+                    anyMatch = true;
+                    if (nameEl) {
+                        const originalText = nameEl.textContent;
+                        const lowerText = originalText.toLowerCase();
+                        const startIdx = lowerText.indexOf(normalizedQuery);
+                        if (startIdx !== -1) {
+                            const before = originalText.substring(0, startIdx);
+                            const matchText = originalText.substring(startIdx, startIdx + normalizedQuery.length);
+                            const after = originalText.substring(startIdx + normalizedQuery.length);
+                            nameEl.innerHTML = `${before}<span class="highlight-match">${matchText}</span>${after}`;
+                        }
+                    }
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (!anyMatch && normalizedQuery !== '') {
+                noMatchMsg.classList.add('show');
+            } else {
+                noMatchMsg.classList.remove('show');
+            }
+        }
 
         // ----- event listeners -----
         addBtn.addEventListener("click", function (e) {
@@ -840,6 +952,11 @@
         addFolderBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             createFolderCard();
+        });
+
+        // Search input listener
+        searchInput.addEventListener('input', function(e) {
+            performSearch(e.target.value);
         });
 
         // Seed with a sample folder
