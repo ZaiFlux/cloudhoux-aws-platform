@@ -283,6 +283,34 @@
             background: #3b82f6;
         }
 
+        /* search highlight */
+        .highlight-match {
+            background-color: yellow !important;
+            color: #000 !important;
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+        .no-match-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 1rem;
+            font-weight: 500;
+            display: none;
+            z-index: 50;
+            pointer-events: none;
+        }
+        .no-match-message.show {
+            display: block;
+        }
+
         @media (max-width: 768px) {
             .trash_grid {
                 min-height: 300px;
@@ -381,7 +409,7 @@
     <header class="topbar">
         <div class="logo">CloudHaux</div>
         <div class="search-container">
-            <input type="search" placeholder="Search files...">
+            <input type="search" placeholder="Search files..." id="globalSearch">
             <i class="fas fa-search search-icon"></i>
         </div>
         <div class="profile">
@@ -418,7 +446,9 @@
                         </button>
                     </div>
                 </div>
-                <div class="trash_grid" id="trashGrid"></div>
+                <div class="trash_grid" id="trashGrid">
+                    <div class="no-match-message" id="noMatchMessage">No file match</div>
+                </div>
             </section>
         </div>
 
@@ -459,6 +489,8 @@
         const toast = document.getElementById('toast');
         const emptyTrashBtn = document.getElementById('emptyTrashBtn');
         const restoreAllBtn = document.getElementById('restoreAllBtn');
+        const searchInput = document.getElementById('globalSearch');
+        const noMatchMsg = document.getElementById('noMatchMessage');
 
         // READ from localStorage - this is the key fix!
         let trashFiles = JSON.parse(localStorage.getItem('trashFiles') || '[]');
@@ -611,6 +643,12 @@
 
         function renderTrash() {
             trashGrid.innerHTML = '';
+            // add no-match message back
+            const noMatchMsgEl = document.createElement('div');
+            noMatchMsgEl.className = 'no-match-message';
+            noMatchMsgEl.id = 'noMatchMessage';
+            noMatchMsgEl.textContent = 'No file match';
+            trashGrid.appendChild(noMatchMsgEl);
             
             if (trashFiles.length === 0) {
                 const emptyDiv = document.createElement('div');
@@ -621,6 +659,8 @@
                     <p>Files you delete will appear here</p>
                 `;
                 trashGrid.appendChild(emptyDiv);
+                // re-run search to hide no-match if empty
+                performSearch(searchInput.value);
                 return;
             }
 
@@ -628,6 +668,63 @@
                 const card = renderTrashItem(item, index);
                 trashGrid.appendChild(card);
             });
+            // re-run search to apply highlights
+            performSearch(searchInput.value);
+        }
+
+        // ----- SEARCH FUNCTIONALITY -----
+        function performSearch(query) {
+            const cards = trashGrid.querySelectorAll('.trash-item-card');
+            const noMatchMsgEl = document.getElementById('noMatchMessage');
+            const normalizedQuery = query.trim().toLowerCase();
+            let anyMatch = false;
+
+            // First, reset all cards and remove highlights
+            cards.forEach(card => {
+                const nameEl = card.querySelector('.item-name');
+                if (nameEl) {
+                    if (nameEl.innerHTML.includes('highlight-match')) {
+                        nameEl.innerHTML = nameEl.textContent;
+                    }
+                }
+                card.style.display = '';
+            });
+
+            if (normalizedQuery === '') {
+                if (noMatchMsgEl) noMatchMsgEl.classList.remove('show');
+                return;
+            }
+
+            cards.forEach(card => {
+                const nameEl = card.querySelector('.item-name');
+                if (!nameEl) return;
+                const fileName = nameEl.textContent.toLowerCase();
+                const match = fileName.includes(normalizedQuery);
+                if (match) {
+                    anyMatch = true;
+                    const originalText = nameEl.textContent;
+                    const lowerText = originalText.toLowerCase();
+                    const startIdx = lowerText.indexOf(normalizedQuery);
+                    if (startIdx !== -1) {
+                        const before = originalText.substring(0, startIdx);
+                        const matchText = originalText.substring(startIdx, startIdx + normalizedQuery.length);
+                        const after = originalText.substring(startIdx + normalizedQuery.length);
+                        nameEl.innerHTML = `${before}<span class="highlight-match">${matchText}</span>${after}`;
+                    }
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Show no-match message if no matches and query not empty
+            if (noMatchMsgEl) {
+                if (!anyMatch && normalizedQuery !== '') {
+                    noMatchMsgEl.classList.add('show');
+                } else {
+                    noMatchMsgEl.classList.remove('show');
+                }
+            }
         }
 
         function openContextMenu(x, y, index) {
@@ -718,6 +815,11 @@
 
         emptyTrashBtn.addEventListener('click', emptyTrash);
         restoreAllBtn.addEventListener('click', restoreAll);
+
+        // Search input listener
+        searchInput.addEventListener('input', function(e) {
+            performSearch(e.target.value);
+        });
 
         // Add files to trash (for demo/testing)
         const fileInput = document.getElementById('fileInput');
