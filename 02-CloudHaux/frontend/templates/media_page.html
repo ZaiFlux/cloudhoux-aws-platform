@@ -165,7 +165,7 @@
             transform: scale(1.05);
         }
 
-        /* Input for renaming */
+        /* Input for renaming folder */
         .folder-name-input {
             background: white;
             border: 2px solid #3b82f6;
@@ -191,7 +191,7 @@
 
         /* media card */
         .media-card {
-            width: 200px;
+            width: 220px;
             padding: 12px;
             border-radius: 12px;
             background: white;
@@ -223,28 +223,83 @@
             color: #dc2626;
         }
 
+        /* Video preview */
+        .media-card .media-video-wrapper {
+            width: 100%;
+            height: 130px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .media-card .media-video-wrapper video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: 8px;
+        }
+
+        /* Audio preview */
+        .media-card .media-audio-wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 0;
+        }
+
+        .media-card .media-audio-wrapper audio {
+            width: 100%;
+            height: 36px;
+            border-radius: 8px;
+        }
+
         .media-card .media-name {
             font-size: 13px;
             color: #374151;
             text-align: center;
             word-break: break-all;
-            max-width: 180px;
+            max-width: 190px;
             font-weight: 500;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: 0.2s;
+        }
+
+        .media-card .media-name:hover {
+            background: #f1f5f9;
+        }
+
+        /* Input for renaming media */
+        .media-name-input {
+            font-size: 13px;
+            color: #1e293b;
+            text-align: center;
+            width: 100%;
+            max-width: 190px;
+            font-weight: 500;
+            padding: 4px 8px;
+            border: 2px solid #3b82f6;
+            border-radius: 6px;
+            outline: none;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .media-name-input:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         }
 
         .media-card .media-size {
             font-size: 11px;
             color: #6b7280;
-        }
-
-        .media-card .media-type {
-            font-size: 10px;
-            padding: 2px 12px;
-            border-radius: 20px;
-            background: #f1f5f9;
-            color: #475569;
-            font-weight: 600;
-            text-transform: uppercase;
         }
 
         /* Drag ghost element */
@@ -284,11 +339,11 @@
                 padding: 16px;
             }
             .media-card {
-                width: 150px;
+                width: 170px;
                 padding: 10px;
             }
-            .media-card .media-icon {
-                font-size: 40px;
+            .media-card .media-video-wrapper {
+                height: 100px;
             }
             .folder-card {
                 width: 100px;
@@ -314,15 +369,15 @@
                 font-size: 1rem;
             }
             .media-card {
-                width: 120px;
+                width: 140px;
                 padding: 8px;
             }
-            .media-card .media-icon {
-                font-size: 32px;
+            .media-card .media-video-wrapper {
+                height: 80px;
             }
             .media-card .media-name {
                 font-size: 11px;
-                max-width: 100px;
+                max-width: 120px;
             }
             .folder-card {
                 width: 80px;
@@ -524,6 +579,14 @@
         ccmDelete.addEventListener('click', function(e) {
             e.stopPropagation();
             if (contextTarget) {
+                const video = contextTarget.querySelector('video');
+                const audio = contextTarget.querySelector('audio');
+                if (video && video.src && video.src.startsWith('blob:')) {
+                    URL.revokeObjectURL(video.src);
+                }
+                if (audio && audio.src && audio.src.startsWith('blob:')) {
+                    URL.revokeObjectURL(audio.src);
+                }
                 contextTarget.style.transition = '0.2s';
                 contextTarget.style.transform = 'scale(0.8)';
                 contextTarget.style.opacity = '0';
@@ -552,7 +615,7 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-        // Get icon for media type
+        // Get media type info
         function getMediaIcon(fileName) {
             const ext = fileName.split('.').pop().toLowerCase();
             const videoExts = ['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'wmv'];
@@ -564,6 +627,55 @@
                 return { icon: 'fa-music', type: 'audio', cssClass: 'audio-icon' };
             }
             return { icon: 'fa-file-video', type: 'media', cssClass: '' };
+        }
+
+        // ----- Rename media function -----
+        function makeMediaNameEditable(nameEl, mediaCard) {
+            const currentName = nameEl.textContent;
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'media-name-input';
+            input.value = currentName;
+            
+            nameEl.replaceWith(input);
+            input.focus();
+            input.select();
+
+            function saveRename() {
+                const newName = input.value.trim() || currentName;
+                const newDiv = document.createElement('div');
+                newDiv.className = 'media-name';
+                newDiv.textContent = newName;
+                
+                newDiv.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    makeMediaNameEditable(newDiv, mediaCard);
+                });
+                
+                input.replaceWith(newDiv);
+                performSearch(searchInput.value);
+            }
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    input.blur();
+                } else if (e.key === 'Escape') {
+                    const newDiv = document.createElement('div');
+                    newDiv.className = 'media-name';
+                    newDiv.textContent = currentName;
+                    
+                    newDiv.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        makeMediaNameEditable(newDiv, mediaCard);
+                    });
+                    
+                    input.replaceWith(newDiv);
+                }
+            });
+
+            input.addEventListener('blur', saveRename);
         }
 
         // ----- Drag and Drop Functions -----
@@ -767,7 +879,7 @@
             dragData = null;
         }
 
-        // ----- Rename functionality -----
+        // ----- Rename functionality for folders -----
         function makeFolderNameEditable(folderNameSpan, folderCard) {
             const currentName = folderNameSpan.textContent;
             
@@ -823,7 +935,7 @@
             input.addEventListener('blur', saveRename);
         }
 
-        // ----- render media files -----
+        // ----- render media files (with real video/audio preview) -----
         function renderMediaFiles(files) {
             const mediaFiles = Array.from(files);
             
@@ -838,26 +950,71 @@
                 
                 const mediaInfo = getMediaIcon(file.name);
                 
-                const icon = document.createElement("div");
-                icon.className = `media-icon ${mediaInfo.cssClass}`;
-                icon.innerHTML = `<i class="fas ${mediaInfo.icon}"></i>`;
+                // ----- VIDEO: show actual video preview -----
+                if (mediaInfo.type === 'video') {
+                    const videoWrapper = document.createElement("div");
+                    videoWrapper.className = "media-video-wrapper";
+                    
+                    const video = document.createElement("video");
+                    video.src = URL.createObjectURL(file);
+                    video.controls = true;
+                    video.preload = "metadata";
+                    video.muted = true;
+                    
+                    videoWrapper.appendChild(video);
+                    card.appendChild(videoWrapper);
+                }
+                // ----- AUDIO: show audio player -----
+                else if (mediaInfo.type === 'audio') {
+                    const audioWrapper = document.createElement("div");
+                    audioWrapper.className = "media-audio-wrapper";
+                    
+                    const audioIcon = document.createElement("i");
+                    audioIcon.className = "fas fa-music";
+                    audioIcon.style.fontSize = "42px";
+                    audioIcon.style.color = "#059669";
+                    
+                    const audio = document.createElement("audio");
+                    audio.src = URL.createObjectURL(file);
+                    audio.controls = true;
+                    audio.preload = "metadata";
+                    
+                    audioWrapper.appendChild(audioIcon);
+                    audioWrapper.appendChild(audio);
+                    card.appendChild(audioWrapper);
+                }
+                // ----- FALLBACK: just an icon -----
+                else {
+                    const icon = document.createElement("div");
+                    icon.className = `media-icon ${mediaInfo.cssClass}`;
+                    icon.innerHTML = `<i class="fas ${mediaInfo.icon}"></i>`;
+                    card.appendChild(icon);
+                }
                 
+                // Name (renamable)
                 const name = document.createElement("div");
                 name.className = "media-name";
                 name.textContent = file.name;
+                name.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    makeMediaNameEditable(name, card);
+                });
+                
+                // Double click card to rename
+                card.addEventListener('dblclick', function(e) {
+                    if (e.target.closest('video') || e.target.closest('audio')) return;
+                    const nameEl = this.querySelector('.media-name');
+                    if (nameEl) {
+                        makeMediaNameEditable(nameEl, this);
+                    }
+                });
                 
                 const size = document.createElement("div");
                 size.className = "media-size";
                 size.textContent = formatFileSize(file.size);
                 
-                const type = document.createElement("div");
-                type.className = "media-type";
-                type.textContent = mediaInfo.type;
-                
-                card.appendChild(icon);
                 card.appendChild(name);
                 card.appendChild(size);
-                card.appendChild(type);
                 mediaGrid.appendChild(card);
                 attachContextMenu(card);
             });
@@ -918,7 +1075,7 @@
             const normalizedQuery = query.trim().toLowerCase();
             let anyMatch = false;
 
-            cards.forEach(card => {
+                       cards.forEach(card => {
                 let nameEl = card.querySelector('.media-name') || card.querySelector('.folder-name');
                 if (nameEl) {
                     if (nameEl.innerHTML.includes('highlight-match')) {

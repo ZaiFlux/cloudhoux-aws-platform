@@ -82,12 +82,14 @@
             gap: 8px;
         }
 
+        /* ===== FIXED GRID - ITEMS START FROM TOP-LEFT ===== */
         .images_grid {
             flex: 1;
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
             align-items: flex-start;
+            align-content: flex-start;
             justify-content: flex-start;
             background: #f9fafb;
             border-radius: 12px;
@@ -96,9 +98,10 @@
             border: 1px solid #e5e7eb;
             transition: 0.2s;
             position: relative;
+            overflow-y: auto;
         }
 
-        /* image card with name label */
+        /* ===== FIXED IMAGE CARD ===== */
         .image-card {
             width: 140px;
             border-radius: 12px;
@@ -110,6 +113,8 @@
             cursor: default;
             display: flex;
             flex-direction: column;
+            align-self: flex-start;
+            flex-shrink: 0;
         }
 
         .image-card:hover {
@@ -176,7 +181,7 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         }
 
-        /* ----- FOLDER CARD — with drag support ----- */
+        /* ===== FIXED FOLDER CARD ===== */
         .folder-card {
             width: 125px;
             height: 100px;
@@ -197,6 +202,8 @@
             position: relative;
             user-select: none;
             touch-action: none;
+            align-self: flex-start;
+            flex-shrink: 0;
         }
 
         .folder-card.dragging {
@@ -303,6 +310,7 @@
             .images_grid {
                 min-height: 300px;
                 padding: 16px;
+                gap: 15px;
             }
             .image-card {
                 width: 100px;
@@ -995,9 +1003,11 @@
             const normalizedQuery = query.trim().toLowerCase();
             let anyMatch = false;
 
+            // Reset highlights and show all first
             cards.forEach(card => {
                 let nameEl = card.querySelector('.folder-name') || card.querySelector('.image-name');
                 if (nameEl) {
+                    // Remove any existing highlight spans
                     if (nameEl.innerHTML.includes('highlight-match')) {
                         nameEl.innerHTML = nameEl.textContent;
                     }
