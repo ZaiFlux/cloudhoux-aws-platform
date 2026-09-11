@@ -84,11 +84,7 @@
 
         .media_grid {
             flex: 1;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            align-items: flex-start;
-            justify-content: flex-start;
+            display: block;              /* free-position: cards are absolutely positioned */
             background: #f9fafb;
             border-radius: 12px;
             padding: 24px;
@@ -96,10 +92,12 @@
             border: 1px solid #e5e7eb;
             transition: 0.2s;
             position: relative;
+            overflow: hidden;
         }
 
-        /* ----- FOLDER CARD — with drag support ----- */
+        /* ----- FOLDER CARD — free positioned ----- */
         .folder-card {
+            position: absolute;
             width: 125px;
             height: 100px;
             border-radius: 12px;
@@ -112,17 +110,17 @@
             color: #1e293b;
             font-size: 0.85rem;
             font-weight: 500;
-            transition: none;
             box-shadow: 0 2px 6px rgba(0,0,0,0.02);
             cursor: grab;
             gap: 4px;
-            position: relative;
             user-select: none;
             touch-action: none;
+            transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+            z-index: 1;
         }
 
         .folder-card.dragging {
-            opacity: 0.8;
+            opacity: 0.9;
             transform: scale(1.05);
             z-index: 1000;
             cursor: grabbing;
@@ -133,7 +131,6 @@
         .folder-card.drag-over {
             border-color: #3b82f6;
             background: #dbeafe;
-            transform: scale(1.03);
         }
 
         .folder-card i {
@@ -143,7 +140,6 @@
             pointer-events: none;
         }
 
-        /* Folder name styling */
         .folder-name {
             background: #dce3ec;
             padding: 2px 14px;
@@ -165,7 +161,6 @@
             transform: scale(1.05);
         }
 
-        /* Input for renaming folder */
         .folder-name-input {
             background: white;
             border: 2px solid #3b82f6;
@@ -189,25 +184,42 @@
             border-color: #94a3b8;
         }
 
-        /* media card */
+        /* ----- media card — free positioned ----- */
         .media-card {
+            position: absolute;
             width: 220px;
             padding: 12px;
             border-radius: 12px;
             background: white;
             border: 1px solid #e2e8f0;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            transition: 0.2s;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 8px;
-            cursor: default;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+            transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+            z-index: 1;
         }
 
         .media-card:hover {
-            transform: scale(1.02);
             box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+        }
+
+        .media-card.dragging {
+            opacity: 0.9;
+            transform: scale(1.05);
+            z-index: 1000;
+            cursor: grabbing;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+            border-color: #3b82f6;
+        }
+
+        .media-card.drag-over {
+            border-color: #3b82f6;
+            background: #dbeafe;
         }
 
         .media-card .media-icon {
@@ -223,7 +235,6 @@
             color: #dc2626;
         }
 
-        /* Video preview */
         .media-card .media-video-wrapper {
             width: 100%;
             height: 130px;
@@ -244,7 +255,6 @@
             border-radius: 8px;
         }
 
-        /* Audio preview */
         .media-card .media-audio-wrapper {
             width: 100%;
             display: flex;
@@ -277,7 +287,6 @@
             background: #f1f5f9;
         }
 
-        /* Input for renaming media */
         .media-name-input {
             font-size: 13px;
             color: #1e293b;
@@ -333,6 +342,33 @@
             color: #1e293b;
         }
 
+        .drag-ghost.media-ghost {
+            background: white;
+            border: 1px solid #3b82f6;
+            padding: 8px 14px;
+            border-radius: 10px;
+            max-width: 180px;
+            flex-direction: row;
+            gap: 8px;
+        }
+
+        .drag-ghost.media-ghost i {
+            font-size: 1.4rem;
+            color: #dc2626;
+        }
+
+        .drag-ghost.media-ghost span {
+            background: transparent;
+            padding: 0;
+            font-size: 0.7rem;
+            border-radius: 0;
+            color: #1e293b;
+            max-width: 130px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         @media (max-width: 768px) {
             .media_grid {
                 min-height: 300px;
@@ -362,7 +398,6 @@
         @media (max-width: 480px) {
             .media_grid {
                 min-height: 200px;
-                gap: 12px;
                 padding: 12px;
             }
             .media_header h2 {
@@ -529,523 +564,529 @@
         <div class="ccm-item ccm-danger" id="ccmDelete"><i class="fas fa-trash"></i> Delete</div>
     </div>
 
-    <!-- ===== JAVASCRIPT - Media upload + folder creation with drag & drop + SEARCH ===== -->
+    <!-- ===== JAVASCRIPT ===== -->
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        "use strict";
+document.addEventListener('DOMContentLoaded', function() {
+    "use strict";
 
-        const fileInput = document.getElementById("fileInput");
-        const addBtn = document.getElementById("addFileBtn");
-        const mediaGrid = document.getElementById("mediaGrid");
-        const addFolderBtn = document.getElementById("addFolderBtn");
-        const searchInput = document.getElementById("globalSearch");
-        const noMatchMsg = document.getElementById("noMatchMessage");
+    const fileInput = document.getElementById("fileInput");
+    const addBtn = document.getElementById("addFileBtn");
+    const mediaGrid = document.getElementById("mediaGrid");
+    const addFolderBtn = document.getElementById("addFolderBtn");
+    const searchInput = document.getElementById("globalSearch");
+    const noMatchMsg = document.getElementById("noMatchMessage");
 
-        if (!fileInput || !addBtn || !mediaGrid || !addFolderBtn || !searchInput) {
-            console.error('Elements not found');
-            return;
+    if (!fileInput || !addBtn || !mediaGrid || !addFolderBtn || !searchInput) {
+        console.error('Elements not found');
+        return;
+    }
+
+    let dragData = null;
+    let ghostElement = null;
+
+    const contextMenu = document.getElementById('customContextMenu');
+    let contextTarget = null;
+    const ccmDelete = document.getElementById('ccmDelete');
+
+    // ---------- Free-position layout tracking ----------
+    const GRID_PADDING = 24;
+    const CARD_GAP = 20;
+
+    // Rectangle overlap check
+    function rectsOverlap(a, b) {
+        return !(a.x + a.w <= b.x || a.x >= b.x + b.w ||
+                 a.y + a.h <= b.y || a.y >= b.y + b.h);
+    }
+
+    // Get the actual current position/size of a card
+    function cardRect(card) {
+        return {
+            x: parseFloat(card.style.left) || 0,
+            y: parseFloat(card.style.top) || 0,
+            w: card.offsetWidth,
+            h: card.offsetHeight
+        };
+    }
+
+    // Find a free spot that does NOT overlap any existing card, optionally ignoring a card
+    function findFreeSpot(cardW, cardH, ignoreCard) {
+        const gridRect = mediaGrid.getBoundingClientRect();
+        const placed = Array.from(mediaGrid.querySelectorAll('.folder-card, .media-card'))
+            .filter(el => el !== ignoreCard)
+            .map(el => cardRect(el));
+
+        const maxCols = Math.max(1, Math.floor((gridRect.width - GRID_PADDING * 2 + CARD_GAP) / (cardW + CARD_GAP)));
+        const stepX = cardW + CARD_GAP;
+        const stepY = cardH + CARD_GAP;
+        const startX = GRID_PADDING;
+        const startY = GRID_PADDING;
+
+        for (let row = 0; row < 100; row++) {
+            for (let col = 0; col < maxCols; col++) {
+                const x = startX + col * stepX;
+                const y = startY + row * stepY;
+                const test = { x, y, w: cardW, h: cardH };
+                const overlaps = placed.some(p => rectsOverlap(test, p));
+                if (!overlaps) return { x, y };
+            }
+        }
+        return { x: startX, y: startY };
+    }
+
+    // Find the nearest free spot to a given point (so pushed cards land close to where they were)
+    function findNearestFreeSpot(cardW, cardH, preferredX, preferredY, ignoreCard) {
+        const placed = Array.from(mediaGrid.querySelectorAll('.folder-card, .media-card'))
+            .filter(el => el !== ignoreCard)
+            .map(el => cardRect(el));
+
+        // Try the preferred spot first
+        const test0 = { x: preferredX, y: preferredY, w: cardW, h: cardH };
+        if (!placed.some(p => rectsOverlap(test0, p))) {
+            return { x: preferredX, y: preferredY };
         }
 
-        let dragData = null;
-        let ghostElement = null;
-
-        const contextMenu = document.getElementById('customContextMenu');
-        let contextTarget = null;
-        const ccmDelete = document.getElementById('ccmDelete');
-
-        function openContextMenu(x, y, targetCard) {
-            contextTarget = targetCard;
-            const maxX = window.innerWidth - 190;
-            const maxY = window.innerHeight - 120;
-            contextMenu.style.left = Math.min(x, maxX) + 'px';
-            contextMenu.style.top = Math.min(y, maxY) + 'px';
-            contextMenu.classList.add('open');
+        // Otherwise spiral outward from the preferred position
+        const step = 20;
+        for (let radius = step; radius < 2000; radius += step) {
+            // check cardinal + diagonal directions
+            const candidates = [
+                { x: preferredX + radius, y: preferredY },
+                { x: preferredX - radius, y: preferredY },
+                { x: preferredX, y: preferredY + radius },
+                { x: preferredX, y: preferredY - radius },
+                { x: preferredX + radius, y: preferredY + radius },
+                { x: preferredX - radius, y: preferredY - radius },
+                { x: preferredX + radius, y: preferredY - radius },
+                { x: preferredX - radius, y: preferredY + radius }
+            ];
+            for (const c of candidates) {
+                const x = Math.max(0, c.x);
+                const y = Math.max(0, c.y);
+                const test = { x, y, w: cardW, h: cardH };
+                if (!placed.some(p => rectsOverlap(test, p))) {
+                    return { x, y };
+                }
+            }
         }
+        return { x: preferredX, y: preferredY };
+    }
 
-        function closeContextMenu() {
-            contextMenu.classList.remove('open');
-            contextTarget = null;
+    function growGridToFit(bottomY) {
+        const minH = Math.max(400, bottomY + GRID_PADDING);
+        mediaGrid.style.minHeight = minH + 'px';
+    }
+
+    function placeCard(card, x, y) {
+        card.style.left = x + 'px';
+        card.style.top = y + 'px';
+        const bottom = y + card.offsetHeight;
+        if (bottom > mediaGrid.clientHeight) {
+            growGridToFit(bottom);
         }
+    }
 
-        function attachContextMenu(card) {
-            card.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                openContextMenu(e.clientX, e.clientY, card);
-            });
-        }
+    // ---------- Auto-push overlapping cards ----------
+    // After a card lands at a position, any card that overlaps it gets pushed
+    // to the nearest free spot.
+    function pushOverlappingCards(movedCard) {
+        const movedRect = cardRect(movedCard);
+        const allCards = Array.from(mediaGrid.querySelectorAll('.folder-card, .media-card'))
+            .filter(el => el !== movedCard);
 
-        // DELETE action for media cards and folders
-        ccmDelete.addEventListener('click', function(e) {
+        let anyPushed = false;
+        allCards.forEach(other => {
+            const otherRect = cardRect(other);
+            if (rectsOverlap(movedRect, otherRect)) {
+                // Find a new spot for this overlapping card, close to its current position,
+                // and ignoring the moved card (so it doesn't re-collide with it)
+                const spot = findNearestFreeSpot(
+                    other.offsetWidth,
+                    other.offsetHeight,
+                    otherRect.x,
+                    otherRect.y,
+                    other  // ignore self when testing
+                );
+                placeCard(other, spot.x, spot.y);
+                anyPushed = true;
+            }
+        });
+        return anyPushed;
+    }
+
+    // ---------- Context menu ----------
+    function openContextMenu(x, y, targetCard) {
+        contextTarget = targetCard;
+        const maxX = window.innerWidth - 190;
+        const maxY = window.innerHeight - 120;
+        contextMenu.style.left = Math.min(x, maxX) + 'px';
+        contextMenu.style.top = Math.min(y, maxY) + 'px';
+        contextMenu.classList.add('open');
+    }
+
+    function closeContextMenu() {
+        contextMenu.classList.remove('open');
+        contextTarget = null;
+    }
+
+    function attachContextMenu(card) {
+        card.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
             e.stopPropagation();
-            if (contextTarget) {
-                const video = contextTarget.querySelector('video');
-                const audio = contextTarget.querySelector('audio');
-                if (video && video.src && video.src.startsWith('blob:')) {
-                    URL.revokeObjectURL(video.src);
-                }
-                if (audio && audio.src && audio.src.startsWith('blob:')) {
-                    URL.revokeObjectURL(audio.src);
-                }
-                contextTarget.style.transition = '0.2s';
-                contextTarget.style.transform = 'scale(0.8)';
-                contextTarget.style.opacity = '0';
-                setTimeout(() => {
-                    contextTarget.remove();
-                    performSearch(searchInput.value);
-                }, 200);
+            openContextMenu(e.clientX, e.clientY, card);
+        });
+    }
+
+    ccmDelete.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (contextTarget) {
+            const video = contextTarget.querySelector('video');
+            const audio = contextTarget.querySelector('audio');
+            if (video && video.src && video.src.startsWith('blob:')) {
+                URL.revokeObjectURL(video.src);
             }
-            closeContextMenu();
-        });
-
-        document.addEventListener('click', function(e) {
-            if (!contextMenu.contains(e.target)) closeContextMenu();
-        });
-        document.addEventListener('scroll', closeContextMenu, true);
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeContextMenu();
-        });
-
-        // Function to format file size
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        // Get media type info
-        function getMediaIcon(fileName) {
-            const ext = fileName.split('.').pop().toLowerCase();
-            const videoExts = ['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'wmv'];
-            const audioExts = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'wma'];
-            
-            if (videoExts.includes(ext)) {
-                return { icon: 'fa-video', type: 'video', cssClass: 'video-icon' };
-            } else if (audioExts.includes(ext)) {
-                return { icon: 'fa-music', type: 'audio', cssClass: 'audio-icon' };
+            if (audio && audio.src && audio.src.startsWith('blob:')) {
+                URL.revokeObjectURL(audio.src);
             }
-            return { icon: 'fa-file-video', type: 'media', cssClass: '' };
-        }
-
-        // ----- Rename media function -----
-        function makeMediaNameEditable(nameEl, mediaCard) {
-            const currentName = nameEl.textContent;
-            
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'media-name-input';
-            input.value = currentName;
-            
-            nameEl.replaceWith(input);
-            input.focus();
-            input.select();
-
-            function saveRename() {
-                const newName = input.value.trim() || currentName;
-                const newDiv = document.createElement('div');
-                newDiv.className = 'media-name';
-                newDiv.textContent = newName;
-                
-                newDiv.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    makeMediaNameEditable(newDiv, mediaCard);
-                });
-                
-                input.replaceWith(newDiv);
+            contextTarget.style.transition = '0.2s';
+            contextTarget.style.transform = 'scale(0.8)';
+            contextTarget.style.opacity = '0';
+            setTimeout(() => {
+                contextTarget.remove();
                 performSearch(searchInput.value);
-            }
+            }, 200);
+        }
+        closeContextMenu();
+    });
 
-            input.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    input.blur();
-                } else if (e.key === 'Escape') {
-                    const newDiv = document.createElement('div');
-                    newDiv.className = 'media-name';
-                    newDiv.textContent = currentName;
-                    
-                    newDiv.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        makeMediaNameEditable(newDiv, mediaCard);
-                    });
-                    
-                    input.replaceWith(newDiv);
-                }
+    document.addEventListener('click', function(e) {
+        if (!contextMenu.contains(e.target)) closeContextMenu();
+    });
+    document.addEventListener('scroll', closeContextMenu, true);
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeContextMenu();
+    });
+
+    // ---------- Helpers ----------
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function getMediaIcon(fileName) {
+        const ext = fileName.split('.').pop().toLowerCase();
+        const videoExts = ['mp4', 'mov', 'avi', 'mkv', 'webm', 'flv', 'wmv'];
+        const audioExts = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'wma'];
+        if (videoExts.includes(ext)) return { icon: 'fa-video', type: 'video', cssClass: 'video-icon' };
+        if (audioExts.includes(ext)) return { icon: 'fa-music', type: 'audio', cssClass: 'audio-icon' };
+        return { icon: 'fa-file-video', type: 'media', cssClass: '' };
+    }
+
+    // ---------- Rename ----------
+    function makeMediaNameEditable(nameEl, mediaCard) {
+        const currentName = nameEl.textContent;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'media-name-input';
+        input.value = currentName;
+        nameEl.replaceWith(input);
+        input.focus();
+        input.select();
+
+        function saveRename() {
+            const newName = input.value.trim() || currentName;
+            const newDiv = document.createElement('div');
+            newDiv.className = 'media-name';
+            newDiv.textContent = newName;
+            newDiv.addEventListener('click', function(e) {
+                e.stopPropagation();
+                makeMediaNameEditable(newDiv, mediaCard);
             });
-
-            input.addEventListener('blur', saveRename);
-        }
-
-        // ----- Drag and Drop Functions -----
-        function createGhostElement(card) {
-            const ghost = document.createElement('div');
-            ghost.className = 'drag-ghost';
-            ghost.style.position = 'fixed';
-            ghost.style.pointerEvents = 'none';
-            ghost.style.zIndex = '9999';
-            
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-folder';
-            
-            const nameSpan = document.createElement('span');
-            const folderNameEl = card.querySelector('.folder-name');
-            nameSpan.textContent = folderNameEl ? folderNameEl.textContent : 'Folder';
-            
-            ghost.appendChild(icon);
-            ghost.appendChild(nameSpan);
-            
-            return ghost;
-        }
-
-        function isInsideGrid(grid, clientX, clientY) {
-            const rect = grid.getBoundingClientRect();
-            return clientX >= rect.left && clientX <= rect.right &&
-                   clientY >= rect.top && clientY <= rect.bottom;
-        }
-
-        function findDropTarget(grid, clientX, clientY) {
-            const cards = grid.querySelectorAll('.folder-card:not(.dragging)');
-            for (let card of cards) {
-                const rect = card.getBoundingClientRect();
-                if (clientX >= rect.left && clientX <= rect.right &&
-                    clientY >= rect.top && clientY <= rect.bottom) {
-                    return card;
-                }
-            }
-            return null;
-        }
-
-        function initDrag(card, e) {
-            if (e.target.closest('.folder-name-input') || e.target.closest('.folder-name')) {
-                return;
-            }
-
-            const startX = e.clientX || e.touches?.[0]?.clientX || 0;
-            const startY = e.clientY || e.touches?.[0]?.clientY || 0;
-
-            dragData = {
-                card: card,
-                startX: startX,
-                startY: startY,
-                offsetX: 0,
-                offsetY: 0,
-                isDragging: false
-            };
-
-            ghostElement = createGhostElement(card);
-            document.body.appendChild(ghostElement);
-            ghostElement.style.display = 'none';
-
-            card.classList.add('dragging');
-        }
-
-        function moveDrag(e) {
-            if (!dragData || !ghostElement) return;
-
-            const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
-            const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
-
-            const dx = clientX - dragData.startX;
-            const dy = clientY - dragData.startY;
-
-            if (!dragData.isDragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
-                dragData.isDragging = true;
-                const cardRect = dragData.card.getBoundingClientRect();
-                ghostElement.style.display = 'flex';
-                ghostElement.style.left = (clientX - cardRect.width / 2) + 'px';
-                ghostElement.style.top = (clientY - 40) + 'px';
-                
-                document.querySelectorAll('.folder-card.drag-over').forEach(el => {
-                    el.classList.remove('drag-over');
-                });
-            }
-
-            if (dragData.isDragging) {
-                ghostElement.style.left = (clientX - 62) + 'px';
-                ghostElement.style.top = (clientY - 50) + 'px';
-
-                if (isInsideGrid(mediaGrid, clientX, clientY)) {
-                    const target = findDropTarget(mediaGrid, clientX, clientY);
-                    document.querySelectorAll('.folder-card.drag-over').forEach(el => {
-                        if (el !== target) el.classList.remove('drag-over');
-                    });
-                    if (target && target !== dragData.card) {
-                        target.classList.add('drag-over');
-                    }
-                } else {
-                    document.querySelectorAll('.folder-card.drag-over').forEach(el => {
-                        el.classList.remove('drag-over');
-                    });
-                }
-            }
-        }
-
-        function endDrag(e) {
-            if (!dragData) return;
-
-            const clientX = e.clientX || e.changedTouches?.[0]?.clientX || 0;
-            const clientY = e.clientY || e.changedTouches?.[0]?.clientY || 0;
-
-            document.querySelectorAll('.folder-card.drag-over').forEach(el => {
-                el.classList.remove('drag-over');
-            });
-
-            if (dragData.isDragging) {
-                const inside = isInsideGrid(mediaGrid, clientX, clientY);
-                const target = findDropTarget(mediaGrid, clientX, clientY);
-
-                if (inside && target && target !== dragData.card) {
-                    const parent = mediaGrid;
-                    const card1 = dragData.card;
-                    const card2 = target;
-                    
-                    const clone1 = card1.cloneNode(true);
-                    const clone2 = card2.cloneNode(true);
-                    
-                    const nameSpan1 = clone1.querySelector('.folder-name');
-                    if (nameSpan1) {
-                        nameSpan1.addEventListener('click', function(e) {
-                            e.stopPropagation();
-                            makeFolderNameEditable(nameSpan1, clone1);
-                        });
-                    }
-                    clone1.addEventListener('dblclick', function(e) {
-                        const nameEl = this.querySelector('.folder-name');
-                        if (nameEl) {
-                            makeFolderNameEditable(nameEl, this);
-                        }
-                    });
-                    
-                    clone1.addEventListener('mousedown', function(e) {
-                        initDrag(this, e);
-                    });
-                    clone1.addEventListener('touchstart', function(e) {
-                        initDrag(this, e);
-                    }, { passive: true });
-                    
-                    const nameSpan2 = clone2.querySelector('.folder-name');
-                    if (nameSpan2) {
-                        nameSpan2.addEventListener('click', function(e) {
-                            e.stopPropagation();
-                            makeFolderNameEditable(nameSpan2, clone2);
-                        });
-                    }
-                    clone2.addEventListener('dblclick', function(e) {
-                        const nameEl = this.querySelector('.folder-name');
-                        if (nameEl) {
-                            makeFolderNameEditable(nameEl, this);
-                        }
-                    });
-                    
-                    clone2.addEventListener('mousedown', function(e) {
-                        initDrag(this, e);
-                    });
-                    clone2.addEventListener('touchstart', function(e) {
-                        initDrag(this, e);
-                    }, { passive: true });
-
-                    attachContextMenu(clone1);
-                    attachContextMenu(clone2);
-                    
-                    const idx1 = Array.from(parent.children).indexOf(card1);
-                    const idx2 = Array.from(parent.children).indexOf(card2);
-                    
-                    if (idx1 < idx2) {
-                        parent.insertBefore(clone2, card1);
-                        parent.insertBefore(clone1, card2);
-                    } else {
-                        parent.insertBefore(clone1, card2);
-                        parent.insertBefore(clone2, card1);
-                    }
-                    
-                    card1.remove();
-                    card2.remove();
-                    performSearch(searchInput.value);
-                }
-            }
-
-            if (ghostElement) {
-                ghostElement.remove();
-                ghostElement = null;
-            }
-            if (dragData.card) {
-                dragData.card.classList.remove('dragging');
-            }
-            document.querySelectorAll('.folder-card.drag-over').forEach(el => {
-                el.classList.remove('drag-over');
-            });
-            dragData = null;
-        }
-
-        // ----- Rename functionality for folders -----
-        function makeFolderNameEditable(folderNameSpan, folderCard) {
-            const currentName = folderNameSpan.textContent;
-            
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'folder-name-input';
-            input.value = currentName;
-            
-            folderNameSpan.replaceWith(input);
-            input.focus();
-            input.select();
-
-            function saveRename() {
-                const newName = input.value.trim() || currentName;
-                const newSpan = document.createElement('span');
-                newSpan.className = 'folder-name';
-                newSpan.textContent = newName;
-                
-                newSpan.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    makeFolderNameEditable(newSpan, folderCard);
-                });
-                
-                folderCard.addEventListener('dblclick', function(e) {
-                    const nameSpan = this.querySelector('.folder-name');
-                    if (nameSpan) {
-                        makeFolderNameEditable(nameSpan, this);
-                    }
-                });
-                
-                input.replaceWith(newSpan);
-                performSearch(searchInput.value);
-            }
-
-            input.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    input.blur();
-                } else if (e.key === 'Escape') {
-                    const newSpan = document.createElement('span');
-                    newSpan.className = 'folder-name';
-                    newSpan.textContent = currentName;
-                    
-                    newSpan.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        makeFolderNameEditable(newSpan, folderCard);
-                    });
-                    
-                    input.replaceWith(newSpan);
-                }
-            });
-
-            input.addEventListener('blur', saveRename);
-        }
-
-        // ----- render media files (with real video/audio preview) -----
-        function renderMediaFiles(files) {
-            const mediaFiles = Array.from(files);
-            
-            if (mediaFiles.length === 0) {
-                alert("Please select media files (videos or audio)");
-                return;
-            }
-
-            mediaFiles.forEach((file) => {
-                const card = document.createElement("div");
-                card.className = "media-card";
-                
-                const mediaInfo = getMediaIcon(file.name);
-                
-                // ----- VIDEO: show actual video preview -----
-                if (mediaInfo.type === 'video') {
-                    const videoWrapper = document.createElement("div");
-                    videoWrapper.className = "media-video-wrapper";
-                    
-                    const video = document.createElement("video");
-                    video.src = URL.createObjectURL(file);
-                    video.controls = true;
-                    video.preload = "metadata";
-                    video.muted = true;
-                    
-                    videoWrapper.appendChild(video);
-                    card.appendChild(videoWrapper);
-                }
-                // ----- AUDIO: show audio player -----
-                else if (mediaInfo.type === 'audio') {
-                    const audioWrapper = document.createElement("div");
-                    audioWrapper.className = "media-audio-wrapper";
-                    
-                    const audioIcon = document.createElement("i");
-                    audioIcon.className = "fas fa-music";
-                    audioIcon.style.fontSize = "42px";
-                    audioIcon.style.color = "#059669";
-                    
-                    const audio = document.createElement("audio");
-                    audio.src = URL.createObjectURL(file);
-                    audio.controls = true;
-                    audio.preload = "metadata";
-                    
-                    audioWrapper.appendChild(audioIcon);
-                    audioWrapper.appendChild(audio);
-                    card.appendChild(audioWrapper);
-                }
-                // ----- FALLBACK: just an icon -----
-                else {
-                    const icon = document.createElement("div");
-                    icon.className = `media-icon ${mediaInfo.cssClass}`;
-                    icon.innerHTML = `<i class="fas ${mediaInfo.icon}"></i>`;
-                    card.appendChild(icon);
-                }
-                
-                // Name (renamable)
-                const name = document.createElement("div");
-                name.className = "media-name";
-                name.textContent = file.name;
-                name.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    makeMediaNameEditable(name, card);
-                });
-                
-                // Double click card to rename
-                card.addEventListener('dblclick', function(e) {
-                    if (e.target.closest('video') || e.target.closest('audio')) return;
-                    const nameEl = this.querySelector('.media-name');
-                    if (nameEl) {
-                        makeMediaNameEditable(nameEl, this);
-                    }
-                });
-                
-                const size = document.createElement("div");
-                size.className = "media-size";
-                size.textContent = formatFileSize(file.size);
-                
-                card.appendChild(name);
-                card.appendChild(size);
-                mediaGrid.appendChild(card);
-                attachContextMenu(card);
-            });
+            input.replaceWith(newDiv);
             performSearch(searchInput.value);
         }
 
-        // ----- ADD FOLDER with rename and drag capability -----
-        function createFolderCard() {
-            const folderCount = mediaGrid.querySelectorAll('.folder-card').length + 1;
-            const folderName = `Folder ${folderCount}`;
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+            else if (e.key === 'Escape') {
+                const newDiv = document.createElement('div');
+                newDiv.className = 'media-name';
+                newDiv.textContent = currentName;
+                newDiv.addEventListener('click', function(ev) {
+                    ev.stopPropagation();
+                    makeMediaNameEditable(newDiv, mediaCard);
+                });
+                input.replaceWith(newDiv);
+            }
+        });
+        input.addEventListener('blur', saveRename);
+    }
 
-            const card = document.createElement('div');
-            card.className = 'folder-card';
-            
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-folder';
-            
-            const nameSpan = document.createElement('span');
-            nameSpan.className = 'folder-name';
-            nameSpan.textContent = folderName;
-            
-            nameSpan.addEventListener('click', function(e) {
+    function makeFolderNameEditable(folderNameSpan, folderCard) {
+        const currentName = folderNameSpan.textContent;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'folder-name-input';
+        input.value = currentName;
+        folderNameSpan.replaceWith(input);
+        input.focus();
+        input.select();
+
+        function saveRename() {
+            const newName = input.value.trim() || currentName;
+            const newSpan = document.createElement('span');
+            newSpan.className = 'folder-name';
+            newSpan.textContent = newName;
+            newSpan.addEventListener('click', function(e) {
                 e.stopPropagation();
-                makeFolderNameEditable(nameSpan, card);
+                makeFolderNameEditable(newSpan, folderCard);
             });
-            
+            input.replaceWith(newSpan);
+            performSearch(searchInput.value);
+        }
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+            else if (e.key === 'Escape') {
+                const newSpan = document.createElement('span');
+                newSpan.className = 'folder-name';
+                newSpan.textContent = currentName;
+                newSpan.addEventListener('click', function(ev) {
+                    ev.stopPropagation();
+                    makeFolderNameEditable(newSpan, folderCard);
+                });
+                input.replaceWith(newSpan);
+            }
+        });
+        input.addEventListener('blur', saveRename);
+    }
+
+    // ---------- Drag ghosts ----------
+    function createFolderGhostElement(card) {
+        const ghost = document.createElement('div');
+        ghost.className = 'drag-ghost';
+        ghost.style.position = 'fixed';
+        ghost.style.pointerEvents = 'none';
+        ghost.style.zIndex = '9999';
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-folder';
+        const nameSpan = document.createElement('span');
+        const folderNameEl = card.querySelector('.folder-name');
+        nameSpan.textContent = folderNameEl ? folderNameEl.textContent : 'Folder';
+        ghost.appendChild(icon);
+        ghost.appendChild(nameSpan);
+        return ghost;
+    }
+
+    function createMediaGhostElement(card) {
+        const ghost = document.createElement('div');
+        ghost.className = 'drag-ghost media-ghost';
+        ghost.style.position = 'fixed';
+        ghost.style.pointerEvents = 'none';
+        ghost.style.zIndex = '9999';
+        const nameEl = card.querySelector('.media-name');
+        const nameText = nameEl ? nameEl.textContent : 'Media';
+        let iconClass = 'fa-file-video';
+        if (card.querySelector('.media-audio-wrapper')) iconClass = 'fa-music';
+        const icon = document.createElement('i');
+        icon.className = 'fas ' + iconClass;
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = nameText;
+        ghost.appendChild(icon);
+        ghost.appendChild(nameSpan);
+        return ghost;
+    }
+
+    function createGhostElement(card) {
+        if (card.classList.contains('folder-card')) return createFolderGhostElement(card);
+        return createMediaGhostElement(card);
+    }
+
+    function isInsideGrid(grid, clientX, clientY) {
+        const rect = grid.getBoundingClientRect();
+        return clientX >= rect.left && clientX <= rect.right &&
+               clientY >= rect.top && clientY <= rect.bottom;
+    }
+
+    // ---------- Drag lifecycle ----------
+    function initDrag(card, e) {
+        if (e.target.closest('.folder-name-input') || e.target.closest('.folder-name') ||
+            e.target.closest('.media-name-input') || e.target.closest('.media-name')) {
+            return;
+        }
+        if (e.target.closest('video') || e.target.closest('audio')) return;
+
+        const startX = e.clientX || e.touches?.[0]?.clientX || 0;
+        const startY = e.clientY || e.touches?.[0]?.clientY || 0;
+
+        dragData = {
+            card: card,
+            startX: startX,
+            startY: startY,
+            startLeft: parseFloat(card.style.left) || 0,
+            startTop: parseFloat(card.style.top) || 0,
+            isDragging: false
+        };
+
+        ghostElement = createGhostElement(card);
+        document.body.appendChild(ghostElement);
+        ghostElement.style.display = 'none';
+
+        card.classList.add('dragging');
+        card.style.zIndex = '1000';
+    }
+
+    function moveDrag(e) {
+        if (!dragData || !ghostElement) return;
+
+        const clientX = e.clientX || e.touches?.[0]?.clientX || 0;
+        const clientY = e.clientY || e.touches?.[0]?.clientY || 0;
+
+        const dx = clientX - dragData.startX;
+        const dy = clientY - dragData.startY;
+
+        if (!dragData.isDragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+            dragData.isDragging = true;
+            ghostElement.style.display = 'flex';
+            ghostElement.style.left = (clientX - 60) + 'px';
+            ghostElement.style.top = (clientY - 50) + 'px';
+        }
+
+        if (dragData.isDragging) {
+            ghostElement.style.left = (clientX - 60) + 'px';
+            ghostElement.style.top = (clientY - 50) + 'px';
+
+            const newLeft = dragData.startLeft + dx;
+            const newTop  = dragData.startTop + dy;
+
+            dragData.card.style.left = Math.max(0, newLeft) + 'px';
+            dragData.card.style.top  = Math.max(0, newTop) + 'px';
+
+            const cardH = dragData.card.offsetHeight;
+            if (newTop + cardH + GRID_PADDING > mediaGrid.clientHeight) {
+                growGridToFit(newTop + cardH);
+            }
+        }
+    }
+
+    function endDrag(e) {
+        if (!dragData) return;
+
+        const clientX = e.clientX || e.changedTouches?.[0]?.clientX || 0;
+        const clientY = e.clientY || e.changedTouches?.[0]?.clientY || 0;
+
+        if (dragData.isDragging) {
+            const card = dragData.card;
+            const inside = isInsideGrid(mediaGrid, clientX, clientY);
+
+            if (inside) {
+                // Clamp within grid horizontally
+                const gridW = mediaGrid.clientWidth;
+                const cardW = card.offsetWidth;
+                let left = parseFloat(card.style.left) || 0;
+                let top  = parseFloat(card.style.top)  || 0;
+
+                left = Math.max(0, Math.min(left, gridW - cardW));
+                top  = Math.max(0, top);
+
+                card.style.left = left + 'px';
+                card.style.top  = top  + 'px';
+
+                // **Push any overlapping cards out of the way**
+                pushOverlappingCards(card);
+
+                growGridToFit(top + card.offsetHeight);
+            } else {
+                // Dropped outside → snap back
+                card.style.left = dragData.startLeft + 'px';
+                card.style.top  = dragData.startTop  + 'px';
+            }
+        }
+
+        if (ghostElement) {
+            ghostElement.remove();
+            ghostElement = null;
+        }
+        if (dragData.card) {
+            dragData.card.classList.remove('dragging');
+            dragData.card.style.zIndex = '';
+        }
+        dragData = null;
+    }
+
+    // ---------- Render media files ----------
+    function renderMediaFiles(files) {
+        const mediaFiles = Array.from(files);
+        if (mediaFiles.length === 0) {
+            alert("Please select media files (videos or audio)");
+            return;
+        }
+
+        mediaFiles.forEach((file) => {
+            const card = document.createElement("div");
+            card.className = "media-card";
+
+            const mediaInfo = getMediaIcon(file.name);
+
+            if (mediaInfo.type === 'video') {
+                const videoWrapper = document.createElement("div");
+                videoWrapper.className = "media-video-wrapper";
+                const video = document.createElement("video");
+                video.src = URL.createObjectURL(file);
+                video.controls = true;
+                video.preload = "metadata";
+                video.muted = true;
+                videoWrapper.appendChild(video);
+                card.appendChild(videoWrapper);
+            } else if (mediaInfo.type === 'audio') {
+                const audioWrapper = document.createElement("div");
+                audioWrapper.className = "media-audio-wrapper";
+                const audioIcon = document.createElement("i");
+                audioIcon.className = "fas fa-music";
+                audioIcon.style.fontSize = "42px";
+                audioIcon.style.color = "#059669";
+                const audio = document.createElement("audio");
+                audio.src = URL.createObjectURL(file);
+                audio.controls = true;
+                audio.preload = "metadata";
+                audioWrapper.appendChild(audioIcon);
+                audioWrapper.appendChild(audio);
+                card.appendChild(audioWrapper);
+            } else {
+                const icon = document.createElement("div");
+                icon.className = `media-icon ${mediaInfo.cssClass}`;
+                icon.innerHTML = `<i class="fas ${mediaInfo.icon}"></i>`;
+                card.appendChild(icon);
+            }
+
+            const name = document.createElement("div");
+            name.className = "media-name";
+            name.textContent = file.name;
+            name.addEventListener('click', function(e) {
+                e.stopPropagation();
+                makeMediaNameEditable(name, card);
+            });
+
             card.addEventListener('dblclick', function(e) {
-                const nameEl = this.querySelector('.folder-name');
-                if (nameEl) {
-                    makeFolderNameEditable(nameEl, this);
-                }
+                if (e.target.closest('video') || e.target.closest('audio')) return;
+                const nameEl = this.querySelector('.media-name');
+                if (nameEl) makeMediaNameEditable(nameEl, this);
+            });
+
+            const size = document.createElement("div");
+            size.className = "media-size";
+            size.textContent = formatFileSize(file.size);
+
+            card.appendChild(name);
+            card.appendChild(size);
+
+            mediaGrid.appendChild(card);
+
+            requestAnimationFrame(() => {
+                const spot = findFreeSpot(card.offsetWidth, card.offsetHeight);
+                placeCard(card, spot.x, spot.y);
             });
 
             card.addEventListener('mousedown', function(e) {
@@ -1055,112 +1096,151 @@
                 initDrag(this, e);
             }, { passive: true });
 
-            card.appendChild(icon);
-            card.appendChild(nameSpan);
-            mediaGrid.appendChild(card);
             attachContextMenu(card);
-            performSearch(searchInput.value);
+        });
+
+        performSearch(searchInput.value);
+    }
+
+    // ---------- Add folder ----------
+    function createFolderCard() {
+        const folderCount = mediaGrid.querySelectorAll('.folder-card').length + 1;
+        const folderName = `Folder ${folderCount}`;
+
+        const card = document.createElement('div');
+        card.className = 'folder-card';
+
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-folder';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'folder-name';
+        nameSpan.textContent = folderName;
+
+        nameSpan.addEventListener('click', function(e) {
+            e.stopPropagation();
+            makeFolderNameEditable(nameSpan, card);
+        });
+
+        card.addEventListener('dblclick', function(e) {
+            const nameEl = this.querySelector('.folder-name');
+            if (nameEl) makeFolderNameEditable(nameEl, this);
+        });
+
+        card.appendChild(icon);
+        card.appendChild(nameSpan);
+        mediaGrid.appendChild(card);
+
+        requestAnimationFrame(() => {
+            const spot = findFreeSpot(card.offsetWidth || 125, card.offsetHeight || 100);
+            placeCard(card, spot.x, spot.y);
+        });
+
+        card.addEventListener('mousedown', function(e) {
+            initDrag(this, e);
+        });
+        card.addEventListener('touchstart', function(e) {
+            initDrag(this, e);
+        }, { passive: true });
+
+        attachContextMenu(card);
+        performSearch(searchInput.value);
+    }
+
+    // Global drag listeners
+    document.addEventListener('mousemove', moveDrag);
+    document.addEventListener('touchmove', moveDrag, { passive: true });
+    document.addEventListener('mouseup', endDrag);
+    document.addEventListener('touchend', endDrag);
+    document.addEventListener('touchcancel', endDrag);
+
+    // ---------- Search ----------
+    function performSearch(query) {
+        const cards = mediaGrid.querySelectorAll('.media-card, .folder-card');
+        const normalizedQuery = query.trim().toLowerCase();
+        let anyMatch = false;
+
+        cards.forEach(card => {
+            let nameEl = card.querySelector('.media-name') || card.querySelector('.folder-name');
+            if (nameEl && nameEl.innerHTML.includes('highlight-match')) {
+                nameEl.innerHTML = nameEl.textContent;
+            }
+            card.style.display = '';
+        });
+
+        if (normalizedQuery === '') {
+            noMatchMsg.classList.remove('show');
+            return;
         }
 
-        // Global drag event listeners
-        document.addEventListener('mousemove', moveDrag);
-        document.addEventListener('touchmove', moveDrag, { passive: true });
-        document.addEventListener('mouseup', endDrag);
-        document.addEventListener('touchend', endDrag);
-        document.addEventListener('touchcancel', endDrag);
-
-        // ----- SEARCH FUNCTIONALITY -----
-        function performSearch(query) {
-            const cards = mediaGrid.querySelectorAll('.media-card, .folder-card');
-            const normalizedQuery = query.trim().toLowerCase();
-            let anyMatch = false;
-
-                       cards.forEach(card => {
-                let nameEl = card.querySelector('.media-name') || card.querySelector('.folder-name');
-                if (nameEl) {
-                    if (nameEl.innerHTML.includes('highlight-match')) {
-                        nameEl.innerHTML = nameEl.textContent;
-                    }
+        cards.forEach(card => {
+            let nameEl = card.querySelector('.media-name') || card.querySelector('.folder-name');
+            if (!nameEl) return;
+            const fileName = nameEl.textContent.toLowerCase();
+            const match = fileName.includes(normalizedQuery);
+            if (match) {
+                anyMatch = true;
+                const originalText = nameEl.textContent;
+                const lowerText = originalText.toLowerCase();
+                const startIdx = lowerText.indexOf(normalizedQuery);
+                if (startIdx !== -1) {
+                    const before = originalText.substring(0, startIdx);
+                    const matchText = originalText.substring(startIdx, startIdx + normalizedQuery.length);
+                    const after = originalText.substring(startIdx + normalizedQuery.length);
+                    nameEl.innerHTML = `${before}<span class="highlight-match">${matchText}</span>${after}`;
                 }
                 card.style.display = '';
-            });
-
-            if (normalizedQuery === '') {
-                noMatchMsg.classList.remove('show');
-                return;
-            }
-
-            cards.forEach(card => {
-                let nameEl = card.querySelector('.media-name') || card.querySelector('.folder-name');
-                if (!nameEl) return;
-                const fileName = nameEl.textContent.toLowerCase();
-                const match = fileName.includes(normalizedQuery);
-                if (match) {
-                    anyMatch = true;
-                    const originalText = nameEl.textContent;
-                    const lowerText = originalText.toLowerCase();
-                    const startIdx = lowerText.indexOf(normalizedQuery);
-                    if (startIdx !== -1) {
-                        const before = originalText.substring(0, startIdx);
-                        const matchText = originalText.substring(startIdx, startIdx + normalizedQuery.length);
-                        const after = originalText.substring(startIdx + normalizedQuery.length);
-                        nameEl.innerHTML = `${before}<span class="highlight-match">${matchText}</span>${after}`;
-                    }
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-
-            if (!anyMatch && normalizedQuery !== '') {
-                noMatchMsg.classList.add('show');
             } else {
-                noMatchMsg.classList.remove('show');
+                card.style.display = 'none';
             }
+        });
+
+        if (!anyMatch && normalizedQuery !== '') {
+            noMatchMsg.classList.add('show');
+        } else {
+            noMatchMsg.classList.remove('show');
         }
+    }
 
-        // ----- event listeners -----
-        addBtn.addEventListener("click", function (e) {
-            e.stopPropagation();
-            fileInput.click();
-        });
-
-        fileInput.addEventListener("change", function (e) {
-            const files = e.target.files;
-            if (!files || files.length === 0) return;
-            renderMediaFiles(files);
-            fileInput.value = "";
-        });
-
-        mediaGrid.addEventListener("dragover", function (e) {
-            e.preventDefault();
-            this.style.backgroundColor = "#f0f4ff";
-        });
-        mediaGrid.addEventListener("dragleave", function (e) {
-            this.style.backgroundColor = "#f9fafb";
-        });
-        mediaGrid.addEventListener("drop", function (e) {
-            e.preventDefault();
-            this.style.backgroundColor = "#f9fafb";
-            const files = e.dataTransfer.files;
-            if (files && files.length > 0) {
-                renderMediaFiles(files);
-            }
-        });
-
-        addFolderBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            createFolderCard();
-        });
-
-        // Search input listener
-        searchInput.addEventListener('input', function(e) {
-            performSearch(e.target.value);
-        });
-
-        // Seed with a sample folder
-        setTimeout(() => { createFolderCard(); }, 100);
+    // ---------- Event listeners ----------
+    addBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        fileInput.click();
     });
-    </script>
-</body>
-</html>
+
+    fileInput.addEventListener("change", function (e) {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        renderMediaFiles(files);
+        fileInput.value = "";
+    });
+
+    mediaGrid.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        this.style.backgroundColor = "#f0f4ff";
+    });
+    mediaGrid.addEventListener("dragleave", function (e) {
+        this.style.backgroundColor = "#f9fafb";
+    });
+    mediaGrid.addEventListener("drop", function (e) {
+        e.preventDefault();
+        this.style.backgroundColor = "#f9fafb";
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+            renderMediaFiles(files);
+        }
+    });
+
+    addFolderBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        createFolderCard();
+    });
+
+    searchInput.addEventListener('input', function(e) {
+        performSearch(e.target.value);
+    });
+
+    // Seed with a sample folder
+    setTimeout(() => { createFolderCard(); }, 100);
+});
+</script>
