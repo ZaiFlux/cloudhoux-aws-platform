@@ -16,7 +16,7 @@ body{
     min-height: 100vh;
     background: #ffffff;
     font-family: Arial, Helvetica, sans-serif;
-    overflow: hidden;
+    overflow: hidden; /* Prevents whole page from scrolling */
 }
 
 /* ==========================
@@ -109,13 +109,10 @@ body{
     border-right: 1px solid #e5e7eb;
     background: white;
     overflow-y: auto;
+    z-index: 900;
 }
 
-/* Hide scrollbar for sidebar but keep functionality */
-.left_nav_bar::-webkit-scrollbar {
-    width: 0px;
-    background: transparent;
-}
+.left_nav_bar::-webkit-scrollbar { width: 0px; background: transparent; }
 
 .left_nav_bar a{
     display:block;
@@ -127,9 +124,7 @@ body{
     transition:.2s;
 }
 
-.left_nav_bar a:hover{
-    background:#f3f4f6;
-}
+.left_nav_bar a:hover{ background:#f3f4f6; }
 
 .add_file_btn {
     width: 100%;
@@ -144,13 +139,8 @@ body{
     text-align: center;
 }
 
-.add_file_btn:hover {
-    background-color: #2563eb;
-}
-
-.add_file_btn:active {
-    transform: scale(0.98);
-}
+.add_file_btn:hover { background-color: #2563eb; }
+.add_file_btn:active { transform: scale(0.98); }
 
 /* ==========================
    DASHBOARD LAYOUT
@@ -159,10 +149,10 @@ body{
 .dashboard_content{
     margin-left: 220px;
     margin-top: 70px;
-    padding: 30px 30px 30px 30px;
+    padding: 30px;
     display: grid;
     grid-template-columns: 1fr 280px;
-    gap: 0px;
+    gap: 0;
     height: calc(100vh - 70px);
     overflow: hidden;
 }
@@ -172,28 +162,15 @@ body{
     flex-direction: column;
     gap: 40px;
     overflow-y: auto;
-    padding-right: 2px;
+    padding-right: 20px;
     height: 100%;
 }
 
-/* Hide scrollbar for main content but keep functionality */
-.main_content::-webkit-scrollbar {
-    width: 0px;
-    background: transparent;
-}
-
-/* For Firefox */
-.main_content {
-    scrollbar-width: none;
-}
-
-/* For IE/Edge */
-.main_content {
-    -ms-overflow-style: none;
-}
+.main_content::-webkit-scrollbar { width: 0px; background: transparent; }
+.main_content { scrollbar-width: none; -ms-overflow-style: none; }
 
 /* ==========================
-   CARDS
+   SECTION CARDS (Recent, Favorites, All)
 ========================== */
 
 .all_files,
@@ -206,7 +183,7 @@ body{
 .favorites,
 .all_files {
     width:100%;
-    min-height: 400px;
+    min-height: 200px; /* reduced from 400px so empty sections don't leave huge gaps */
     padding:20px;
     border:1px solid #d9d9d9;
     border-radius:16px;
@@ -215,47 +192,32 @@ body{
 
 .recent_files h2,
 .favorites h2,
-.all_files h2
-{
+.all_files h2 {
     font-size:1.3rem;
     margin-bottom:15px;
 }
 
 /* ==========================
-   RIGHT PANEL (FIXED FULL HEIGHT - INDEPENDENT)
+   RIGHT PANEL (STICKY - LOCKED IN PLACE)
 ========================== */
 
 .right_panel{
-    position: fixed;
-    right: 0;
+    position: sticky;
     top: 0;
+    align-self: start;
     width: 280px;
-    height: 100vh;
+    max-height: 100%;
     border-left: 1px solid #e5e7eb;
     padding: 20px;
-    padding-top: 420px;
-    padding-left: 20px;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     overflow-y: auto;
     background: white;
 }
 
-/* Hide scrollbar for right panel but keep functionality */
-.right_panel::-webkit-scrollbar {
-    width: 0px;
-    background: transparent;
-}
-
-/* For Firefox */
-.right_panel {
-    scrollbar-width: none;
-}
-
-/* For IE/Edge */
-.right_panel {
-    -ms-overflow-style: none;
-}
+.right_panel::-webkit-scrollbar { width: 0px; background: transparent; }
+.right_panel { scrollbar-width: none; -ms-overflow-style: none; }
 
 .button_group{
     display: flex;
@@ -285,109 +247,134 @@ body{
     box-shadow:0 10px 20px rgba(37,99,235,.25);
 }
 
-/* Individual button hover colors */
-.category_btn.images:hover {
-    background: #2563eb;
-    color: white;
-}
-.category_btn.documents:hover {
-    background: #7c3aed;
-    color: white;
-}
-.category_btn.media_files:hover {
-    background: #dc2626;
-    color: white;
-}
-.category_btn.audio_files:hover {
-    background: #059669;
-    color: white;
-}
-.category_btn.safe_vault:hover {
-    background: #d97706;
-    color: white;
-}
+.category_btn.images:hover { background: #2563eb; color: white; }
+.category_btn.documents:hover { background: #7c3aed; color: white; }
+.category_btn.media_files:hover { background: #dc2626; color: white; }
+.category_btn.audio_files:hover { background: #059669; color: white; }
+.category_btn.safe_vault:hover { background: #d97706; color: white; }
 
-/* ==========================
-   FILE LIST
-========================== */
-
-#fileList{
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 20px;
+#fileList,
+#recentFileList,
+#favoritesFileList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
     margin-top: 20px;
-}
-
-.file_card{
-    padding: 16px;
-    border: 1px solid #d1d5db;
-    border-radius: 12px;
-    background: #f9fafb;
-    transition: 0.2s;
-}
-
-.file_card:hover{
-    border-color: #3b82f6;
-    transform: translateY(-2px);
-}
-
-.file_card h3{
-    font-size: 16px;
-    margin-bottom: 8px;
-    color: #111827;
-    word-break: break-word;
-}
-
-.file_card p{
-    font-size: 14px;
-    color: #6b7280;
+    align-content: flex-start;
+    align-items: flex-start;
 }
 
 /* ==========================
-   RENAME FUNCTIONALITY STYLES
+   FILE ITEM (THE ACTUAL CARD)
 ========================== */
 
-/* File name - make it clickable while keeping original look */
-.file-name {
+.file-item {
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: #f9fafb;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    transition: transform 0.2s, box-shadow 0.2s, background 0.2s, border-color 0.2s;
+    position: relative;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    width: 300px;        /* ← Fixed width */
+    flex: 0 0 300px;     /* ← Prevents growing/shrinking */
+    min-width: 0;
+}
+
+.file-item:active { cursor: grabbing; }
+
+.file-item:hover {
+    background: #f3f4f6;
+    border-color: #7c3aed;
+}
+
+.file-item.dragging {
+    opacity: 0.6;
+    transform: scale(0.95);
+    border-color: #7c3aed;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+    z-index: 1000;
+    cursor: grabbing;
+}
+
+.file-item.drag-over {
+    border-color: #7c3aed;
+    background: #f0f4ff;
+    transform: scale(1.02);
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.1);
+}
+
+.file-item i {
+    font-size: 16px;
+    color: #6b7280;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.file-item .file-name {
+    flex: 1;
+    font-size: 13px;
+    color: #374151;
     cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
-    color: #111827;
-    display: block;
-    margin-bottom: 8px;
-    word-break: break-word;
-    transition: color 0.2s;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: 0.2s;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
 }
 
-.file-name:hover {
-    color: #2563eb;
+.file-item .file-name:hover { background: #e5e7eb; }
+
+.file-item .file-size {
+    font-size: 11px;
+    color: #6b7280;
+    background: white;
+    padding: 1px 8px;
+    border-radius: 10px;
+    flex-shrink: 0;
 }
 
-/* Rename input - matches original file name style */
-.rename-input {
-    font-size: 16px;
-    font-weight: bold;
-    color: #111827;
+/* ==========================
+   RENAME INPUT
+========================== */
+
+.file-name-input {
     background: white;
     border: 2px solid #3b82f6;
+    padding: 1px 6px;
     border-radius: 4px;
-    padding: 2px 6px;
-    width: 100%;
-    margin-bottom: 8px;
+    font-size: 13px;
+    color: #1e293b;
     outline: none;
+    flex: 1;
     font-family: inherit;
+    font-weight: 500;
+    min-width: 60px;
 }
 
-.rename-input:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+.file-name-input:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
-/* No files message */
-.no-files {
-    text-align: center;
-    color: #9ca3af;
-    padding: 40px 20px;
-    font-size: 14px;
-    grid-column: 1 / -1;
+/* ==========================
+   DRAG PLACEHOLDER
+========================== */
+
+.drag-placeholder {
+    border: 2px dashed #7c3aed;
+    border-radius: 6px;
+    padding: 8px 12px;
+    background: #f8f4ff;
+    height: 42px;
+    opacity: 0.5;
+    transition: all 0.2s;
 }

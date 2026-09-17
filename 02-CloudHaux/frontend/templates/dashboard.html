@@ -7,285 +7,178 @@
     <link rel="stylesheet" href="../static/css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* Custom Context Menu Styles */
-        .custom-context-menu {
-            position: fixed;
-            z-index: 10000;
-            min-width: 180px;
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            padding: 6px;
-            display: none;
-        }
-        .custom-context-menu.open { display: block; }
-        .ccm-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 9px 12px;
-            border-radius: 7px;
-            font-size: 0.85rem;
-            color: #1f2937;
-            cursor: pointer;
-        }
-        .ccm-item i { width: 16px; text-align: center; color: #475569; }
-        .ccm-item:hover { background: #f1f5f9; }
-        .ccm-item.ccm-danger { color: #dc2626; }
-        .ccm-item.ccm-danger i { color: #dc2626; }
-        .ccm-item.ccm-danger:hover { background: #fee2e2; }
-        .ccm-separator { height: 1px; background: #eef0f3; margin: 5px 4px; }
+    /* =========================
+       FORCE FILE ITEM WIDTH (override everything)
+       ========================= */
+    #fileList .file-item,
+    #recentFileList .file-item,
+    #favoritesFileList .file-item {
+        width: 300px !important;
+        flex: 0 0 300px !important;
+        max-width: 300px !important;
+    }
 
-        /* File item styles */
-        .file-item {
-            cursor: grab;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            background: #f9fafb;
-            border-radius: 6px;
-            border: 1px solid #e5e7eb;
-            margin-bottom: 6px;
-            transition: transform 0.2s, box-shadow 0.2s, background 0.2s, border-color 0.2s;
-            position: relative;
-            touch-action: none;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        .file-item:active {
-            cursor: grabbing;
-        }
-        .file-item:hover {
-            background: #f3f4f6;
-            border-color: #7c3aed;
-        }
-        .file-item.dragging {
-            opacity: 0.6;
-            transform: scale(0.95);
-            border-color: #7c3aed;
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
-            z-index: 1000;
-            cursor: grabbing;
-        }
-        .file-item.drag-over {
-            border-color: #7c3aed;
-            background: #f0f4ff;
-            transform: scale(1.02);
-            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.1);
-        }
-        .file-item i {
-            font-size: 16px;
-            color: #6b7280;
-            width: 20px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-        .file-item .file-name {
-            flex: 1;
-            font-size: 13px;
-            color: #374151;
-            cursor: pointer;
-            padding: 2px 4px;
-            border-radius: 4px;
-            transition: 0.2s;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .file-item .file-name:hover {
-            background: #e5e7eb;
-        }
-        .file-item .file-size {
-            font-size: 11px;
-            color: #6b7280;
-            background: white;
-            padding: 1px 8px;
-            border-radius: 10px;
-            flex-shrink: 0;
-        }
-        .file-name-input {
-            background: white;
-            border: 2px solid #3b82f6;
-            padding: 1px 6px;
-            border-radius: 4px;
-            font-size: 13px;
-            color: #1e293b;
-            outline: none;
-            flex: 1;
-            font-family: inherit;
-            font-weight: 500;
-            min-width: 60px;
-        }
-        .file-name-input:focus {
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
+    #fileList,
+    #recentFileList,
+    #favoritesFileList {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+    }
 
-        /* Drag placeholder */
-        .drag-placeholder {
-            border: 2px dashed #7c3aed;
-            border-radius: 6px;
-            padding: 8px 12px;
-            margin-bottom: 6px;
-            background: #f8f4ff;
-            height: 42px;
-            opacity: 0.5;
-            transition: all 0.2s;
-        }
+    /* =========================
+       Custom Context Menu Styles
+       ========================= */
+    .custom-context-menu {
+        position: fixed;
+        z-index: 10000;
+        min-width: 180px;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        padding: 6px;
+        display: none;
+    }
+    .custom-context-menu.open { display: block; }
+    .ccm-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+        border-radius: 7px;
+        font-size: 0.85rem;
+        color: #1f2937;
+        cursor: pointer;
+    }
+    .ccm-item i { width: 16px; text-align: center; color: #475569; }
+    .ccm-item:hover { background: #f1f5f9; }
+    .ccm-item.ccm-danger { color: #dc2626; }
+    .ccm-item.ccm-danger i { color: #dc2626; }
+    .ccm-item.ccm-danger:hover { background: #fee2e2; }
+    .ccm-separator { height: 1px; background: #eef0f3; margin: 5px 4px; }
 
-        /* Compact sections */
-        #recentFileList, #favoritesFileList, #fileList {
-            max-height: 400px;
-            overflow-y: auto;
-            min-height: 60px;
-        }
+    /* search highlight */
+    .highlight-match {
+        background: #fef08a;
+        padding: 0 2px;
+        border-radius: 3px;
+        font-weight: 600;
+    }
+    .clear-search-btn {
+        background: transparent;
+        border: none;
+        color: #6b7280;
+        font-size: 0.75rem;
+        margin-left: 12px;
+        cursor: pointer;
+        padding: 2px 10px;
+        border-radius: 20px;
+        display: none;
+    }
+    .clear-search-btn:hover { background: #f1f5f9; }
+    .section-header { display: flex; align-items: center; }
 
-        /* search highlight */
-        .highlight-match {
-            background: #fef08a;
-            padding: 0 2px;
-            border-radius: 3px;
-            font-weight: 600;
-        }
-        .clear-search-btn {
-            background: transparent;
-            border: none;
-            color: #6b7280;
-            font-size: 0.75rem;
-            margin-left: 12px;
-            cursor: pointer;
-            padding: 2px 10px;
-            border-radius: 20px;
-            display: none;
-        }
-        .clear-search-btn:hover {
-            background: #f1f5f9;
-        }
-        .section-header {
-            display: flex;
-            align-items: center;
-        }
+    /* Upload status indicator */
+    .upload-status {
+        font-size: 12px;
+        color: #6b7280;
+        padding: 4px 12px;
+        background: #f3f4f6;
+        border-radius: 20px;
+        display: none;
+        margin-left: 12px;
+    }
+    .upload-status.active {
+        display: inline-block;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
 
-        /* Upload status indicator */
-        .upload-status {
-            font-size: 12px;
-            color: #6b7280;
-            padding: 4px 12px;
-            background: #f3f4f6;
-            border-radius: 20px;
-            display: none;
-            margin-left: 12px;
-        }
-        .upload-status.active {
-            display: inline-block;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
+    /* Drop zone highlight */
+    #fileList.drag-over-zone {
+        background: #f8f4ff;
+        border: 2px dashed #7c3aed;
+        border-radius: 8px;
+        padding: 4px;
+    }
 
-        /* Drop zone highlight */
-        #fileList.drag-over-zone {
-            background: #f8f4ff;
-            border: 2px dashed #7c3aed;
-            border-radius: 8px;
-            padding: 4px;
-        }
+    /* Toast notification */
+    .toast-notification {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: #1e293b;
+        color: white;
+        padding: 14px 24px;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+        font-size: 14px;
+        z-index: 99999;
+        transform: translateY(100px);
+        opacity: 0;
+        transition: transform 0.4s ease, opacity 0.4s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .toast-notification.show { transform: translateY(0); opacity: 1; }
+    .toast-notification .toast-icon { font-size: 18px; }
+    .toast-notification .toast-undo {
+        background: rgba(255,255,255,0.15);
+        border: none;
+        color: white;
+        padding: 4px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: 0.2s;
+    }
+    .toast-notification .toast-undo:hover { background: rgba(255,255,255,0.25); }
+    .toast-notification .toast-close {
+        background: none;
+        border: none;
+        color: rgba(255,255,255,0.6);
+        cursor: pointer;
+        font-size: 18px;
+        padding: 0 4px;
+    }
+    .toast-notification .toast-close:hover { color: white; }
 
-        /* Toast notification */
-        .toast-notification {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: #1e293b;
-            color: white;
-            padding: 14px 24px;
-            border-radius: 12px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-            font-size: 14px;
-            z-index: 99999;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: transform 0.4s ease, opacity 0.4s ease;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .toast-notification.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-        .toast-notification .toast-icon {
-            font-size: 18px;
-        }
-        .toast-notification .toast-undo {
-            background: rgba(255,255,255,0.15);
-            border: none;
-            color: white;
-            padding: 4px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: 0.2s;
-        }
-        .toast-notification .toast-undo:hover {
-            background: rgba(255,255,255,0.25);
-        }
-        .toast-notification .toast-close {
-            background: none;
-            border: none;
-            color: rgba(255,255,255,0.6);
-            cursor: pointer;
-            font-size: 18px;
-            padding: 0 4px;
-        }
-        .toast-notification .toast-close:hover {
-            color: white;
-        }
+    /* Trash count badge */
+    .trash-count {
+        background: #ef4444;
+        color: white;
+        border-radius: 50%;
+        padding: 1px 8px;
+        font-size: 11px;
+        margin-left: 6px;
+        display: inline-block;
+    }
+    .left_nav_bar a { position: relative; }
 
-        /* Trash count badge */
-        .trash-count {
-            background: #ef4444;
-            color: white;
-            border-radius: 50%;
-            padding: 1px 8px;
-            font-size: 11px;
-            margin-left: 6px;
-            display: inline-block;
-        }
-
-        .left_nav_bar a {
-            position: relative;
-        }
-
-        /* No matches message */
-        .no-matches-message {
-            display: none;
-            color: #6b7280;
-            font-size: 0.9rem;
-            padding: 20px;
-            text-align: center;
-            background: #f9fafb;
-            border-radius: 8px;
-            border: 1px dashed #d1d5db;
-            margin: 10px 0;
-        }
-        .no-matches-message i {
-            display: block;
-            font-size: 28px;
-            color: #9aa8b9;
-            margin-bottom: 8px;
-        }
-        .no-matches-message.show {
-            display: block;
-        }
-        
-        /* Search results wrapper */
-        .search-results-container {
-            position: relative;
-        }
+    /* No matches message */
+    .no-matches-message {
+        display: none;
+        color: #6b7280;
+        font-size: 0.9rem;
+        padding: 20px;
+        text-align: center;
+        background: #f9fafb;
+        border-radius: 8px;
+        border: 1px dashed #d1d5db;
+        margin: 10px 0;
+    }
+    .no-matches-message i {
+        display: block;
+        font-size: 28px;
+        color: #9aa8b9;
+        margin-bottom: 8px;
+    }
+    .no-matches-message.show { display: block; }
     </style>
 </head>
 <body>
@@ -315,7 +208,6 @@
 
     <main class="dashboard_content">
         <div class="main_content">
-            <!-- No matches message that appears under the search box -->
             <div class="no-matches-message" id="noMatchesMessage">
                 <i class="fas fa-search"></i>
                 No matches found for "<span id="searchQueryDisplay"></span>"
@@ -360,7 +252,6 @@
         </aside>
     </main>
 
-    <!-- Custom Context Menu -->
     <div class="custom-context-menu" id="customContextMenu">
         <div class="ccm-item" id="ccmOpen"><i class="fas fa-eye"></i> Open</div>
         <div class="ccm-item" id="ccmShare"><i class="fas fa-share-alt"></i> Share</div>
@@ -370,7 +261,6 @@
         <div class="ccm-item ccm-danger" id="ccmDelete"><i class="fas fa-trash"></i> Move to Trash</div>
     </div>
 
-    <!-- Toast Notification -->
     <div class="toast-notification" id="toastNotification">
         <span class="toast-icon">🗑️</span>
         <span id="toastMessage">File moved to trash</span>
@@ -393,16 +283,14 @@
         const noMatchesMessage = document.getElementById("noMatchesMessage");
         const searchQueryDisplay = document.getElementById("searchQueryDisplay");
 
-        // Use a shared global variable for trash (no localStorage)
         if (!window.trashFiles) {
             window.trashFiles = [];
         }
-        
+
         let allFiles = [];
         let favoriteFiles = [];
         let recentFiles = [];
-        
-        // Store for undo functionality
+
         let lastDeletedFile = null;
         let lastDeletedElement = null;
         let toastTimeout = null;
@@ -411,24 +299,40 @@
         let contextTarget = null;
         let contextTargetFile = null;
 
-        // Toast elements
         const toast = document.getElementById('toastNotification');
         const toastMessage = document.getElementById('toastMessage');
         const toastUndoBtn = document.getElementById('toastUndoBtn');
         const toastCloseBtn = document.getElementById('toastCloseBtn');
 
+        // ---------- FORCE CARD SIZE (JS inline !important, cannot be overridden) ----------
+        function forceCardSize() {
+            ['fileList', 'recentFileList', 'favoritesFileList'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.style.setProperty('display', 'flex', 'important');
+                el.style.setProperty('flex-wrap', 'wrap', 'important');
+                el.style.setProperty('gap', '10px', 'important');
+                el.querySelectorAll('.file-item').forEach(function(card) {
+                    card.style.setProperty('width', '300px', 'important');
+                    card.style.setProperty('max-width', '300px', 'important');
+                    card.style.setProperty('min-width', '0', 'important');
+                    card.style.setProperty('flex', '0 0 300px', 'important');
+                });
+            });
+        }
+
+        // Run after every render
+        const _origRenderAllSections = null; // placeholder
+        setInterval(forceCardSize, 300); // simple watchdog — safe and cheap
+
         // ---------- Toast functions ----------
         function showToast(message, fileData, element) {
             toastMessage.textContent = message;
             toast.classList.add('show');
-            
             lastDeletedFile = fileData;
             lastDeletedElement = element;
-            
             clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                hideToast();
-            }, 5000);
+            toastTimeout = setTimeout(() => { hideToast(); }, 5000);
         }
 
         function hideToast() {
@@ -439,7 +343,7 @@
         }
 
         toastCloseBtn.addEventListener('click', hideToast);
-        
+
         toastUndoBtn.addEventListener('click', function() {
             if (lastDeletedFile && lastDeletedElement) {
                 restoreFromTrash(lastDeletedFile, lastDeletedElement);
@@ -449,29 +353,19 @@
 
         // ---------- Trash functions ----------
         function moveToTrash(fileData, element) {
-            const trashItem = {
-                ...fileData,
-                deletedAt: new Date().toISOString()
-            };
+            const trashItem = { ...fileData, deletedAt: new Date().toISOString() };
             window.trashFiles.push(trashItem);
-            
             const fileId = fileData.id;
-            
+
             const index = allFiles.findIndex(f => f.id === fileId);
-            if (index !== -1) {
-                allFiles.splice(index, 1);
-            }
-            
+            if (index !== -1) allFiles.splice(index, 1);
+
             const favIndex = favoriteFiles.findIndex(f => f.id === fileId);
-            if (favIndex !== -1) {
-                favoriteFiles.splice(favIndex, 1);
-            }
-            
+            if (favIndex !== -1) favoriteFiles.splice(favIndex, 1);
+
             const recIndex = recentFiles.findIndex(f => f.id === fileId);
-            if (recIndex !== -1) {
-                recentFiles.splice(recIndex, 1);
-            }
-            
+            if (recIndex !== -1) recentFiles.splice(recIndex, 1);
+
             if (element) {
                 element.style.transition = '0.3s';
                 element.style.transform = 'scale(0.8)';
@@ -483,17 +377,15 @@
                     else renderAllSections('');
                 }, 300);
             }
-            
+
             showToast(`"${fileData.name}" moved to trash`, fileData, element);
             updateTrashCount();
         }
 
         function restoreFromTrash(fileData, element) {
             const trashIndex = window.trashFiles.findIndex(f => f.id === fileData.id);
-            if (trashIndex !== -1) {
-                window.trashFiles.splice(trashIndex, 1);
-            }
-            
+            if (trashIndex !== -1) window.trashFiles.splice(trashIndex, 1);
+
             const restoredFile = {
                 id: fileData.id || Date.now() + Math.random().toString(36).substr(2, 5),
                 name: fileData.name,
@@ -502,16 +394,14 @@
                 lastModified: fileData.lastModified || Date.now(),
                 webkitRelativePath: fileData.webkitRelativePath || fileData.name
             };
-            
+
             const exists = allFiles.some(f => f.id === restoredFile.id);
-            if (!exists) {
-                allFiles.push(restoredFile);
-            }
-            
+            if (!exists) allFiles.push(restoredFile);
+
             const q = searchInput.value.trim();
             if (q) performSearch(q);
             else renderAllSections('');
-            
+
             updateTrashCount();
         }
 
@@ -521,7 +411,6 @@
                 const count = window.trashFiles.length;
                 const existingBadge = trashLink.querySelector('.trash-count');
                 if (existingBadge) existingBadge.remove();
-                
                 if (count > 0) {
                     const badge = document.createElement('span');
                     badge.className = 'trash-count';
@@ -539,22 +428,19 @@
 
         function makeFileDraggable(element) {
             element.draggable = true;
-            
+
             element.addEventListener('dragstart', function(e) {
                 draggedItem = this;
                 dragStartIndex = Array.from(this.parentNode.children).indexOf(this);
                 this.classList.add('dragging');
-                
+
                 const fileId = this.dataset.fileId;
                 const fileData = allFiles.find(f => f.id === fileId);
                 if (fileData) {
-                    e.dataTransfer.setData('text/plain', JSON.stringify({
-                        id: fileId,
-                        index: dragStartIndex
-                    }));
+                    e.dataTransfer.setData('text/plain', JSON.stringify({ id: fileId, index: dragStartIndex }));
                 }
                 e.dataTransfer.effectAllowed = 'move';
-                
+
                 const ghost = this.cloneNode(true);
                 ghost.style.opacity = '0.5';
                 ghost.style.position = 'absolute';
@@ -566,15 +452,10 @@
 
             element.addEventListener('dragend', function(e) {
                 this.classList.remove('dragging');
-                
-                document.querySelectorAll('.file-item.drag-over').forEach(el => {
-                    el.classList.remove('drag-over');
-                });
+                document.querySelectorAll('.file-item.drag-over').forEach(el => el.classList.remove('drag-over'));
                 fileList.classList.remove('drag-over-zone');
-                
                 const placeholder = document.querySelector('.drag-placeholder');
                 if (placeholder) placeholder.remove();
-                
                 draggedItem = null;
                 dragOverItem = null;
                 dragStartIndex = -1;
@@ -584,16 +465,10 @@
             element.addEventListener('dragover', function(e) {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = 'move';
-                
                 if (this === draggedItem) return;
-                
-                document.querySelectorAll('.file-item.drag-over').forEach(el => {
-                    el.classList.remove('drag-over');
-                });
-                
+                document.querySelectorAll('.file-item.drag-over').forEach(el => el.classList.remove('drag-over'));
                 this.classList.add('drag-over');
                 dragOverItem = this;
-                
                 const placeholder = document.querySelector('.drag-placeholder');
                 if (!placeholder) {
                     const ph = document.createElement('div');
@@ -608,41 +483,35 @@
                 if (!this.contains(e.relatedTarget)) {
                     this.classList.remove('drag-over');
                     const placeholder = document.querySelector('.drag-placeholder');
-                    if (placeholder && placeholder.parentNode) {
-                        placeholder.remove();
-                    }
+                    if (placeholder && placeholder.parentNode) placeholder.remove();
                 }
             });
 
             element.addEventListener('drop', function(e) {
                 e.preventDefault();
                 this.classList.remove('drag-over');
-                
                 const placeholder = document.querySelector('.drag-placeholder');
                 if (placeholder) placeholder.remove();
-                
+
                 if (draggedItem && draggedItem !== this) {
                     dragEndIndex = Array.from(this.parentNode.children).indexOf(this);
-                    
                     const fileId = draggedItem.dataset.fileId;
                     const fileData = allFiles.find(f => f.id === fileId);
-                    
+
                     if (fileData) {
                         const currentIndex = allFiles.findIndex(f => f.id === fileId);
                         const targetId = this.dataset.fileId;
                         const targetIndex = allFiles.findIndex(f => f.id === targetId);
-                        
+
                         if (currentIndex !== -1 && targetIndex !== -1 && currentIndex !== targetIndex) {
                             const [movedItem] = allFiles.splice(currentIndex, 1);
                             allFiles.splice(targetIndex, 0, movedItem);
-                            
                             const q = searchInput.value.trim();
                             if (q) performSearch(q);
                             else renderAllSections('');
                         }
                     }
                 }
-                
                 dragEndIndex = -1;
             });
         }
@@ -741,7 +610,7 @@
             }
             closeContextMenu();
         });
-        
+
         document.getElementById('ccmDelete').addEventListener('click', function(e) {
             e.stopPropagation();
             if (contextTargetFile && contextTargetFile.id) {
@@ -838,7 +707,7 @@
         function renderAllFiles(highlight = '') {
             fileList.innerHTML = '';
             if (allFiles.length === 0) {
-                fileList.innerHTML = '<div style="color: #9aa8b9; padding: 1rem; text-align: center; font-size: 0.9rem;">Drop files here or click "+ Add Files"</div>';
+                fileList.innerHTML = '<div style="color: #9aa8b9; padding: 1rem; text-align: center; font-size: 0.9rem; width: 100%;">Drop files here or click "+ Add Files"</div>';
                 return;
             }
             const fragment = document.createDocumentFragment();
@@ -851,7 +720,7 @@
         function renderFavorites(highlight = '') {
             favoritesFileList.innerHTML = '';
             if (favoriteFiles.length === 0) {
-                favoritesFileList.innerHTML = '<div style="color: #9aa8b9; padding: 0.5rem 0; font-size: 0.85rem;">No favorites yet.</div>';
+                favoritesFileList.innerHTML = '<div style="color: #9aa8b9; padding: 0.5rem 0; font-size: 0.85rem; width: 100%;">No favorites yet.</div>';
                 return;
             }
             const fragment = document.createDocumentFragment();
@@ -867,7 +736,7 @@
             recentFileList.innerHTML = '';
             const recent = recentFiles.slice(0, 5);
             if (recent.length === 0) {
-                recentFileList.innerHTML = '<div style="color: #9aa8b9; padding: 0.5rem 0; font-size: 0.85rem;">No recent files.</div>';
+                recentFileList.innerHTML = '<div style="color: #9aa8b9; padding: 0.5rem 0; font-size: 0.85rem; width: 100%;">No recent files.</div>';
                 return;
             }
             const fragment = document.createDocumentFragment();
@@ -879,7 +748,6 @@
             recentFileList.appendChild(fragment);
         }
 
-        // ---------- Check if any files match the search ----------
         function hasSearchMatches(query) {
             if (!query || query.trim() === '') return true;
             const q = query.toLowerCase().trim();
@@ -891,8 +759,8 @@
             renderRecent(highlight);
             renderFavorites(highlight);
             updateTrashCount();
-            
-            // Show/hide "no matches" message
+            forceCardSize();
+
             const q = searchInput.value.trim();
             if (q !== '') {
                 const hasMatches = hasSearchMatches(q);
@@ -907,7 +775,6 @@
             }
         }
 
-        // ---------- search ----------
         function performSearch(query) {
             const q = query.trim();
             if (q === '') {
@@ -931,23 +798,23 @@
             searchInput.focus();
         });
 
-                // ---------- file processing ----------
+        // ---------- file processing ----------
         function processFiles(files) {
             const fileArray = Array.from(files);
             const totalFiles = fileArray.length;
-            
+
             if (totalFiles === 0) return;
-            
+
             uploadStatus.textContent = `Uploading ${totalFiles} files...`;
             uploadStatus.style.display = 'inline-block';
             uploadStatus.classList.add('active');
-            
+
             const CHUNK_SIZE = 10;
             let processedCount = 0;
-            
+
             function processChunk(startIndex) {
                 const endIndex = Math.min(startIndex + CHUNK_SIZE, totalFiles);
-                
+
                 for (let i = startIndex; i < endIndex; i++) {
                     const file = fileArray[i];
                     const fileData = {
@@ -963,13 +830,13 @@
                     if (recentFiles.length > 20) recentFiles.pop();
                     processedCount++;
                 }
-                
+
                 uploadStatus.textContent = `Uploading ${processedCount}/${totalFiles}...`;
-                
+
                 const q = searchInput.value.trim();
                 if (q) performSearch(q);
                 else renderAllSections('');
-                
+
                 if (endIndex < totalFiles) {
                     requestAnimationFrame(() => {
                         setTimeout(() => processChunk(endIndex), 50);
@@ -988,7 +855,7 @@
                     else renderAllSections('');
                 }
             }
-            
+
             processChunk(0);
         }
 
@@ -1002,48 +869,41 @@
         fileInput.addEventListener("change", function(e) {
             const files = e.target.files;
             if (!files || files.length === 0) return;
-            
+
             uploadStatus.style.display = 'inline-block';
             uploadStatus.textContent = 'Preparing...';
             uploadStatus.classList.add('active');
-            
+
             setTimeout(() => {
                 processFiles(files);
                 fileInput.value = "";
             }, 100);
         });
 
-        // FILE UPLOAD DRAG AND DROP
         fileList.addEventListener("dragover", function(e) {
             e.preventDefault();
             e.stopPropagation();
-            if (!draggedItem) {
-                this.classList.add('drag-over-zone');
-            }
+            if (!draggedItem) this.classList.add('drag-over-zone');
         });
 
         fileList.addEventListener("dragleave", function(e) {
             e.preventDefault();
             e.stopPropagation();
-            if (!this.contains(e.relatedTarget)) {
-                this.classList.remove('drag-over-zone');
-            }
+            if (!this.contains(e.relatedTarget)) this.classList.remove('drag-over-zone');
         });
 
         fileList.addEventListener("drop", function(e) {
             e.preventDefault();
             e.stopPropagation();
             this.classList.remove('drag-over-zone');
-            
+
             if (!draggedItem) {
                 const files = e.dataTransfer.files;
                 if (files && files.length > 0) {
                     uploadStatus.style.display = 'inline-block';
                     uploadStatus.textContent = 'Preparing...';
                     uploadStatus.classList.add('active');
-                    setTimeout(() => {
-                        processFiles(files);
-                    }, 100);
+                    setTimeout(() => { processFiles(files); }, 100);
                 }
             }
         });
@@ -1070,12 +930,9 @@
         clearSearchBtn.style.display = 'none';
         uploadStatus.style.display = 'none';
         updateTrashCount();
+        forceCardSize();
 
         console.log('✅ Dashboard loaded with drag-and-drop reordering!');
-        console.log('📁 Drag files to reorder them. Drag outside to cancel.');
-        console.log('🗑️ Deleted files go to trash. Use Undo to restore.');
-        console.log(`📊 ${window.trashFiles.length} files in trash`);
-        
     });
     </script>
 </body>
