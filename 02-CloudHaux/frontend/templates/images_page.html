@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="../static/css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* ----- IMAGES PAGE SPECIFIC STYLES ----- */
         .images_viewer {
             width: 100%;
             min-height: 400px;
@@ -36,7 +35,6 @@
             margin: 0;
         }
 
-        /* ADD FOLDER BUTTON (icon only) */
         .add-folder-btn {
             background: transparent;
             border: none;
@@ -55,34 +53,13 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.03);
         }
 
-        .add-folder-btn i {
-            font-size: 1.6rem;
-            color: #334155;
-        }
+        .add-folder-btn i { font-size: 1.6rem; color: #334155; }
+        .add-folder-btn:hover { background: #e2e8f0; transform: scale(1.04); color: #0f172a; }
+        .add-folder-btn:active { transform: scale(0.94); }
 
-        .add-folder-btn:hover {
-            background: #e2e8f0;
-            transform: scale(1.04);
-            color: #0f172a;
-        }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header-actions { display: flex; align-items: center; gap: 8px; }
 
-        .add-folder-btn:active {
-            transform: scale(0.94);
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* ===== FIXED GRID - ITEMS START FROM TOP-LEFT ===== */
         .images_grid {
             flex: 1;
             display: flex;
@@ -101,7 +78,7 @@
             overflow-y: auto;
         }
 
-        /* ===== FIXED IMAGE CARD ===== */
+        /* ===== IMAGE CARD ===== */
         .image-card {
             width: 140px;
             border-radius: 12px;
@@ -110,17 +87,21 @@
             border: 1px solid #e2e8f0;
             background: white;
             transition: 0.2s;
-            cursor: default;
+            cursor: grab;
             display: flex;
             flex-direction: column;
             align-self: flex-start;
             flex-shrink: 0;
+            user-select: none;
+            touch-action: none;
         }
 
         .image-card:hover {
             transform: scale(1.02);
             box-shadow: 0 6px 14px rgba(0,0,0,0.08);
         }
+
+        .image-card.dragging { opacity: 0.35; cursor: grabbing; }
 
         .image-card .image-wrapper {
             width: 100%;
@@ -137,6 +118,9 @@
             height: 100%;
             object-fit: cover;
             display: block;
+            -webkit-user-drag: none;
+            user-select: none;
+            pointer-events: none;
         }
 
         .image-card .image-name {
@@ -156,11 +140,8 @@
             transition: 0.2s;
         }
 
-        .image-card .image-name:hover {
-            background: #eef2f6;
-        }
+        .image-card .image-name:hover { background: #eef2f6; }
 
-        /* Input for renaming image */
         .image-name-input {
             background: white;
             border: 2px solid #3b82f6;
@@ -177,11 +158,9 @@
             box-sizing: border-box;
         }
 
-        .image-name-input:focus {
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
+        .image-name-input:focus { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
 
-        /* ===== FIXED FOLDER CARD ===== */
+        /* ===== FOLDER CARD ===== */
         .folder-card {
             width: 125px;
             height: 100px;
@@ -207,18 +186,9 @@
         }
 
         .folder-card.dragging {
-            opacity: 0.8;
-            transform: scale(1.05);
-            z-index: 1000;
+            opacity: 0.35;
             cursor: grabbing;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
             border-color: #3b82f6;
-        }
-
-        .folder-card.drag-over {
-            border-color: #3b82f6;
-            background: #dbeafe;
-            transform: scale(1.03);
         }
 
         .folder-card i {
@@ -228,7 +198,6 @@
             pointer-events: none;
         }
 
-        /* Folder name styling */
         .folder-name {
             background: #dce3ec;
             padding: 2px 14px;
@@ -245,12 +214,8 @@
             pointer-events: auto;
         }
 
-        .folder-name:hover {
-            background: #c8d2e0;
-            transform: scale(1.05);
-        }
+        .folder-name:hover { background: #c8d2e0; transform: scale(1.05); }
 
-        /* Input for renaming folder */
         .folder-name-input {
             background: white;
             border: 2px solid #3b82f6;
@@ -265,16 +230,10 @@
             font-weight: 500;
         }
 
-        .folder-name-input:focus {
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
+        .folder-name-input:focus { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+        .folder-card:hover { background: #e2e8f0; border-color: #94a3b8; }
 
-        .folder-card:hover {
-            background: #e2e8f0;
-            border-color: #94a3b8;
-        }
-
-        /* Drag ghost element */
+        /* ===== DRAG GHOST ===== */
         .drag-ghost {
             position: fixed;
             pointer-events: none;
@@ -292,11 +251,7 @@
             gap: 4px;
         }
 
-        .drag-ghost i {
-            font-size: 2.8rem;
-            color: #475569;
-        }
-
+        .drag-ghost i { font-size: 2.8rem; color: #475569; }
         .drag-ghost span {
             background: #dce3ec;
             padding: 2px 14px;
@@ -305,72 +260,40 @@
             color: #1e293b;
         }
 
-        /* Responsive */
+        /* ===== INSERTION INDICATOR ===== */
+        .insert-indicator {
+            position: absolute;
+            width: 4px;
+            background: #3b82f6;
+            border-radius: 2px;
+            pointer-events: none;
+            z-index: 100;
+            transition: left 0.06s ease, top 0.06s ease, height 0.06s ease;
+            display: none;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+        }
+        .insert-indicator.show { display: block; }
+
         @media (max-width: 768px) {
-            .images_grid {
-                min-height: 300px;
-                padding: 16px;
-                gap: 15px;
-            }
-            .image-card {
-                width: 100px;
-            }
-            .image-card .image-wrapper {
-                height: 100px;
-            }
-            .image-card .image-name {
-                font-size: 10px;
-                padding: 4px 6px;
-                min-height: 28px;
-            }
-            .folder-card {
-                width: 100px;
-                height: 100px;
-            }
-            .add-folder-btn {
-                width: 38px;
-                height: 38px;
-                font-size: 1.4rem;
-            }
-            .add-folder-btn i {
-                font-size: 1.3rem;
-            }
+            .images_grid { min-height: 300px; padding: 16px; gap: 15px; }
+            .image-card { width: 100px; }
+            .image-card .image-wrapper { height: 100px; }
+            .image-card .image-name { font-size: 10px; padding: 4px 6px; min-height: 28px; }
+            .folder-card { width: 100px; height: 100px; }
+            .add-folder-btn { width: 38px; height: 38px; font-size: 1.4rem; }
+            .add-folder-btn i { font-size: 1.3rem; }
         }
 
         @media (max-width: 480px) {
-            .images_grid {
-                min-height: 200px;
-                gap: 12px;
-                padding: 12px;
-            }
-            .images_header h2 {
-                font-size: 1rem;
-            }
-            .image-card {
-                width: 80px;
-            }
-            .image-card .image-wrapper {
-                height: 80px;
-            }
-            .image-card .image-name {
-                font-size: 9px;
-                padding: 3px 4px;
-                min-height: 24px;
-            }
-            .folder-card {
-                width: 80px;
-                height: 80px;
-            }
-            .folder-card i {
-                font-size: 2rem;
-            }
-            .add-folder-btn {
-                width: 34px;
-                height: 34px;
-            }
-            .add-folder-btn i {
-                font-size: 1.1rem;
-            }
+            .images_grid { min-height: 200px; gap: 12px; padding: 12px; }
+            .images_header h2 { font-size: 1rem; }
+            .image-card { width: 80px; }
+            .image-card .image-wrapper { height: 80px; }
+            .image-card .image-name { font-size: 9px; padding: 3px 4px; min-height: 24px; }
+            .folder-card { width: 80px; height: 80px; }
+            .folder-card i { font-size: 2rem; }
+            .add-folder-btn { width: 34px; height: 34px; }
+            .add-folder-btn i { font-size: 1.1rem; }
         }
 
         .custom-context-menu {
@@ -402,7 +325,6 @@
         .ccm-item.ccm-danger:hover { background: #fee2e2; }
         .ccm-separator { height: 1px; background: #eef0f3; margin: 5px 4px; }
 
-        /* search highlight */
         .highlight-match {
             background-color: yellow !important;
             color: #000 !important;
@@ -426,13 +348,10 @@
             z-index: 50;
             pointer-events: none;
         }
-        .no-match-message.show {
-            display: block;
-        }
+        .no-match-message.show { display: block; }
     </style>
 </head>
 <body>
-    <!-- ===== TOPBAR ===== -->
     <header class="topbar">
         <div class="logo">CloudHaux</div>
         <div class="search-container">
@@ -446,7 +365,6 @@
         </div>
     </header>
 
-    <!-- ===== LEFT NAV ===== -->
     <nav class="left_nav_bar">
         <button type="button" class="add_file_btn" id="addFileBtn">+ Add Files</button>
         <a href="#all_files">All Files</a>
@@ -455,14 +373,11 @@
         <a href="#trash">Trash</a>
     </nav>
 
-    <!-- ===== MAIN CONTENT ===== -->
     <main class="dashboard_content">
         <div class="main_content">
             <section class="images_viewer">
                 <div class="images_header">
-                    <div class="header-left">
-                        <h2>Images</h2>
-                    </div>
+                    <div class="header-left"><h2>Images</h2></div>
                     <div class="header-actions">
                         <button class="add-folder-btn" id="addFolderBtn" title="Create new folder">
                             <i class="fas fa-folder-plus"></i>
@@ -470,13 +385,11 @@
                     </div>
                 </div>
                 <div class="images_grid" id="imageGrid">
-                    <!-- no-match message -->
                     <div class="no-match-message" id="noMatchMessage">No file match</div>
                 </div>
             </section>
         </div>
 
-        <!-- ===== RIGHT PANEL ===== -->
         <aside class="right_panel">
             <div class="button_group">
                 <button class="category_btn images" onclick="window.location.href='images_page.html'">
@@ -506,6 +419,7 @@
         <div class="ccm-separator"></div>
         <div class="ccm-item ccm-danger" id="ccmDelete"><i class="fas fa-trash"></i> Delete</div>
     </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     "use strict";
@@ -524,6 +438,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let dragData = null;
     let ghostElement = null;
+    let indicatorEl = null;
 
     const contextMenu = document.getElementById('customContextMenu');
     let contextTarget = null;
@@ -551,7 +466,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // DELETE action for images and folders
     ccmDelete.addEventListener('click', function(e) {
         e.stopPropagation();
         if (contextTarget) {
@@ -578,10 +492,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Escape') closeContextMenu();
     });
 
-    // ----- Rename image function -----
+    // ----- Rename image -----
     function makeImageNameEditable(nameSpan, imageCard) {
         const currentName = nameSpan.textContent;
-
         const input = document.createElement('input');
         input.type = 'text';
         input.className = 'image-name-input';
@@ -603,36 +516,29 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             input.replaceWith(newSpan);
-            // Update dataset for search
             imageCard.dataset.filename = newName;
             performSearch(searchInput.value);
         }
 
         input.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                input.blur();
-            } else if (e.key === 'Escape') {
+            if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+            else if (e.key === 'Escape') {
                 const newSpan = document.createElement('div');
                 newSpan.className = 'image-name';
                 newSpan.textContent = currentName;
-
                 newSpan.addEventListener('click', function(e) {
                     e.stopPropagation();
                     makeImageNameEditable(newSpan, imageCard);
                 });
-
                 input.replaceWith(newSpan);
             }
         });
-
         input.addEventListener('blur', saveRename);
     }
 
-    // ----- Rename folder function -----
+    // ----- Rename folder -----
     function makeFolderNameEditable(folderNameSpan, folderCard) {
         const currentName = folderNameSpan.textContent;
-
         const input = document.createElement('input');
         input.type = 'text';
         input.className = 'folder-name-input';
@@ -647,38 +553,31 @@ document.addEventListener('DOMContentLoaded', function() {
             const newSpan = document.createElement('span');
             newSpan.className = 'folder-name';
             newSpan.textContent = newName;
-
             newSpan.addEventListener('click', function(e) {
                 e.stopPropagation();
                 makeFolderNameEditable(newSpan, folderCard);
             });
-
             input.replaceWith(newSpan);
             performSearch(searchInput.value);
         }
 
         input.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                input.blur();
-            } else if (e.key === 'Escape') {
+            if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+            else if (e.key === 'Escape') {
                 const newSpan = document.createElement('span');
                 newSpan.className = 'folder-name';
                 newSpan.textContent = currentName;
-
                 newSpan.addEventListener('click', function(e) {
                     e.stopPropagation();
                     makeFolderNameEditable(newSpan, folderCard);
                 });
-
                 input.replaceWith(newSpan);
             }
         });
-
         input.addEventListener('blur', saveRename);
     }
 
-    // ----- render images (from FileList) with filename below -----
+    // ----- render images -----
     function renderImages(files) {
         const imageFiles = Array.from(files).filter((file) =>
             file.type.startsWith("image/")
@@ -711,13 +610,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 nameLabel.className = "image-name";
                 nameLabel.textContent = file.name;
 
-                // Click on name to rename
                 nameLabel.addEventListener('click', function(e) {
                     e.stopPropagation();
                     makeImageNameEditable(nameLabel, card);
                 });
 
-                // Double click on card to rename
                 card.addEventListener('dblclick', function(e) {
                     const nameEl = this.querySelector('.image-name');
                     if (nameEl && !e.target.closest('.image-wrapper')) {
@@ -728,6 +625,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 card.appendChild(wrapper);
                 card.appendChild(nameLabel);
 
+                card.addEventListener('mousedown', function(e) {
+                    initDrag(this, e);
+                });
+                card.addEventListener('touchstart', function(e) {
+                    initDrag(this, e);
+                }, { passive: true });
+
                 imageGrid.appendChild(card);
                 attachContextMenu(card);
                 performSearch(searchInput.value);
@@ -736,24 +640,21 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ----- Drag and Drop Functions -----
+    // ----- Drag helpers -----
     function createGhostElement(card) {
         const ghost = document.createElement('div');
         ghost.className = 'drag-ghost';
-        ghost.style.position = 'fixed';
-        ghost.style.pointerEvents = 'none';
-        ghost.style.zIndex = '9999';
 
+        const isFolder = card.classList.contains('folder-card');
         const icon = document.createElement('i');
-        icon.className = 'fas fa-folder';
+        icon.className = isFolder ? 'fas fa-folder' : 'fas fa-image';
 
+        const nameEl = card.querySelector('.folder-name') || card.querySelector('.image-name');
         const nameSpan = document.createElement('span');
-        const folderNameEl = card.querySelector('.folder-name');
-        nameSpan.textContent = folderNameEl ? folderNameEl.textContent : 'Folder';
+        nameSpan.textContent = nameEl ? nameEl.textContent : (isFolder ? 'Folder' : 'Image');
 
         ghost.appendChild(icon);
         ghost.appendChild(nameSpan);
-
         return ghost;
     }
 
@@ -763,20 +664,71 @@ document.addEventListener('DOMContentLoaded', function() {
                clientY >= rect.top && clientY <= rect.bottom;
     }
 
-    function findDropTarget(grid, clientX, clientY) {
-        const cards = grid.querySelectorAll('.folder-card:not(.dragging)');
-        for (let card of cards) {
-            const rect = card.getBoundingClientRect();
-            if (clientX >= rect.left && clientX <= rect.right &&
-                clientY >= rect.top && clientY <= rect.bottom) {
-                return card;
+    // closest-card + side detection
+    function getInsertReference(cursorX, cursorY, draggedCard) {
+        const allCards = Array.from(
+            imageGrid.querySelectorAll('.folder-card, .image-card')
+        ).filter(c => c !== draggedCard && c.style.display !== 'none');
+
+        if (allCards.length === 0) return { before: null, after: false, rect: null };
+
+        let closest = null;
+        let closestDist = Infinity;
+        let closestRect = null;
+
+        for (const c of allCards) {
+            const rect = c.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const dx = cursorX - cx;
+            const dy = cursorY - cy;
+            const dist = dx * dx + dy * dy;
+            if (dist < closestDist) {
+                closestDist = dist;
+                closest = c;
+                closestRect = rect;
             }
         }
-        return null;
+
+        if (!closest) return { before: null, after: false, rect: null };
+
+        const midX = closestRect.left + closestRect.width / 2;
+        return { before: closest, after: cursorX >= midX, rect: closestRect };
+    }
+
+    function showInsertIndicator(cursorX, cursorY) {
+        if (!indicatorEl) {
+            indicatorEl = document.createElement('div');
+            indicatorEl.className = 'insert-indicator';
+            imageGrid.appendChild(indicatorEl);
+        }
+
+        const gridRect = imageGrid.getBoundingClientRect();
+        const scrollLeft = imageGrid.scrollLeft;
+        const scrollTop = imageGrid.scrollTop;
+        const { before, after, rect } = getInsertReference(cursorX, cursorY, dragData.card);
+
+        if (before && rect) {
+            if (after) {
+                indicatorEl.style.left = (rect.right - gridRect.left + scrollLeft + 8) + 'px';
+            } else {
+                indicatorEl.style.left = (rect.left - gridRect.left + scrollLeft - 12) + 'px';
+            }
+            indicatorEl.style.top  = (rect.top - gridRect.top + scrollTop) + 'px';
+            indicatorEl.style.height = rect.height + 'px';
+            indicatorEl.classList.add('show');
+        } else {
+            indicatorEl.classList.remove('show');
+        }
+    }
+
+    function hideInsertIndicator() {
+        if (indicatorEl) indicatorEl.classList.remove('show');
     }
 
     function initDrag(card, e) {
-        if (e.target.closest('.folder-name-input') || e.target.closest('.folder-name')) {
+        if (e.target.closest('.folder-name-input') || e.target.closest('.folder-name') ||
+            e.target.closest('.image-name-input') || e.target.closest('.image-name')) {
             return;
         }
 
@@ -787,8 +739,6 @@ document.addEventListener('DOMContentLoaded', function() {
             card: card,
             startX: startX,
             startY: startY,
-            offsetX: 0,
-            offsetY: 0,
             isDragging: false
         };
 
@@ -810,14 +760,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!dragData.isDragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
             dragData.isDragging = true;
-            const cardRect = dragData.card.getBoundingClientRect();
             ghostElement.style.display = 'flex';
-            ghostElement.style.left = (clientX - cardRect.width / 2) + 'px';
-            ghostElement.style.top = (clientY - 40) + 'px';
-
-            document.querySelectorAll('.folder-card.drag-over').forEach(el => {
-                el.classList.remove('drag-over');
-            });
         }
 
         if (dragData.isDragging) {
@@ -825,56 +768,53 @@ document.addEventListener('DOMContentLoaded', function() {
             ghostElement.style.top = (clientY - 50) + 'px';
 
             if (isInsideGrid(imageGrid, clientX, clientY)) {
-                const target = findDropTarget(imageGrid, clientX, clientY);
-                document.querySelectorAll('.folder-card.drag-over').forEach(el => {
-                    if (el !== target) el.classList.remove('drag-over');
-                });
-                if (target && target !== dragData.card) {
-                    target.classList.add('drag-over');
-                }
+                showInsertIndicator(clientX, clientY);
             } else {
-                document.querySelectorAll('.folder-card.drag-over').forEach(el => {
-                    el.classList.remove('drag-over');
-                });
+                hideInsertIndicator();
             }
         }
     }
 
+    // ✅ FIXED: detach first, then reinsert — no stale sibling refs
     function endDrag(e) {
         if (!dragData) return;
 
         const clientX = e.clientX || e.changedTouches?.[0]?.clientX || 0;
         const clientY = e.clientY || e.changedTouches?.[0]?.clientY || 0;
 
-        document.querySelectorAll('.folder-card.drag-over').forEach(el => {
-            el.classList.remove('drag-over');
-        });
-
         if (dragData.isDragging) {
             const inside = isInsideGrid(imageGrid, clientX, clientY);
-            const target = findDropTarget(imageGrid, clientX, clientY);
 
-            if (inside && target && target !== dragData.card) {
-                const parent = imageGrid;
-                const card1 = dragData.card; // dragged card
-                const card2 = target;        // drop target card
+            if (inside) {
+                const card1 = dragData.card;
 
-                const children = Array.from(parent.children);
-                const idx1 = children.indexOf(card1);
-                const idx2 = children.indexOf(card2);
+                // 1. Compute the insert reference WHILE card1 is still in the DOM.
+                //    getInsertReference filters out card1, so `before` is a different card.
+                const { before, after } = getInsertReference(clientX, clientY, card1);
 
-                // MOVE the actual nodes instead of cloning them.
-                if (idx1 < idx2) {
-                    parent.insertBefore(card2, card1);
-                    parent.insertBefore(card1, children[idx2 + 1] || null);
-                } else {
-                    parent.insertBefore(card1, card2);
-                    parent.insertBefore(card2, children[idx1 + 1] || null);
+                if (before) {
+                    // 2. Detach card1 first so any `before.nextSibling` won't be card1.
+                    if (card1.parentNode) card1.parentNode.removeChild(card1);
+
+                    // 3. Now insert cleanly
+                    if (after) {
+                        const ref = before.nextSibling;
+                        if (ref) {
+                            imageGrid.insertBefore(card1, ref);
+                        } else {
+                            imageGrid.appendChild(card1);
+                        }
+                    } else {
+                        imageGrid.insertBefore(card1, before);
+                    }
                 }
+                // else: no other cards exist — leave card1 where it was (still attached)
 
                 performSearch(searchInput.value);
             }
         }
+
+        hideInsertIndicator();
 
         if (ghostElement) {
             ghostElement.remove();
@@ -883,13 +823,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (dragData.card) {
             dragData.card.classList.remove('dragging');
         }
-        document.querySelectorAll('.folder-card.drag-over').forEach(el => {
-            el.classList.remove('drag-over');
-        });
         dragData = null;
     }
 
-    // ----- ADD FOLDER (creates a folder-card with rename and drag capability) -----
+    // ----- Add folder -----
     function createFolderCard() {
         const folderCount = imageGrid.querySelectorAll('.folder-card').length + 1;
         const folderName = `Folder ${folderCount}`;
@@ -911,9 +848,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         card.addEventListener('dblclick', function(e) {
             const nameEl = this.querySelector('.folder-name');
-            if (nameEl) {
-                makeFolderNameEditable(nameEl, this);
-            }
+            if (nameEl) makeFolderNameEditable(nameEl, this);
         });
 
         card.addEventListener('mousedown', function(e) {
@@ -930,27 +865,23 @@ document.addEventListener('DOMContentLoaded', function() {
         performSearch(searchInput.value);
     }
 
-    // Global drag event listeners
+    // Global drag listeners
     document.addEventListener('mousemove', moveDrag);
     document.addEventListener('touchmove', moveDrag, { passive: true });
     document.addEventListener('mouseup', endDrag);
     document.addEventListener('touchend', endDrag);
     document.addEventListener('touchcancel', endDrag);
 
-    // ----- SEARCH FUNCTIONALITY -----
+    // ----- Search -----
     function performSearch(query) {
         const cards = imageGrid.querySelectorAll('.image-card, .folder-card');
         const normalizedQuery = query.trim().toLowerCase();
         let anyMatch = false;
 
-        // Reset highlights and show all first
         cards.forEach(card => {
             let nameEl = card.querySelector('.folder-name') || card.querySelector('.image-name');
-            if (nameEl) {
-                // Remove any existing highlight spans
-                if (nameEl.innerHTML.includes('highlight-match')) {
-                    nameEl.innerHTML = nameEl.textContent;
-                }
+            if (nameEl && nameEl.innerHTML.includes('highlight-match')) {
+                nameEl.innerHTML = nameEl.textContent;
             }
             card.style.display = '';
         });
@@ -989,7 +920,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // ----- event listeners -----
+    // ----- Event listeners -----
     addBtn.addEventListener("click", function (e) {
         e.stopPropagation();
         fileInput.click();
@@ -1009,9 +940,12 @@ document.addEventListener('DOMContentLoaded', function() {
     imageGrid.addEventListener("dragleave", function (e) {
         this.style.backgroundColor = "#f9fafb";
     });
+
     imageGrid.addEventListener("drop", function (e) {
         e.preventDefault();
         this.style.backgroundColor = "#f9fafb";
+        if (dragData && dragData.isDragging) return;
+
         const files = e.dataTransfer.files;
         if (files && files.length > 0) {
             renderImages(files);
@@ -1023,12 +957,10 @@ document.addEventListener('DOMContentLoaded', function() {
         createFolderCard();
     });
 
-    // Search input listener
     searchInput.addEventListener('input', function(e) {
         performSearch(e.target.value);
     });
 
-    // Seed with a sample folder
     setTimeout(() => { createFolderCard(); }, 100);
 });
 </script>

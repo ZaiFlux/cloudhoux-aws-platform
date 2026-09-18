@@ -179,6 +179,38 @@
         margin-bottom: 8px;
     }
     .no-matches-message.show { display: block; }
+
+    /* =========================
+       MARQUEE / RUBBER-BAND SELECTION
+       ========================= */
+    .marquee-box {
+        position: fixed;
+        border: 1.5px solid #3b82f6;
+        background: rgba(59, 130, 246, 0.15);
+        border-radius: 3px;
+        pointer-events: none;
+        z-index: 99998;
+        display: none;
+    }
+
+    /* Selected file item appearance */
+    .file-item.selected {
+        outline: 2px solid #3b82f6;
+        outline-offset: -2px;
+        background: #dbeafe !important;
+        border-color: #3b82f6 !important;
+    }
+
+    /* Make sure file items can't accidentally native-drag when marquee is active */
+    body.marquee-active .file-item {
+        user-select: none;
+    }
+    body.marquee-active {
+        cursor: crosshair;
+    }
+    body.marquee-active .file-item {
+        cursor: crosshair;
+    }
     </style>
 </head>
 <body>
@@ -268,6 +300,9 @@
         <button class="toast-close" id="toastCloseBtn">×</button>
     </div>
 
+    <!-- Marquee selection rectangle -->
+    <div class="marquee-box" id="marqueeBox"></div>
+
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         "use strict";
@@ -282,6 +317,7 @@
         const uploadStatus = document.getElementById("uploadStatus");
         const noMatchesMessage = document.getElementById("noMatchesMessage");
         const searchQueryDisplay = document.getElementById("searchQueryDisplay");
+        const marqueeBox = document.getElementById("marqueeBox");
 
         if (!window.trashFiles) {
             window.trashFiles = [];
@@ -304,7 +340,148 @@
         const toastUndoBtn = document.getElementById('toastUndoBtn');
         const toastCloseBtn = document.getElementById('toastCloseBtn');
 
-        // ---------- FORCE CARD SIZE (JS inline !important, cannot be overridden) ----------
+        // ============================
+        // MULTI-SELECTION STATE
+        // ============================
+        let selectedFiles = new Set(); // set of file ids that are currently selected
+
+        function clearSelection() {
+            selectedFiles.forEach(id => {
+                const el = document.querySelector('.file-item[data-file-id="' + id + '"]');
+                if (el) el.classList.remove('selected');
+            });
+            selectedFiles.clear();
+        }
+
+        function selectFile(id, element) {
+            if (!id) return;
+            selectedFiles.add(id);
+            if (element) element.classList.add('selected');
+        }
+
+        function toggleFileSelection(id, element) {
+            if (selectedFiles.has(id)) {
+                selectedFiles.delete(id);
+                if (element) element.classList.remove('selected');
+            } else {
+                selectedFiles.add(id);
+                if (element) element.classList.add('selected');
+            }
+        }
+
+                // ============================
+        // MARQUEE / RUBBER-BAND SELECTION
+        // ============================
+        let marqueeStart = null;
+        let marqueeActive = false;
+        let suppressNextClick = false;
+
+        function isMarqueeAllowed(target) {
+            if (!target) return false;
+            if (target.closest('.file-item')) return false;
+            if (target.closest('button')) return false;
+            if (target.closest('a')) return false;
+            if (target.closest('input')) return false;
+            if (target.closest('.custom-context-menu')) return false;
+            // Must be inside a container that holds file items
+            return !!target.closest('#fileList, #recentFileList, #favoritesFileList, .main_content, .dashboard_content');
+        }
+
+        function startMarquee(e) {
+            if (e.button !== 0) return;
+            if (!isMarqueeAllowed(e.target)) return;
+
+            marqueeStart = { x: e.clientX, y: e.clientY };
+            marqueeActive = false;
+            document.body.classList.add('marquee-active');
+
+            document.addEventListener('mousemove', moveMarquee);
+            document.addEventListener('mouseup', endMarquee);
+        }
+
+        function moveMarquee(e) {
+            if (!marqueeStart) return;
+
+            const dx = e.clientX - marqueeStart.x;
+            const dy = e.clientY - marqueeStart.y;
+
+            // Only show the marquee once the user has moved more than 5px
+            if (!marqueeActive && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+                marqueeActive = true;
+                marqueeBox.style.display = 'block';
+            }
+
+            if (!marqueeActive) return;
+
+            const x1 = Math.min(marqueeStart.x, e.clientX);
+            const y1 = Math.min(marqueeStart.y, e.clientY);
+            const x2 = Math.max(marqueeStart.x, e.clientX);
+            const y2 = Math.max(marqueeStart.y, e.clientY);
+
+            marqueeBox.style.left = x1 + 'px';
+            marqueeBox.style.top = y1 + 'px';
+            marqueeBox.style.width = (x2 - x1) + 'px';
+            marqueeBox.style.height = (y2 - y1) + 'px';
+
+            // Highlight every visible file-item that intersects the marquee rect
+            const items = document.querySelectorAll(
+                '#fileList .file-item, #recentFileList .file-item, #favoritesFileList .file-item'
+            );
+            items.forEach(item => {
+                const r = item.getBoundingClientRect();
+                const intersects = !(r.right < x1 || r.left > x2 || r.bottom < y1 || r.top > y2);
+                if (intersects) {
+                    item.classList.add('selected');
+                    selectedFiles.add(item.dataset.fileId);
+                } else {
+                    item.classList.remove('selected');
+                    selectedFiles.delete(item.dataset.fileId);
+                }
+            });
+        }
+
+        function endMarquee(e) {
+            document.removeEventListener('mousemove', moveMarquee);
+            document.removeEventListener('mouseup', endMarquee);
+
+            marqueeBox.style.display = 'none';
+            marqueeBox.style.width = '0';
+            marqueeBox.style.height = '0';
+            document.body.classList.remove('marquee-active');
+
+            if (marqueeActive) {
+                // Block the click event that follows mouseup so it doesn't clear the selection
+                suppressNextClick = true;
+            }
+
+            marqueeStart = null;
+            marqueeActive = false;
+        }
+
+        // Start marquee on mousedown
+        document.addEventListener('mousedown', function(e) {
+            if (e.button !== 0) return;
+            if (!isMarqueeAllowed(e.target)) return;
+            startMarquee(e);
+        });
+
+        // Capture phase — block the click that follows a marquee release
+        document.addEventListener('click', function(e) {
+            if (suppressNextClick) {
+                e.stopPropagation();
+                e.preventDefault();
+                suppressNextClick = false;
+                return;
+            }
+            // Clicking empty space (not on a file item) clears the selection
+            if (!e.target.closest('.file-item') &&
+                !e.target.closest('.custom-context-menu') &&
+                isMarqueeAllowed(e.target)) {
+                clearSelection();
+            }
+        }, true);
+
+        // ---------- FORCE CARD SIZE ----------
         function forceCardSize() {
             ['fileList', 'recentFileList', 'favoritesFileList'].forEach(function(id) {
                 const el = document.getElementById(id);
@@ -321,9 +498,7 @@
             });
         }
 
-        // Run after every render
-        const _origRenderAllSections = null; // placeholder
-        setInterval(forceCardSize, 300); // simple watchdog — safe and cheap
+        setInterval(forceCardSize, 300);
 
         // ---------- Toast functions ----------
         function showToast(message, fileData, element) {
@@ -365,6 +540,8 @@
 
             const recIndex = recentFiles.findIndex(f => f.id === fileId);
             if (recIndex !== -1) recentFiles.splice(recIndex, 1);
+
+            selectedFiles.delete(fileId);
 
             if (element) {
                 element.style.transition = '0.3s';
@@ -430,6 +607,11 @@
             element.draggable = true;
 
             element.addEventListener('dragstart', function(e) {
+                // If marquee is currently active, cancel the native drag
+                if (document.body.classList.contains('marquee-active')) {
+                    e.preventDefault();
+                    return;
+                }
                 draggedItem = this;
                 dragStartIndex = Array.from(this.parentNode.children).indexOf(this);
                 this.classList.add('dragging');
@@ -587,22 +769,40 @@
         // ---------- context menu actions ----------
         document.getElementById('ccmOpen').addEventListener('click', function(e) {
             e.stopPropagation();
-            if (contextTargetFile) alert('Opening: ' + contextTargetFile.name);
+            if (selectedFiles.size > 1) {
+                alert('Opening ' + selectedFiles.size + ' files');
+            } else if (contextTargetFile) {
+                alert('Opening: ' + contextTargetFile.name);
+            }
             closeContextMenu();
         });
         document.getElementById('ccmShare').addEventListener('click', function(e) {
             e.stopPropagation();
-            if (contextTargetFile) alert('Share: ' + contextTargetFile.name);
+            if (selectedFiles.size > 1) {
+                alert('Sharing ' + selectedFiles.size + ' files');
+            } else if (contextTargetFile) {
+                alert('Share: ' + contextTargetFile.name);
+            }
             closeContextMenu();
         });
         document.getElementById('ccmMove').addEventListener('click', function(e) {
             e.stopPropagation();
-            if (contextTargetFile) alert('Move: ' + contextTargetFile.name);
+            if (selectedFiles.size > 1) {
+                alert('Moving ' + selectedFiles.size + ' files');
+            } else if (contextTargetFile) {
+                alert('Move: ' + contextTargetFile.name);
+            }
             closeContextMenu();
         });
         document.getElementById('ccmFavorite').addEventListener('click', function(e) {
             e.stopPropagation();
-            if (contextTargetFile && contextTargetFile.id) {
+            if (selectedFiles.size > 1) {
+                selectedFiles.forEach(id => {
+                    const f = allFiles.find(x => x.id === id);
+                    if (f && !favoriteFiles.some(x => x.id === id)) favoriteFiles.push(f);
+                });
+                renderFavorites(searchInput.value.trim());
+            } else if (contextTargetFile && contextTargetFile.id) {
                 if (!favoriteFiles.some(f => f.id === contextTargetFile.id)) {
                     favoriteFiles.push(contextTargetFile);
                     renderFavorites(searchInput.value.trim());
@@ -613,7 +813,16 @@
 
         document.getElementById('ccmDelete').addEventListener('click', function(e) {
             e.stopPropagation();
-            if (contextTargetFile && contextTargetFile.id) {
+            if (selectedFiles.size > 1) {
+                // Batch delete
+                const idsToDelete = Array.from(selectedFiles);
+                idsToDelete.forEach(id => {
+                    const f = allFiles.find(x => x.id === id);
+                    const el = document.querySelector('.file-item[data-file-id="' + id + '"]');
+                    if (f) moveToTrash(f, el);
+                });
+                clearSelection();
+            } else if (contextTargetFile && contextTargetFile.id) {
                 moveToTrash(contextTargetFile, contextTarget);
             }
             closeContextMenu();
@@ -624,7 +833,10 @@
         });
         document.addEventListener('scroll', closeContextMenu, true);
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeContextMenu();
+            if (e.key === 'Escape') {
+                closeContextMenu();
+                clearSelection();
+            }
         });
 
         // ---------- helpers ----------
@@ -661,6 +873,10 @@
             const div = document.createElement("div");
             div.className = "file-item";
             div.dataset.fileId = file.id;
+
+            if (selectedFiles.has(file.id)) {
+                div.classList.add('selected');
+            }
 
             const icon = document.createElement("i");
             icon.className = 'fas ' + getFileIcon(file.name);
@@ -699,6 +915,23 @@
 
             makeFileDraggable(div);
             attachContextMenu(div, file);
+
+            // ---- Ctrl/Cmd-click to multi-select, plain click to single-select ----
+            div.addEventListener('click', function(e) {
+                // Ignore if clicked on the name label while it's being edited
+                if (e.target.classList.contains('file-name-input')) return;
+                if (e.target.classList.contains('file-name')) {
+                    // Let rename logic handle it
+                    return;
+                }
+                e.stopPropagation();
+                if (e.ctrlKey || e.metaKey) {
+                    toggleFileSelection(file.id, div);
+                } else {
+                    clearSelection();
+                    selectFile(file.id, div);
+                }
+            });
 
             return div;
         }
@@ -761,6 +994,12 @@
             updateTrashCount();
             forceCardSize();
 
+            // Re-apply selection highlighting after render
+            selectedFiles.forEach(id => {
+                const el = document.querySelector('.file-item[data-file-id="' + id + '"]');
+                if (el) el.classList.add('selected');
+            });
+
             const q = searchInput.value.trim();
             if (q !== '') {
                 const hasMatches = hasSearchMatches(q);
@@ -798,7 +1037,7 @@
             searchInput.focus();
         });
 
-        // ---------- file processing ----------
+                // ---------- file processing ----------
         function processFiles(files) {
             const fileArray = Array.from(files);
             const totalFiles = fileArray.length;
@@ -859,7 +1098,7 @@
             processChunk(0);
         }
 
-        // ---------- event listeners ----------
+                // ---------- event listeners ----------
         addBtn.addEventListener("click", function(e) {
             e.stopPropagation();
             fileInput.value = '';
@@ -932,7 +1171,7 @@
         updateTrashCount();
         forceCardSize();
 
-        console.log('✅ Dashboard loaded with drag-and-drop reordering!');
+        console.log('✅ Dashboard loaded with drag-and-drop reordering + marquee selection!');
     });
     </script>
 </body>
