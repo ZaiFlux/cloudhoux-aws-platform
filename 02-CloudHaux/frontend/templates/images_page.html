@@ -274,6 +274,32 @@
         }
         .insert-indicator.show { display: block; }
 
+        /* ===== MARQUEE / RUBBER-BAND SELECTION ===== */
+        .marquee-box {
+            position: fixed;
+            border: 1.5px solid #3b82f6;
+            background: rgba(59, 130, 246, 0.15);
+            border-radius: 3px;
+            pointer-events: none;
+            z-index: 9998;
+            display: none;
+        }
+
+        /* Selected card appearance */
+        .image-card.selected,
+        .folder-card.selected {
+            outline: 2px solid #3b82f6;
+            outline-offset: -2px;
+            background: #dbeafe !important;
+            border-color: #3b82f6 !important;
+        }
+
+        body.marquee-active,
+        body.marquee-active .image-card,
+        body.marquee-active .folder-card {
+            cursor: crosshair;
+        }
+
         @media (max-width: 768px) {
             .images_grid { min-height: 300px; padding: 16px; gap: 15px; }
             .image-card { width: 100px; }
@@ -420,6 +446,9 @@
         <div class="ccm-item ccm-danger" id="ccmDelete"><i class="fas fa-trash"></i> Delete</div>
     </div>
 
+    <!-- Marquee selection rectangle -->
+    <div class="marquee-box" id="marqueeBox"></div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     "use strict";
@@ -430,6 +459,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const addFolderBtn = document.getElementById("addFolderBtn");
     const searchInput = document.getElementById("globalSearch");
     const noMatchMsg = document.getElementById("noMatchMessage");
+    const marqueeBox = document.getElementById("marqueeBox");
 
     if (!fileInput || !addBtn || !imageGrid || !addFolderBtn || !searchInput) {
         console.error('Elements not found');
@@ -444,6 +474,157 @@ document.addEventListener('DOMContentLoaded', function() {
     let contextTarget = null;
     const ccmDelete = document.getElementById('ccmDelete');
 
+    // ============================
+    // MULTI-SELECTION STATE
+    // ============================
+    let selectedFiles = new Set();
+    let cardIdCounter = 0;
+
+    function getCardKey(card) {
+        if (!card.dataset.cardKey) {
+            card.dataset.cardKey = 'card-' + (++cardIdCounter);
+        }
+        return card.dataset.cardKey;
+    }
+
+    function clearSelection() {
+        imageGrid.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+        selectedFiles.clear();
+    }
+
+    function selectCard(card) {
+        const key = getCardKey(card);
+        selectedFiles.add(key);
+        card.classList.add('selected');
+    }
+
+    function toggleCardSelection(card) {
+        const key = getCardKey(card);
+        if (selectedFiles.has(key)) {
+            selectedFiles.delete(key);
+            card.classList.remove('selected');
+        } else {
+            selectedFiles.add(key);
+            card.classList.add('selected');
+        }
+    }
+
+    function getSelectedCards() {
+        const result = [];
+        imageGrid.querySelectorAll('.image-card, .folder-card').forEach(card => {
+            if (selectedFiles.has(getCardKey(card))) result.push(card);
+        });
+        return result;
+    }
+
+    // ============================
+    // MARQUEE / RUBBER-BAND SELECTION
+    // ============================
+    let marqueeStart = null;
+    let marqueeActive = false;
+
+    function isMarqueeAllowed(target) {
+        if (!target) return false;
+        if (target.closest('.image-card')) return false;
+        if (target.closest('.folder-card')) return false;
+        if (target.closest('.custom-context-menu')) return false;
+        return imageGrid.contains(target);
+    }
+
+    // Start marquee: only when mousedown is inside the grid on empty space
+    imageGrid.addEventListener('mousedown', function(e) {
+        if (e.button !== 0) return;
+        if (!isMarqueeAllowed(e.target)) return;
+
+        marqueeStart = { x: e.clientX, y: e.clientY };
+        marqueeActive = false;
+        document.body.classList.add('marquee-active');
+    });
+
+    // Move — attach on document so dragging outside the grid still works
+    document.addEventListener('mousemove', function(e) {
+        if (!marqueeStart) return;
+
+        const dx = e.clientX - marqueeStart.x;
+        const dy = e.clientY - marqueeStart.y;
+
+        if (!marqueeActive && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+            marqueeActive = true;
+            marqueeBox.style.display = 'block';
+        }
+
+        if (!marqueeActive) return;
+
+        const x1 = Math.min(marqueeStart.x, e.clientX);
+        const y1 = Math.min(marqueeStart.y, e.clientY);
+        const x2 = Math.max(marqueeStart.x, e.clientX);
+        const y2 = Math.max(marqueeStart.y, e.clientY);
+
+        marqueeBox.style.left = x1 + 'px';
+        marqueeBox.style.top = y1 + 'px';
+        marqueeBox.style.width = (x2 - x1) + 'px';
+        marqueeBox.style.height = (y2 - y1) + 'px';
+
+        // Clear current selection, then mark everything the marquee touches
+        clearSelection();
+        imageGrid.querySelectorAll('.image-card, .folder-card').forEach(card => {
+            if (card.style.display === 'none') return;
+            const r = card.getBoundingClientRect();
+            const intersects = !(r.right < x1 || r.left > x2 || r.bottom < y1 || r.top > y2);
+            if (intersects) {
+                const key = getCardKey(card);
+                card.classList.add('selected');
+                selectedFiles.add(key);
+            }
+        });
+    });
+
+    // End marquee on mouseup
+    document.addEventListener('mouseup', function(e) {
+        if (!marqueeStart) return;
+
+        const wasActive = marqueeActive;
+        marqueeStart = null;
+        marqueeActive = false;
+
+        marqueeBox.style.display = 'none';
+        marqueeBox.style.width = '0';
+        marqueeBox.style.height = '0';
+        document.body.classList.remove('marquee-active');
+
+        // Block the click event that will follow, so it doesn't clear our selection
+        if (wasActive) {
+            suppressNextClick = true;
+        }
+    });
+
+    // ============================
+    // CLICK CLEARING (with suppression)
+    // ============================
+    let suppressNextClick = false;
+
+    // Capture-phase: kill the click event that comes right after a marquee
+    document.addEventListener('click', function(e) {
+        if (suppressNextClick) {
+            e.stopPropagation();
+            e.preventDefault();
+            suppressNextClick = false;
+            return;
+        }
+    }, true);
+
+    // Normal-phase: clicking empty grid space clears selection
+    imageGrid.addEventListener('click', function(e) {
+        if (suppressNextClick) return;
+        if (e.target.closest('.image-card')) return;
+        if (e.target.closest('.folder-card')) return;
+        if (e.target.closest('.custom-context-menu')) return;
+        clearSelection();
+    });
+
+    // ============================
+    // CONTEXT MENU
+    // ============================
     function openContextMenu(x, y, targetCard) {
         contextTarget = targetCard;
         const maxX = window.innerWidth - 190;
@@ -462,25 +643,39 @@ document.addEventListener('DOMContentLoaded', function() {
         card.addEventListener('contextmenu', function(e) {
             e.preventDefault();
             e.stopPropagation();
+
+            const key = getCardKey(card);
+            if (!selectedFiles.has(key)) {
+                clearSelection();
+                selectCard(card);
+            }
+
             openContextMenu(e.clientX, e.clientY, card);
         });
     }
 
+    // Delete: batch-aware
     ccmDelete.addEventListener('click', function(e) {
         e.stopPropagation();
-        if (contextTarget) {
-            const img = contextTarget.querySelector('img');
+
+        const targets = getSelectedCards();
+        if (targets.length === 0 && contextTarget) targets.push(contextTarget);
+
+        targets.forEach(card => {
+            const img = card.querySelector('img');
             if (img && img.src && img.src.startsWith('blob:')) {
                 URL.revokeObjectURL(img.src);
             }
-            contextTarget.style.transition = '0.2s';
-            contextTarget.style.transform = 'scale(0.8)';
-            contextTarget.style.opacity = '0';
+            card.style.transition = '0.2s';
+            card.style.transform = 'scale(0.8)';
+            card.style.opacity = '0';
             setTimeout(() => {
-                contextTarget.remove();
+                card.remove();
                 performSearch(searchInput.value);
             }, 200);
-        }
+        });
+
+        clearSelection();
         closeContextMenu();
     });
 
@@ -489,7 +684,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.addEventListener('scroll', closeContextMenu, true);
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeContextMenu();
+        if (e.key === 'Escape') {
+            closeContextMenu();
+            clearSelection();
+        }
     });
 
     // ----- Rename image -----
@@ -632,6 +830,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     initDrag(this, e);
                 }, { passive: true });
 
+                card.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('image-name-input')) return;
+                    if (e.target.classList.contains('image-name')) return;
+                    e.stopPropagation();
+                    if (e.ctrlKey || e.metaKey) {
+                        toggleCardSelection(card);
+                    } else {
+                        clearSelection();
+                        selectCard(card);
+                    }
+                });
+
                 imageGrid.appendChild(card);
                 attachContextMenu(card);
                 performSearch(searchInput.value);
@@ -664,7 +874,6 @@ document.addEventListener('DOMContentLoaded', function() {
                clientY >= rect.top && clientY <= rect.bottom;
     }
 
-    // closest-card + side detection
     function getInsertReference(cursorX, cursorY, draggedCard) {
         const allCards = Array.from(
             imageGrid.querySelectorAll('.folder-card, .image-card')
@@ -775,8 +984,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // ✅ FIXED: detach first, then reinsert — no stale sibling refs
-    function endDrag(e) {
+      function endDrag(e) {
         if (!dragData) return;
 
         const clientX = e.clientX || e.changedTouches?.[0]?.clientX || 0;
@@ -787,16 +995,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (inside) {
                 const card1 = dragData.card;
-
-                // 1. Compute the insert reference WHILE card1 is still in the DOM.
-                //    getInsertReference filters out card1, so `before` is a different card.
                 const { before, after } = getInsertReference(clientX, clientY, card1);
 
                 if (before) {
-                    // 2. Detach card1 first so any `before.nextSibling` won't be card1.
                     if (card1.parentNode) card1.parentNode.removeChild(card1);
 
-                    // 3. Now insert cleanly
                     if (after) {
                         const ref = before.nextSibling;
                         if (ref) {
@@ -808,7 +1011,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         imageGrid.insertBefore(card1, before);
                     }
                 }
-                // else: no other cards exist — leave card1 where it was (still attached)
 
                 performSearch(searchInput.value);
             }
@@ -857,6 +1059,18 @@ document.addEventListener('DOMContentLoaded', function() {
         card.addEventListener('touchstart', function(e) {
             initDrag(this, e);
         }, { passive: true });
+
+        card.addEventListener('click', function(e) {
+            if (e.target.classList.contains('folder-name-input')) return;
+            if (e.target.classList.contains('folder-name')) return;
+            e.stopPropagation();
+            if (e.ctrlKey || e.metaKey) {
+                toggleCardSelection(card);
+            } else {
+                clearSelection();
+                selectCard(card);
+            }
+        });
 
         card.appendChild(icon);
         card.appendChild(nameSpan);
